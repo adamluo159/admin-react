@@ -1,16 +1,18 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
 import { Menu, Icon,Row, Col } from 'antd';
+import MainLayout from '../mainlayout/mainlayout'
+import './layout.css'
+
 const SubMenu = Menu.SubMenu;
 const MenuItemGroup = Menu.ItemGroup;
-import './layout.css'
 
 let menu = {
   "游戏指令": ["GM", "b", "c"],
   "主题":["1", "2", "3"]
 }
 
-export default class App extends React.Component {
+export default class layout extends React.Component {
   constructor(props){
     super(props);
    }
@@ -44,15 +46,14 @@ export default class App extends React.Component {
     return (
       <div className = "layout-top">
         <Row>
-          <Col span={18} push={6}>      
-              <div className="layout-main">
-              </div>
+          <Col span={20} push={4}>      
+                  <MainLayout></MainLayout>
           </Col>
 
-          <Col span={6} pull={18}> 
+          <Col span={4} pull={20}> 
           <Menu 
           onClick={this.onclickMenu}
-          style={{ width: 240 }}
+          //style={{ width: 320 }}
           //defaultOpenKeys={['sub1']}
           mode="inline"
           theme="dark">

@@ -2,7 +2,7 @@ import React from 'react';
 import ReactDOM from 'react-dom';
 import {Form, Input, Button, Checkbox, message,Row, Col} from 'antd';
 const FormItem = Form.Item;
-export default class Login extends React.Component {
+export default class login extends React.Component {
   constructor(props){
     super(props);
   }

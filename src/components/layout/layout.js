@@ -1,29 +1,33 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
 import { Menu, Icon,Row, Col } from 'antd';
-import MainLayout from '../mainlayout/mainlayout'
+import MachineMgr from '../machineMgr/machineMgr'
 import './layout.css'
 
 const SubMenu = Menu.SubMenu;
 const MenuItemGroup = Menu.ItemGroup;
 
 let menu = {
-  "游戏指令": ["GM", "b", "c"],
+  "游戏指令": ["machineMgr", "b", "c"],
   "主题":["1", "2", "3"]
+}
+const mainLays = {
+  "machineMgr": (<MachineMgr></MachineMgr>)
 }
 
 export default class layout extends React.Component {
   constructor(props){
     super(props);
+    this.state = {
+      curKey: 'machineMgr'
+    }
    }
-
-   //componentWillMount(){
-   //  console.log("req layoutdata")
-   //  dispatch(GetLayoutData(true))
-   //}
 
    onclickMenu(item){
      console.log(item.key)
+     this.setState({
+       curKey:item.key
+     })
    }
 
    render() {
@@ -42,17 +46,18 @@ export default class layout extends React.Component {
             })
        return arr
      }
-
+    let{curKey} = this.state
     return (
       <div className = "layout-top">
         <Row>
           <Col span={20} push={4}>      
-             <MainLayout></MainLayout>
+            {
+              mainLays[curKey]
+            }
           </Col>
-
           <Col span={4} pull={20}> 
           <Menu 
-          onClick={this.onclickMenu}
+          onClick={(e)=>this.onclickMenu(e)}
           //style={{ width: 320 }}
           //defaultOpenKeys={['sub1']}
           mode="inline"
@@ -65,4 +70,3 @@ export default class layout extends React.Component {
    )
   }
 }
-

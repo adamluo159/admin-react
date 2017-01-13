@@ -42,7 +42,7 @@ const columns = [{
 
 const select = ['login', 'master', 'zone', 'pay', 'db', 'logdb']
 
-export default class mainlayout extends React.Component {
+export default class machineMgr extends React.Component {
   constructor(props){
     super(props);
     this.state = {

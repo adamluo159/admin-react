@@ -17,12 +17,12 @@ export default class layout extends React.Component {
     super(props);
    }
 
+   //componentWillMount(){
+   //  console.log("req layoutdata")
+   //  dispatch(GetLayoutData(true))
+   //}
+
    onclickMenu(item){
-      //menu.map((k) => {
-      //       console.log(k)
-      //})
-
-
      console.log(item.key)
    }
 
@@ -47,7 +47,7 @@ export default class layout extends React.Component {
       <div className = "layout-top">
         <Row>
           <Col span={20} push={4}>      
-                  <MainLayout></MainLayout>
+             <MainLayout></MainLayout>
           </Col>
 
           <Col span={4} pull={20}> 

@@ -1,7 +1,6 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
-
-import Layout from './components/layout/layout'
+import Layout from '../components/layout/layout'
 
 export default class App extends React.Component {
   constructor(props){

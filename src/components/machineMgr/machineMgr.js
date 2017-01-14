@@ -2,46 +2,8 @@ import React from 'react';
 import ReactDOM from 'react-dom';
 import {Select, Message, Table, Icon, Button, Input} from 'antd';
 import {trim, checkIpFormat} from '../../utils/utils'
+import {typeOption, machineColumns} from '../../constant'
 const Option = Select.Option;
-
-const columns = [{
-        title: 'HostName',
-        dataIndex: 'hostname',
-        key: 'hostname',
-        width: '10%',
-      },
-      {
-        title: '类型',
-        dataIndex: 'type',
-        key: 'type',
-        width: '10%',
-     },
-      {
-        title: '内网IP',
-        dataIndex: 'IP',
-        key: 'IP',
-        width: '15%',
-     },
-      {
-        title: '外网IP',
-        dataIndex: 'outIP',
-        key: 'outIP',
-        width: '15%',
-     },
-     {
-       title: '机器用途',
-       dataIndex:'describe',
-       key :'describe',
-       width: '35%'
-     },
-      {
-        title: 'Action',
-        key: 'action',
-        width: '15%',
-}]
-
-const select = ['login', 'master', 'zone', 'pay', 'db', 'logdb']
-
 export default class machineMgr extends React.Component {
   constructor(props){
     super(props);
@@ -161,9 +123,9 @@ export default class machineMgr extends React.Component {
     return (
       record.edit?
       <div>
-        <Select defaultValue={select[0]} size='small' onChange={(value)=>{this.state.editInput[index][key]= value}}>
+        <Select defaultValue={typeOption[0]} size='small' onChange={(value)=>{this.state.editInput[index][key]= value}}>
         {
-          select.map((k) => (
+          typeOption.map((k) => (
             <Option value={k} key={k}>{k}</Option>
           ))
         }
@@ -226,8 +188,7 @@ export default class machineMgr extends React.Component {
 
   render(){
     const {data,page} = this.state;
-      
-    columns.forEach((k)=>{
+    machineColumns.forEach((k)=>{
       switch(k.key){
         case "action":
           k.render = (text, record, index) => (this.actionHandle(text, record, index))
@@ -245,7 +206,7 @@ export default class machineMgr extends React.Component {
     return (
       <div>
         <Button type="primary" onClick={(e) => (this.addClick(e))}>Add</Button>
-        <Table dataSource={data} columns={columns} pagination={page} onChange={(pagination, filters, sorter)=>{
+        <Table dataSource={data} columns={machineColumns} pagination={page} onChange={(pagination, filters, sorter)=>{
           this.setState({
             page:{
               current: pagination.current,

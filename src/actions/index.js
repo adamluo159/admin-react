@@ -1,6 +1,15 @@
 import fetch from 'isomorphic-fetch'
 export const REQ_LAYOUT_POSTS  = 'REQ_LAYOUT_POSTS'
 export const RECV_LAYOUT_POSTS = 'RECV_LAYOUT_POSTS'
+export const SELECT_MAINLAYOUT_KEY='SELECT_MAINLAYOUT_KEY'
+
+export const selectMainlayout=(key)=>{
+    console.log(key)
+    return {
+        type: SELECT_MAINLAYOUT_KEY,
+        selectKey: key
+    }
+} 
 
 export const ReqLayoutData = (loading)=>{
     return {

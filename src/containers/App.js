@@ -5,11 +5,16 @@ import {Icon,Row, Col } from 'antd';
 
 import Layout from '../components/layout/layout'
 import MachineMgr from '../components/machineMgr/machineMgr'
-import {selectMainlayout} from '../actions'
+import {selectMainlayout, 
+        fetchMachines, 
+        addMachine,
+        editMachine,
+        saveMachine
+} from '../actions'
 
 const mainLays = {
-  //"machineMgr": (<MachineMgr>machines={mainLayouts.machines}</MachineMgr>)
-  "machineMgr": (<MachineMgr></MachineMgr>)
+  "machineMgr": (e)=>(<MachineMgr machines={e.machines} initf={e.initmachines} addmachine={e.addmachine}
+                       editmachine={e.editmachine} savemachine={e.savemachine}></MachineMgr>)
 }
 
 class App extends React.Component {
@@ -17,12 +22,14 @@ class App extends React.Component {
     super(props);
   }
   render(){
-    const {layout, mainlayouts} = this.props
+    const {layout,machines} = this.props
+    const empty = (e)=>(console.log(""))
+    const mainfunc = mainLays[layout.selectKey] || empty
     return (
      <div>
         <Row>
           <Col span={20} push={4}>      
-              {mainLays[layout.selectKey]}
+              {mainfunc(this.props)}
           </Col>
           <Col span={4} pull={20}>
             <Layout sfunc={this.props.smainlayout}></Layout>
@@ -38,28 +45,46 @@ App.PropTypes = {
   }),
   mainLayouts: PropTypes.shape({
     machines: PropTypes.arrayOf({
-       key: PropTypes.string.isRequired,
-       hostname: PropTypes.string.isRequired,
-       IP: PropTypes.string.isRequired,
-       outIP:PropTypes.string.isRequired,
-       type :PropTypes.string.isRequired,
-       edit:PropTypes.bool.isRequired,
-    }),
-  })
-
+       editState: PropTypes.bool.isRequired,
+       editInput: PropTypes.shape({
+          key: PropTypes.string.isRequired,
+          hostname: PropTypes.string.isRequired,
+          IP: PropTypes.string.isRequired,
+          outIP:PropTypes.string.isRequired,
+          type :PropTypes.string.isRequired,
+          edit:PropTypes.bool.isRequired,
+       }),
+       data: PropTypes.arrayOf(PropTypes.shape({
+          key: PropTypes.string.isRequired,
+          hostname: PropTypes.string.isRequired,
+          IP: PropTypes.string.isRequired,
+          outIP:PropTypes.string.isRequired,
+          type :PropTypes.string.isRequired,
+          edit:PropTypes.bool.isRequired
+       })),
+       page: PropTypes.shape({
+         current: PropTypes.number.isRequired,
+         pageSize: PropTypes.number.isRequired,
+       }),
+       cur: PropTypes.number.isRequired,
+  })})
 }
 
 const mapStateToProps = state => {
-  const {layout, mainlayouts} = state;
+  const {layout,machines} = state;
   return {
     layout,
-    mainlayouts,
+    machines,
   }
 }
 
 const mapDispatchToProps = dispatch => {
   return {
     smainlayout: (e) => {dispatch(selectMainlayout(e.key))},
+    initmachines: () => {dispatch(fetchMachines())},
+    addmachine: (e)  => {dispatch(addMachine(e))},
+    editmachine:(index)=>{dispatch(editMachine(index))},
+    savemachine:(index)=>{dispatch(saveMachine(index))}
   }
 }
 export default connect(mapStateToProps, mapDispatchToProps)(App);

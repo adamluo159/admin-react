@@ -22,75 +22,79 @@ export default class machineMgr extends React.Component {
      "outIP": checkIpFormat,
    }
   }
+  componentWillMount(){
+    console.log("machines")
+    this.props.initf();
+  }
 
   addClick(e){
-    if(this.state.editState){
+    const {editState} = this.props.machines
+    if(editState){
       Message.error("存在正在编辑的选项，请保存后再添加!")
       return 
     }
 
-    let {data, columns, editInput, cur} = this.state
-
-    let newItem = {
-        key: "host" + cur,
-        hostname: 'host' + cur,
-        IP: "",
-        outIP:"",
-        type :"login",
-        edit: true,
+    this.editInput = {
+     hostname : 'hosttmp',
+     IP : "",
+     outIP : "",
+     type : "login",
     }
-
-    cur++
-    this.setState({
-      editState : true,
-      data: [...data, newItem],
-      editInput: [...editInput, newItem],
-      cur:cur,
+    this.props.addmachine({
+      ...this.editInput,
+      edit:true,
+      key:"",
     });
   }
 
   SaveDo(index){
-    if(!this.state.editState){
-      Message.error("不存在正在编辑的选项")
+    const {editState, data} = this.props.machines
+    console.log(editState)
+    if(!editState){
+      Message.error("存在正在编辑的选项，请保存后再添加!")
       return 
     }
+    console.log("lalala", data, "ddd", this.editInput, index)
+    let editInput = this.editInput
+    this.props.savemachine({
+      index,
+      editInput,
+    })
+    //const {data} = this.props.machines
 
-    let {data} = this.state
-    let editInput = this.state.editInput[index]
+    //let {data} = this.state
+    //let editInput = this.state.editInput[index]
 
-    for (var k of Object.keys(this.checkFunc)) {   
-      let v = editInput[k]
-      if(editInput[k] !== undefined){
-        if(this.checkFunc[k](v)=== false){
-           Message.error("格式错误")
-           return
-        }
-      }
-    }
-
-    editInput.edit = false
-    this.setState(
-      {
-        data: [...data.slice(0,index), editInput, ...data.slice(index+1)],
-        editState: false
-      }
-    )
+    //for (var k of Object.keys(this.checkFunc)) {   
+    //  let v = editInput[k]
+    //  if(editInput[k] !== undefined){
+    //    if(this.checkFunc[k](v)=== false){
+    //       Message.error("格式错误")
+    //       return
+    //    }
+    //  }
+    //}
+    //editInput.edit = false
+    //this.setState(
+    //  {
+    //    data: [...data.slice(0,index), editInput, ...data.slice(index+1)],
+    //    editState: false
+    //  }
+    //)
   }
 
   editDo(index){
-    if(this.state.editState){
-      Message.error("存在正在编辑的选项，请保存后再编辑新选项")
+    const {editState} = this.props.machines
+    if(editState){
+      Message.error("存在正在编辑的选项，请保存后再添加!")
       return 
     }
-    const  {data} = this.state
-    data[index].edit = true
-    this.setState(
-      {
-        data,
-        editState: true
-      }
-    )
-  }
+    const {data} = this.props.machines
+    this.editInput = {
+      ...data[index]
+    }
+    this.props.editmachine(index)
+ }
 
   deleteDo(index){
     if(this.state.editState){
@@ -165,8 +169,8 @@ export default class machineMgr extends React.Component {
   }
  
   actionClick(key, text, record, index){
-    let {current, pageSize} = this.state.page
-    let {data} = this.state
+    let {current, pageSize} = this.props.machines.page
+    let {data} = this.props.machines
     if(current > 1){
       index = pageSize*(current-1) + index
       record= data[index]
@@ -176,7 +180,7 @@ export default class machineMgr extends React.Component {
      <div>
         {
           record.edit?
-          <Input defaultValue={text} size="small" onChange={(e)=>{this.state.editInput[index][key]= e.target.value}}/>
+          <Input defaultValue={text} size="small" onChange={(e)=>{this.editInput[key]= e.target.value}}/>
           :
           <div className="editable-row-text">
               {text}
@@ -187,7 +191,8 @@ export default class machineMgr extends React.Component {
   }
 
   render(){
-    const {data,page} = this.state;
+    //const {data,page} = this.state;
+    const {data, page} = this.props.machines
     machineColumns.forEach((k)=>{
       switch(k.key){
         case "action":

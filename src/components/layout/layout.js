@@ -26,7 +26,6 @@ export default class layout extends React.Component {
             })
        return arr
      }
-    //let{curKey} = this.state
     return (
      <Menu 
           onClick={(e)=>{this.props.sfunc(e)}}

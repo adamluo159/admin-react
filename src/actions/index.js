@@ -6,6 +6,8 @@ export const RECV_MACHINES = 'RECV_MACHINES'
 export const ADD_MACHINE   = 'ADD_MACHINE'
 export const EDIT_MACHINE  = 'EDIT_MACHINE'
 export const SAVE_MACHINE  = 'SAVE_MACHINE'
+export const DEL_MACHINE  =  'DEL_MACHINE'
+export const PAGE_MACHINE = 'PAGE_MACHINE'
 
 export const selectMainlayout=(key)=>{
     return {
@@ -56,15 +58,31 @@ export const addMachine = (newItem)=>{
 export const editMachine = (index)=>{
     return {
         type : EDIT_MACHINE,
-        index: index,
+        index,
     }
 }
 
 export const saveMachine = (save) =>{
-    console.log("save action:", save)
     return {
         type : SAVE_MACHINE,
         save,
+    }
+}
+
+export const delMachine = (index) =>{
+    return {
+        type: DEL_MACHINE,
+        index,
+    }
+}
+
+export const pageMachine = (pagination, filters, sorter)=>{
+    return {
+        type: PAGE_MACHINE,
+        page:{
+              current: pagination.current,
+              pageSize:pagination.pageSize,
+        }
     }
 }
 

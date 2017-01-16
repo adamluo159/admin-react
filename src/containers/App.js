@@ -5,16 +5,19 @@ import {Icon,Row, Col } from 'antd';
 
 import Layout from '../components/layout/layout'
 import MachineMgr from '../components/machineMgr/machineMgr'
-import {selectMainlayout, 
-        fetchMachines, 
-        addMachine,
-        editMachine,
-        saveMachine
-} from '../actions'
+//import {selectMainlayout, 
+//        fetchMachines, 
+//        addMachine,
+//        editMachine,
+//        saveMachine
+//} from '../actions'
+
+import * as machineAction from '../actions'
 
 const mainLays = {
   "machineMgr": (e)=>(<MachineMgr machines={e.machines} initf={e.initmachines} addmachine={e.addmachine}
-                       editmachine={e.editmachine} savemachine={e.savemachine}></MachineMgr>)
+                       editmachine={e.editmachine} savemachine={e.savemachine} delmachine={e.delmachine}
+                       pagemachine={e.pagemachine}></MachineMgr>)
 }
 
 class App extends React.Component {
@@ -80,11 +83,13 @@ const mapStateToProps = state => {
 
 const mapDispatchToProps = dispatch => {
   return {
-    smainlayout: (e) => {dispatch(selectMainlayout(e.key))},
-    initmachines: () => {dispatch(fetchMachines())},
-    addmachine: (e)  => {dispatch(addMachine(e))},
-    editmachine:(index)=>{dispatch(editMachine(index))},
-    savemachine:(index)=>{dispatch(saveMachine(index))}
+    smainlayout: (e) => {dispatch(machineAction.selectMainlayout(e.key))},
+    initmachines: () => {dispatch(machineAction.fetchMachines())},
+    addmachine: (e)  => {dispatch(machineAction.addMachine(e))},
+    editmachine:(index)=>{dispatch(machineAction.editMachine(index))},
+    savemachine:(index)=>{dispatch(machineAction.saveMachine(index))},
+    delmachine:(index)=>{dispatch(machineAction.delMachine(index))},
+    pagemachine:(page, b, c)=>{dispatch(machineAction.pageMachine(page,b,c))}
   }
 }
 export default connect(mapStateToProps, mapDispatchToProps)(App);

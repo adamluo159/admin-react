@@ -97,37 +97,40 @@ export default class machineMgr extends React.Component {
  }
 
   deleteDo(index){
-    if(this.state.editState){
+    const {editState} = this.props.machines
+    if(editState){
       Message.error("存在正在编辑的选项，请保存后再删除选项")
       return 
     }
-    let {data, editInput, page} = this.state
-    let add =0
-    if(index%page.pageSize==0 && page.current > 1){
-      add = -1
-    }
-    this.setState(
-      {
-        data: [...data.slice(0,index), ...data.slice(index+1)],
-        editInput:[...editInput.slice(0,index), ...editInput.slice(index+1)],
-        page:{
-          pageSize: page.pageSize,
-          current:  page.current+add
-        }
-     }
-    )
+    this.props.delmachine(index)
+ 
+    //let {data, editInput, page} = this.state
+    //let add =0
+    //if(index%page.pageSize==0 && page.current > 1){
+    //  add = -1
+    //}
+    //this.setState(
+    //  {
+    //    data: [...data.slice(0,index), ...data.slice(index+1)],
+    //    editInput:[...editInput.slice(0,index), ...editInput.slice(index+1)],
+    //    page:{
+    //      pageSize: page.pageSize,
+    //      current:  page.current+add
+    //    }
+    // }
+    //)
   }
 
   typeSelect(key, text, record, index){
-    let {current, pageSize} = this.state.page
-    let {data} = this.state
+    let {current, pageSize} = this.props.machines.page
+    let {data} = this.props.machines
     if(current > 1){
       index = pageSize*(current-1) + index
     }
     return (
       record.edit?
       <div>
-        <Select defaultValue={typeOption[0]} size='small' onChange={(value)=>{this.state.editInput[index][key]= value}}>
+        <Select defaultValue={typeOption[0]} size='small' onChange={(value)=>{this.editInput[key]= value}}>
         {
           typeOption.map((k) => (
             <Option value={k} key={k}>{k}</Option>
@@ -143,8 +146,8 @@ export default class machineMgr extends React.Component {
   }
 
   actionHandle(text, record, index){
-    let {current, pageSize} = this.state.page
-    let {data} = this.state
+    let {current, pageSize} = this.props.machines.page
+    let {data} = this.props.machines
     if(current > 1){
       index = pageSize*(current-1) + index
     }
@@ -212,12 +215,7 @@ export default class machineMgr extends React.Component {
       <div>
         <Button type="primary" onClick={(e) => (this.addClick(e))}>Add</Button>
         <Table dataSource={data} columns={machineColumns} pagination={page} onChange={(pagination, filters, sorter)=>{
-          this.setState({
-            page:{
-              current: pagination.current,
-              pageSize:pagination.pageSize,
-            }
-          })
+          this.props.pagemachine(pagination, filters, sorter)
        }}/>
       </div>
     )

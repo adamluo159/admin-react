@@ -23,11 +23,11 @@ export default class machineMgr extends React.Component {
    }
   }
   componentWillMount(){
-    this.props.initf();
+    this.props.dispatch.fetchMachines();
   }
 
   addClick(e){
-    const {editState} = this.props.machines
+    const {editState} = this.props.data
     if(editState){
       Message.error("存在正在编辑的选项，请保存后再添加!")
       return 
@@ -39,7 +39,8 @@ export default class machineMgr extends React.Component {
      outIP : "",
      type : "login",
     }
-    this.props.addmachine({
+    console.log(this.props.dispatch)
+    this.props.dispatch.addMachine({
       ...this.editInput,
       edit:true,
       key:"",
@@ -47,17 +48,17 @@ export default class machineMgr extends React.Component {
   }
 
   SaveDo(index){
-    const {editState, data} = this.props.machines
+    const {editState, data} = this.props.data
     if(!editState){
       Message.error("存在正在编辑的选项，请保存后再添加!")
       return 
     }
     let editInput = this.editInput
-    this.props.savemachine({
+    this.props.dispatch.saveMachine({
       index,
       editInput,
     })
-    //const {data} = this.props.machines
+    //const {data} = this.props.data
 
     //let {data} = this.state
     //let editInput = this.state.editInput[index]
@@ -81,25 +82,25 @@ export default class machineMgr extends React.Component {
   }
 
   editDo(index){
-    const {editState} = this.props.machines
+    const {editState} = this.props.data
     if(editState){
       Message.error("存在正在编辑的选项，请保存后再添加!")
       return 
     }
-    const {data} = this.props.machines
+    const {data} = this.props.data
     this.editInput = {
       ...data[index]
     }
-    this.props.editmachine(index)
+    this.props.dispatch.editMachine(index)
  }
 
   deleteDo(index){
-    const {editState} = this.props.machines
+    const {editState} = this.props.data
     if(editState){
       Message.error("存在正在编辑的选项，请保存后再删除选项")
       return 
     }
-    this.props.delmachine(index)
+    this.props.dispatch.delMachine(index)
  
     //let {data, editInput, page} = this.state
     //let add =0
@@ -119,8 +120,8 @@ export default class machineMgr extends React.Component {
   }
 
   typeSelect(key, text, record, index){
-    let {current, pageSize} = this.props.machines.page
-    let {data} = this.props.machines
+    let {current, pageSize} = this.props.data.page
+    let {data} = this.props.data
     if(current > 1){
       index = pageSize*(current-1) + index
     }
@@ -143,8 +144,8 @@ export default class machineMgr extends React.Component {
   }
 
   actionHandle(text, record, index){
-    let {current, pageSize} = this.props.machines.page
-    let {data} = this.props.machines
+    let {current, pageSize} = this.props.data.page
+    let {data} = this.props.data
     if(current > 1){
       index = pageSize*(current-1) + index
     }
@@ -169,8 +170,8 @@ export default class machineMgr extends React.Component {
   }
  
   actionClick(key, text, record, index){
-    let {current, pageSize} = this.props.machines.page
-    let {data} = this.props.machines
+    let {current, pageSize} = this.props.data.page
+    let {data} = this.props.data
     if(current > 1){
       index = pageSize*(current-1) + index
       record= data[index]
@@ -191,8 +192,7 @@ export default class machineMgr extends React.Component {
   }
 
   render(){
-    //const {data,page} = this.state;
-    const {data, page} = this.props.machines
+    const {data, page} = this.props.data
     machineColumns.forEach((k)=>{
       switch(k.key){
         case "action":
@@ -212,7 +212,7 @@ export default class machineMgr extends React.Component {
       <div>
         <Button type="primary" onClick={(e) => (this.addClick(e))}>Add</Button>
         <Table dataSource={data} columns={machineColumns} pagination={page} onChange={(pagination, filters, sorter)=>{
-          this.props.pagemachine({page:{current:pagination.current, pageSize:pagination.pageSize}})
+          this.props.dispatch.pageMachine({page:{current:pagination.current, pageSize:pagination.pageSize}})
        }}/>
       </div>
     )

@@ -1,23 +1,14 @@
 import { combineReducers } from 'redux'
-//import {REQ_MACHINES, 
-//        RECV_MACHINES,
-//        ADD_MACHINE,
-//        EDIT_MACHINE,
-//        SAVE_MACHINE,
-//        DEL_MACHINE,
-//        SELECT_MAINLAYOUT_KEY,
-//} from '../actions'
-
-import * as machine from '../actions'
+import {actions} from '../actions'
 
 const initState = {
     loading : true,
 }
 const layout = (state ={selectKey: 'machineMgr'}, action)=>{
     switch (action.type) {
-        case machine.SELECT_MAINLAYOUT_KEY:
+        case actions.SELECT_MAINLAYOUT_KEY:
             return {
-                selectKey: action.selectKey,
+                selectKey: action.playload,
             }
         default:
             return state
@@ -92,31 +83,24 @@ const delmachineData =(oldState, index) =>{
      }
 }
 
+const objReduxHandle = (state, playload)=>({...state, ...playload})
+const reduxHandle = {
+}
+reduxHandle[actions.RECV_MACHINES] = objReduxHandle
+reduxHandle[actions.ADD_MACHINE]   = addmachineData
+reduxHandle[actions.EDIT_MACHINE]  = editmachineData
+reduxHandle[actions.PAGE_MACHINE]  = objReduxHandle
+reduxHandle[actions.DEL_MACHINE]   = delmachineData
+reduxHandle[actions.SAVE_MACHINE]  = savemachineData
+
+
 const machines = (state= machinesInitState, action)=>{
-    switch(action.type){
-        case machine.REQ_MACHINES:
-            return state;
-        case machine.RECV_MACHINES:
-            return {
-                ...state,
-                data: action.data,
-                cur: action.data.length,
-            }
-        case machine.ADD_MACHINE:
-            return addmachineData(state, action.newItem)
-        case machine.EDIT_MACHINE:
-            return editmachineData(state, action.index)
-        case machine.SAVE_MACHINE:
-            return savemachineData(state, action.save)
-        case machine.DEL_MACHINE:
-            return delmachineData(state, action.index)
-        case machine.PAGE_MACHINE:
-            return {
-                ...state,
-                page:action.page,
-            }
-        default:
-            return state;
+    let handle = reduxHandle[action.type]
+    if(handle){
+        return handle(state, action.playload)
+    }
+    else{
+        return state
     }
 }
 

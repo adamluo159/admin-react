@@ -1,88 +1,43 @@
 import fetch from 'isomorphic-fetch'
-export const SELECT_MAINLAYOUT_KEY='SELECT_MAINLAYOUT_KEY'
 
-export const REQ_MACHINES  = 'REQ_MACHINES'
-export const RECV_MACHINES = 'RECV_MACHINES'
-export const ADD_MACHINE   = 'ADD_MACHINE'
-export const EDIT_MACHINE  = 'EDIT_MACHINE'
-export const SAVE_MACHINE  = 'SAVE_MACHINE'
-export const DEL_MACHINE  =  'DEL_MACHINE'
-export const PAGE_MACHINE = 'PAGE_MACHINE'
+const actionCreator = (regActionType,type)=>{
+   regActionType[type] = type
+   return (playload)=>({
+        type,
+        playload
+   }
+)}
 
-export const selectMainlayout=(key)=>{
-    return {
-        type: SELECT_MAINLAYOUT_KEY,
-        selectKey: key
-    }
-} 
-
-export const reqMachines = ()=>{
-    return {
-        type: REQ_MACHINES,
-    }
-}
-
-export const recvMachines = (json)=>{
-    return {
-        type: RECV_MACHINES,
-        data: json,
-    }
-}
-
-export const fetchMachines = ()=>{
+const fetchMachines = ()=>{
     return dispath=>{
-        dispath(reqMachines())
-        dispath(recvMachines(
-            [{  
+        dispath(machine.reqMachines())
+        let data = [{
                key: "host0",
                hostname: 'host0',
                IP: "192.168.1.1",
                outIP:"192.168.1.1",
                type :"login",
                edit: false,
-            }]
-        ))
-        //return fetch('')
-        //.then(response=>response.json())
-        //.then(json=>dispath(RecvLayoutData(loading, json)))
+        }]
+        dispath(machine.recvMachines({
+            data:data
+        }))
+       // return fetch('')
+       // .then(response=>response.json())
+       // .then(json=>dispath(RecvLayoutData(loading, json)))
     }
 }
 
-export const addMachine = (newItem)=>{
-    return {
-        type: ADD_MACHINE,
-        newItem,
-    }
+export const actions={}
+const  machine={
+    "selectMainlayout": actionCreator(actions, 'SELECT_MAINLAYOUT_KEY'),
+    "reqMachines":      actionCreator(actions, 'REQ_MACHINES'),
+    "recvMachines":     actionCreator(actions, 'RECV_MACHINES'),
+    "addMachine":       actionCreator(actions, 'ADD_MACHINE'),
+    "editMachine":      actionCreator(actions, 'EDIT_MACHINE'),
+    "saveMachine":      actionCreator(actions, 'SAVE_MACHINE'),
+    "delMachine" :      actionCreator(actions, 'DEL_MACHINE'),
+    "pageMachine" :     actionCreator(actions, 'PAGE_MACHINE'),
+    "fetchMachines":    fetchMachines,
 }
-
-export const editMachine = (index)=>{
-    return {
-        type : EDIT_MACHINE,
-        index,
-    }
-}
-
-export const saveMachine = (save) =>{
-    return {
-        type : SAVE_MACHINE,
-        save,
-    }
-}
-
-export const delMachine = (index) =>{
-    return {
-        type: DEL_MACHINE,
-        index,
-    }
-}
-
-export const pageMachine = (pagination, filters, sorter)=>{
-    return {
-        type: PAGE_MACHINE,
-        page:{
-              current: pagination.current,
-              pageSize:pagination.pageSize,
-        }
-    }
-}
-
+export default machine

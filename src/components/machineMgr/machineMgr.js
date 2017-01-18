@@ -23,7 +23,6 @@ export default class machineMgr extends React.Component {
    }
   }
   componentWillMount(){
-    console.log("machines")
     this.props.initf();
   }
 
@@ -49,12 +48,10 @@ export default class machineMgr extends React.Component {
 
   SaveDo(index){
     const {editState, data} = this.props.machines
-    console.log(editState)
     if(!editState){
       Message.error("存在正在编辑的选项，请保存后再添加!")
       return 
     }
-    console.log("lalala", data, "ddd", this.editInput, index)
     let editInput = this.editInput
     this.props.savemachine({
       index,
@@ -215,7 +212,7 @@ export default class machineMgr extends React.Component {
       <div>
         <Button type="primary" onClick={(e) => (this.addClick(e))}>Add</Button>
         <Table dataSource={data} columns={machineColumns} pagination={page} onChange={(pagination, filters, sorter)=>{
-          this.props.pagemachine(pagination, filters, sorter)
+          this.props.pagemachine({page:{current:pagination.current, pageSize:pagination.pageSize}})
        }}/>
       </div>
     )

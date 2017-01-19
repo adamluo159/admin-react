@@ -10,7 +10,6 @@ import actionDispatchFunc from '../actions'
 
 const mainLays = {
   "machineMgr": (e) => {
-    console.log(e.machineDispatch);
     return <MachineMgr data={e.machines} dispatch={e.machineDispatch}></MachineMgr>
   }
 }
@@ -31,7 +30,7 @@ class App extends React.Component {
               : null}
           </Col>
           <Col span={4} pull={20}>
-            <Layout sfunc={this.props.smainlayout}></Layout>
+            <Layout sfunc={this.props.machineDispatch.selectMainlayout}></Layout>
           </Col>
         </Row>
       </div>

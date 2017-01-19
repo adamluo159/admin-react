@@ -39,7 +39,6 @@ export default class machineMgr extends React.Component {
      outIP : "",
      type : "login",
     }
-    console.log(this.props.dispatch)
     this.props.dispatch.addMachine({
       ...this.editInput,
       edit:true,

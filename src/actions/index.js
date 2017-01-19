@@ -1,12 +1,12 @@
 import fetch from 'isomorphic-fetch'
 const actionCreator = (regActionType, type) => {
     regActionType[type] = type
-    return (playload) => {console.log("action:",type,playload); return {type, playload}}
+    return (playload) => ({type, playload})
 }
 
 const fetchMachines = () => {
     return dispath => {
-        //dispath(machineDispatch.reqMachines())
+        dispath(machineDispatch.reqMachines())
         let data = [
             {
                 key: "host0",

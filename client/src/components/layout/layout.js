@@ -29,8 +29,6 @@ export default class layout extends React.Component {
     return (
      <Menu 
           onClick={(e)=>{this.props.sfunc({selectKey:e.key})}}
-          //style={{ width: 320 }}
-          //defaultOpenKeys={['sub1']}
           mode="inline"
           theme="dark">
           {parseMenu(adminMenu)}

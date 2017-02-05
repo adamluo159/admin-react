@@ -7,19 +7,9 @@ const actionCreator = (regActionType, type) => {
 const fetchMachines = () => {
     return dispath => {
         dispath(machineDispatch.reqMachines())
-        let data = [
-            {
-                key: "host0",
-                hostname: 'host0',
-                IP: "192.168.1.1",
-                outIP: "192.168.1.1",
-                type: "login",
-                edit: false
-            }
-        ]
-        dispath(machineDispatch.recvMachines({data: data}))
-        // return fetch('') .then(response=>response.json())
-        // .then(json=>dispath(RecvLayoutData(loading, json)))
+        return fetch("/machines",
+        ) .then(response=>response.json())
+          .then(json=>dispath(machineDispatch.recvMachines({data: json})))
     }
 }
 
@@ -33,6 +23,7 @@ const machineDispatch = {
         "saveMachine": actionCreator(actions, 'SAVE_MACHINE'),
         "delMachine": actionCreator(actions, 'DEL_MACHINE'),
         "pageMachine": actionCreator(actions, 'PAGE_MACHINE'),
+        "resetMachineState": actionCreator(actions, 'RESET_MACHINE_STATE'),
         "fetchMachines": fetchMachines
 }
 

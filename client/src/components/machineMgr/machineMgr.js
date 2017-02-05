@@ -6,23 +6,16 @@ import {typeOption, machineColumns} from '../../constant'
 const Option = Select.Option;
 export default class machineMgr extends React.Component {
   constructor(props){
-    super(props);
-    this.state = {
-      cur: 0,
-      editState: false,
-      editInput:[],
-      data : [],
-      page:{
-        current: 1,
-        pageSize:3,
-      },
-   }
+   super(props);
    this.checkFunc={
      "IP": checkIpFormat,
      "outIP": checkIpFormat,
    }
   }
   componentWillMount(){
+    this.props.dispatch.resetMachineState({
+      editState: false
+    })
     this.props.dispatch.fetchMachines();
   }
 
@@ -57,27 +50,6 @@ export default class machineMgr extends React.Component {
       index,
       editInput,
     })
-    //const {data} = this.props.data
-
-    //let {data} = this.state
-    //let editInput = this.state.editInput[index]
-
-    //for (var k of Object.keys(this.checkFunc)) {   
-    //  let v = editInput[k]
-    //  if(editInput[k] !== undefined){
-    //    if(this.checkFunc[k](v)=== false){
-    //       Message.error("格式错误")
-    //       return
-    //    }
-    //  }
-    //}
-    //editInput.edit = false
-    //this.setState(
-    //  {
-    //    data: [...data.slice(0,index), editInput, ...data.slice(index+1)],
-    //    editState: false
-    //  }
-    //)
   }
 
   editDo(index){
@@ -100,22 +72,6 @@ export default class machineMgr extends React.Component {
       return 
     }
     this.props.dispatch.delMachine(index)
- 
-    //let {data, editInput, page} = this.state
-    //let add =0
-    //if(index%page.pageSize==0 && page.current > 1){
-    //  add = -1
-    //}
-    //this.setState(
-    //  {
-    //    data: [...data.slice(0,index), ...data.slice(index+1)],
-    //    editInput:[...editInput.slice(0,index), ...editInput.slice(index+1)],
-    //    page:{
-    //      pageSize: page.pageSize,
-    //      current:  page.current+add
-    //    }
-    // }
-    //)
   }
 
   typeSelect(key, text, record, index){

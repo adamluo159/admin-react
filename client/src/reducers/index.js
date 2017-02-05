@@ -17,7 +17,6 @@ const layout = (state = {
 
 const machinesInitState = {
     editState: false,
-    editInput: {},
     data: [],
     page: {
         current: 1,
@@ -97,12 +96,14 @@ const delmachineData = (oldState, index) => {
     }
 }
 
-const objReduxHandle = (state, playload) => ({
-    ...state,
+const objReduxHandle = (oldState, playload) => {
+    return {
+    ...oldState,
     ...playload
-})
+}}
 const reduxHandle = {}
 reduxHandle[actions.RECV_MACHINES] = objReduxHandle
+reduxHandle[actions.RESET_MACHINE_STATE] = objReduxHandle
 reduxHandle[actions.ADD_MACHINE] = addmachineData
 reduxHandle[actions.EDIT_MACHINE] = editmachineData
 reduxHandle[actions.PAGE_MACHINE] = objReduxHandle

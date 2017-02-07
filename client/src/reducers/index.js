@@ -21,18 +21,15 @@ const machinesInitState = {
     page: {
         current: 1,
         pageSize: 3
-    },
-    cur: 0
+    }
 }
 
 const addmachineData = (oldState, newItem) => {
-    const {cur, page, data} = oldState
-    newItem.key += cur
-    newItem.hostname += cur
+    const {page, data} = oldState
+    newItem.key = newItem.hostname
     return {
         editState: true,
         page: page,
-        cur: cur + 1,
         data: [
             ...data,
             newItem
@@ -61,17 +58,16 @@ const editmachineData = (oldState, index) => {
 
 const savemachineData = (oldState, save) => {
     const {data} = oldState
-    let saveItem = {
-        ...save.editInput,
-        key: data[save.index].key,
-        edit: false
+    const {index, rsp} = save
+    if (rsp.Result !== "OK") {
+        return
     }
     return {
         ...oldState,
         data: [
-            ...data.slice(0, save.index),
-            saveItem,
-            ...data.slice(save.index + 1)
+            ...data.slice(0, index),
+            rsp.Item,
+            ...data.slice(index + 1)
         ],
         editState: false
     }
@@ -95,14 +91,25 @@ const delmachineData = (oldState, index) => {
         }
     }
 }
+const initMachine = (oldState, playload) => {
+    if (playload.data == null) {
+        return oldState
+    }
+    return {
+        ...oldState,
+        ...playload
+    }
+}
 
 const objReduxHandle = (oldState, playload) => {
     return {
-    ...oldState,
-    ...playload
-}}
+        ...oldState,
+        ...playload
+    }
+}
+
 const reduxHandle = {}
-reduxHandle[actions.RECV_MACHINES] = objReduxHandle
+reduxHandle[actions.RECV_MACHINES] = initMachine
 reduxHandle[actions.RESET_MACHINE_STATE] = objReduxHandle
 reduxHandle[actions.ADD_MACHINE] = addmachineData
 reduxHandle[actions.EDIT_MACHINE] = editmachineData

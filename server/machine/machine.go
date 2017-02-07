@@ -21,6 +21,11 @@ type Machine struct {
 	Edit     bool   `json:"edit" bson:"edit"`
 }
 
+type MachineRsp struct {
+	Result string
+	Item   Machine
+}
+
 var (
 	cl *mgo.Collection
 )
@@ -43,38 +48,49 @@ func AddMachine(c echo.Context) error {
 		return err
 	}
 
-	s := []string{"{'hostname': 'host101'}"}
-	i := mgo.Index{
-		Key:    s,
-		Unique: true,
-	}
-	err = cl.EnsureIndex(i)
-	if err != nil {
-		fmt.Println(err.Error())
-		return err
-	}
+	//s := []string{"{'hostname': 'host101'}"}
+	//i := mgo.Index{
+	//	Key:    s,
+	//	Unique: true,
+	//}
+	//err = cl.EnsureIndex(i)
+	//if err != nil {
+	//	fmt.Println(err.Error())
+	//	return err
+	//}
 	err = cl.Insert(m)
 	if err != nil {
 		fmt.Println(err.Error())
 		return err
 	}
-	return nil
+	fmt.Println("aaaa", m)
+	ret := MachineRsp{}
+	ret.Item = m
+	ret.Result = "OK"
+	return c.JSON(http.StatusOK, ret)
 }
 
 //保存
 func SaveMachine(c echo.Context) error {
+	fmt.Println("recv save machine")
 	m, err := getM(&c)
 	if err != nil {
 		fmt.Println(err.Error())
 		return err
 	}
+	fmt.Println("get save info:", m)
 	query := bson.M{"hostname": m.Hostname}
 	err = cl.Update(query, &m)
 	if err != nil {
 		fmt.Println(err.Error())
 		return err
 	}
-	return nil
+	ret := MachineRsp{}
+	ret.Item = *m
+	ret.Result = "OK"
+	err = c.JSON(http.StatusOK, ret)
+	fmt.Println("wwwww", err.Error())
+	return err
 }
 
 //删除
@@ -96,11 +112,6 @@ func DelMachine(c echo.Context) error {
 func getM(c *echo.Context) (*Machine, error) {
 	m := Machine{}
 	err := (*c).Bind(&m)
-	if err != nil {
-		fmt.Println(err.Error())
-		return nil, err
-	}
-	err = cl.Insert(m)
 	if err != nil {
 		fmt.Println(err.Error())
 		return nil, err

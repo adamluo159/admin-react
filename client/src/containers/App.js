@@ -42,14 +42,6 @@ App.PropTypes = {
   mainLayouts: PropTypes.shape({
     machines: PropTypes.arrayOf({
       editState: PropTypes.bool.isRequired,
-      editInput: PropTypes.shape({
-        key: PropTypes.string.isRequired,
-        hostname: PropTypes.string.isRequired,
-        IP: PropTypes.string.isRequired,
-        outIP: PropTypes.string.isRequired,
-        type: PropTypes.string.isRequired,
-        edit: PropTypes.bool.isRequired
-      }),
       data: PropTypes.arrayOf(PropTypes.shape({
         key: PropTypes.string.isRequired,
         hostname: PropTypes.string.isRequired,

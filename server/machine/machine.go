@@ -1,7 +1,6 @@
 package machine
 
 import (
-	"encoding/json"
 	"fmt"
 	"net/http"
 
@@ -21,9 +20,11 @@ type Machine struct {
 	Edit     bool   `json:"edit" bson:"edit"`
 }
 
+//回复信息
 type MachineRsp struct {
 	Result string
 	Item   Machine
+	Items  []Machine
 }
 
 var (
@@ -32,81 +33,68 @@ var (
 
 //获取机器信息
 func GetMachines(c echo.Context) error {
-	var a []Machine
-	err := cl.Find(nil).All(&a)
-	fmt.Println("machine request:", err, &a)
-	b, err := json.Marshal(&a)
-	return c.Blob(http.StatusOK, "application/json", b)
+	rsp := MachineRsp{}
+	cl.Find(nil).All(&rsp.Items)
+	if len(rsp.Items) > 0 {
+		rsp.Result = "OK"
+	} else {
+		rsp.Result = "NOT ITEM"
+	}
+	return c.JSON(http.StatusOK, rsp)
 }
 
 //添加机器信息
 func AddMachine(c echo.Context) error {
-	m := Machine{}
-	err := c.Bind(&m)
+	m, err := getM(&c)
 	if err != nil {
-		fmt.Println(err.Error())
 		return err
 	}
-
-	//s := []string{"{'hostname': 'host101'}"}
-	//i := mgo.Index{
-	//	Key:    s,
-	//	Unique: true,
-	//}
-	//err = cl.EnsureIndex(i)
-	//if err != nil {
-	//	fmt.Println(err.Error())
-	//	return err
-	//}
+	ret := MachineRsp{
+		Result: "OK",
+	}
 	err = cl.Insert(m)
 	if err != nil {
-		fmt.Println(err.Error())
-		return err
+		ret.Result = "FALSE"
+	} else {
+		ret.Item = *m
 	}
-	fmt.Println("aaaa", m)
-	ret := MachineRsp{}
-	ret.Item = m
-	ret.Result = "OK"
 	return c.JSON(http.StatusOK, ret)
 }
 
 //保存
 func SaveMachine(c echo.Context) error {
-	fmt.Println("recv save machine")
 	m, err := getM(&c)
 	if err != nil {
-		fmt.Println(err.Error())
 		return err
 	}
 	fmt.Println("get save info:", m)
+	ret := MachineRsp{
+		Result: "OK",
+	}
 	query := bson.M{"hostname": m.Hostname}
 	err = cl.Update(query, &m)
 	if err != nil {
-		fmt.Println(err.Error())
-		return err
+		ret.Result = "FALSE"
+	} else {
+		ret.Item = *m
 	}
-	ret := MachineRsp{}
-	ret.Item = *m
-	ret.Result = "OK"
-	err = c.JSON(http.StatusOK, ret)
-	fmt.Println("wwwww", err.Error())
-	return err
+	return c.JSON(http.StatusOK, ret)
 }
 
 //删除
 func DelMachine(c echo.Context) error {
 	m, err := getM(&c)
 	if err != nil {
-		fmt.Println(err.Error())
 		return err
 	}
+	ret := MachineRsp{}
+	ret.Result = "OK"
 	query := bson.M{"hostname": m.Hostname}
 	err = cl.Remove(query)
 	if err != nil {
-		fmt.Println(err.Error())
-		return err
+		ret.Result = "FALSE"
 	}
-	return nil
+	return c.JSON(http.StatusOK, ret)
 }
 
 func getM(c *echo.Context) (*Machine, error) {

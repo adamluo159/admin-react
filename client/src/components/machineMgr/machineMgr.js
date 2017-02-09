@@ -15,20 +15,24 @@ const Option = Select.Option;
 export default class machineMgr extends React.Component {
   constructor(props) {
     super(props);
-    this.checkFunc = {
-      "IP": checkIpFormat,
-      "outIP": checkIpFormat
+    this.hosts = {
+      "hosttmp": true
     }
   }
   componentWillMount() {
     this
       .props
       .dispatch
-      .resetMachineState({editState: false})
-    this
-      .props
-      .dispatch
-      .fetchMachines();
+      .fetchInitMachines(() => this.initProp());
+  }
+
+  initProp() {
+    let {data} = this.props.data
+    console.log(data)
+    data.forEach((v, index) => {
+      this.hosts[v.hostname] = true
+    })
+    console.log("initProp", this.hosts)
   }
 
   addClick(e) {
@@ -42,33 +46,51 @@ export default class machineMgr extends React.Component {
       hostname: 'hosttmp',
       IP: "",
       outIP: "",
-      type: "login"
+      type: "login",
+      key: "tmp"
     }
+
     this.new = true
     this
       .props
       .dispatch
       .addMachine({
         ...this.editInput,
-        edit: true,
-        key: ""
+        edit: true
       });
   }
 
-  SaveDo(index) {
+  SaveDo(index, record) {
     const {editState, data} = this.props.data
     if (!editState) {
       Message.error("存在正在编辑的选项，请保存后再添加!")
       return
     }
+    if (!checkIpFormat(this.editInput.IP) || !checkIpFormat(this.editInput.outIP)) {
+      Message.error("保存失败，IP不合法，请重新修改")
+      return
+    }
+    if (this.hosts[this.editInput.hostname]) {
+      Message.error("主机名重复，请重新修改")
+      return
+    }
+    this.editInput.key = this.editInput.hostname
     let playload = {
       index: index,
-      machine:this.editInput
+      machine: this.editInput,
+      oldmachine: record
     }
+
     if (this.new) {
-      this.props.dispatch.fetchAddMachine(playload)
+      this
+        .props
+        .dispatch
+        .fetchAddMachine(playload)
     } else {
-      this.props.dispatch.fetchSaveMachine(playload)
+      this
+        .props
+        .dispatch
+        .fetchSaveMachine(playload)
     }
     this.new = false
   }
@@ -83,10 +105,13 @@ export default class machineMgr extends React.Component {
     this.editInput = {
       ...data[index]
     }
-    this.props.dispatch.editMachine(index)
+    this
+      .props
+      .dispatch
+      .editMachine(index)
   }
 
-  deleteDo(index) {
+  deleteDo(index, record) {
     const {editState} = this.props.data
     if (editState) {
       Message.error("存在正在编辑的选项，请保存后再删除选项")
@@ -95,7 +120,12 @@ export default class machineMgr extends React.Component {
     this
       .props
       .dispatch
-      .delMachine(index)
+      .fetchDelMachine({
+        index: index,
+        fetchDel: {
+          hostname: record.hostname
+        }
+      })
   }
 
   typeSelect(key, text, record, index) {
@@ -133,12 +163,14 @@ export default class machineMgr extends React.Component {
       <div>
         {record.edit
           ? <div>
-              <a onClick={(e) => {
-                this.SaveDo(index)
+              <a
+                onClick={(e) => {
+                this.SaveDo(index, record)
               }}>save</a>
               <span className="ant-divider"/>
-              <a onClick={(e) => {
-                this.deleteDo(index)
+              <a
+                onClick={(e) => {
+                this.deleteDo(index, record)
               }}>delete</a>
             </div>
           : <div>
@@ -147,7 +179,7 @@ export default class machineMgr extends React.Component {
             }}>edit</a>
             <span className="ant-divider"/>
             <a onClick={(e) => {
-              this.deleteDo(index)
+              this.deleteDo(index, record)
             }}>delete</a>
           </div>
 }

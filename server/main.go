@@ -11,7 +11,7 @@ import (
 func ServerHeader(next echo.HandlerFunc) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		err := next(c)
-		fmt.Println("aaaaaa", c.Request().RequestURI, c.Request().Method, err)
+		fmt.Println(c.Request().Method, c.Request().RequestURI, err)
 		return err
 	}
 }

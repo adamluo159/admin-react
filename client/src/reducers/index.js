@@ -59,9 +59,7 @@ const editmachineData = (oldState, index) => {
 const savemachineData = (oldState, save) => {
     const {data} = oldState
     const {index, rsp} = save
-    if (rsp.Result !== "OK") {
-        return
-    }
+    console.log(save)
     return {
         ...oldState,
         data: [
@@ -91,15 +89,6 @@ const delmachineData = (oldState, index) => {
         }
     }
 }
-const initMachine = (oldState, playload) => {
-    if (playload.data == null) {
-        return oldState
-    }
-    return {
-        ...oldState,
-        ...playload
-    }
-}
 
 const objReduxHandle = (oldState, playload) => {
     return {
@@ -109,8 +98,7 @@ const objReduxHandle = (oldState, playload) => {
 }
 
 const reduxHandle = {}
-reduxHandle[actions.RECV_MACHINES] = initMachine
-reduxHandle[actions.RESET_MACHINE_STATE] = objReduxHandle
+reduxHandle[actions.INIT_MACHINES] = objReduxHandle
 reduxHandle[actions.ADD_MACHINE] = addmachineData
 reduxHandle[actions.EDIT_MACHINE] = editmachineData
 reduxHandle[actions.PAGE_MACHINE] = objReduxHandle

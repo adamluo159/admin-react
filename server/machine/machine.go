@@ -20,6 +20,11 @@ type Machine struct {
 	Edit     bool   `json:"edit" bson:"edit"`
 }
 
+type SaveMachineReq struct {
+	Oldhost string
+	Item    Machine
+}
+
 //回复信息
 type MachineRsp struct {
 	Result string
@@ -63,21 +68,41 @@ func AddMachine(c echo.Context) error {
 
 //保存
 func SaveMachine(c echo.Context) error {
-	m, err := getM(&c)
-	if err != nil {
-		return err
-	}
-	fmt.Println("get save info:", m)
+	m := SaveMachineReq{}
 	ret := MachineRsp{
 		Result: "OK",
 	}
-	query := bson.M{"hostname": m.Hostname}
-	err = cl.Update(query, &m)
+	err := c.Bind(&m)
 	if err != nil {
+		fmt.Println(err.Error())
 		ret.Result = "FALSE"
-	} else {
-		ret.Item = *m
+		return c.JSON(http.StatusOK, ret)
 	}
+	fmt.Println("get save info:", m)
+	if m.Oldhost != m.Item.Hostname {
+		del := bson.M{"hostname": m.Oldhost}
+		err = cl.Remove(del)
+		if err != nil {
+			fmt.Println(err.Error())
+		}
+		err = cl.Insert(m.Item)
+		if err != nil {
+			fmt.Println(err.Error())
+			ret.Result = "FALSE"
+		} else {
+			ret.Item = m.Item
+		}
+	} else {
+		query := bson.M{"hostname": m.Item.Hostname}
+		err = cl.Update(query, &m.Item)
+		if err != nil {
+			fmt.Println("SaveMachine, update:", err.Error())
+			ret.Result = "FALSE"
+		} else {
+			ret.Item = m.Item
+		}
+	}
+
 	return c.JSON(http.StatusOK, ret)
 }
 
@@ -114,6 +139,16 @@ func Register(e *echo.Echo) {
 		fmt.Printf("cannt find Collection about machine")
 		panic(0)
 	}
+	i := mgo.Index{
+		Key:    []string{"key", "hostname"},
+		Unique: true,
+	}
+	err := cl.EnsureIndex(i)
+	if err != nil {
+		fmt.Printf("mongodb ensureindex err:%s", err.Error())
+		panic(0)
+	}
+
 	e.GET("/machine", GetMachines)
 	e.POST("/machine/add", AddMachine)
 	e.POST("/machine/save", SaveMachine)

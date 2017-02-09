@@ -9,7 +9,6 @@ export default class login extends React.Component {
 
   handleSubmit(e) {
     e.preventDefault();
-    console.log(e.target.userName.value)
     let a = {
       user: e.target.userName.value,
       pwd:e.target.password.value,

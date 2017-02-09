@@ -28,11 +28,9 @@ export default class machineMgr extends React.Component {
 
   initProp() {
     let {data} = this.props.data
-    console.log(data)
     data.forEach((v, index) => {
       this.hosts[v.hostname] = true
     })
-    console.log("initProp", this.hosts)
   }
 
   addClick(e) {
@@ -50,7 +48,6 @@ export default class machineMgr extends React.Component {
       key: "tmp"
     }
 
-    this.new = true
     this
       .props
       .dispatch
@@ -71,31 +68,37 @@ export default class machineMgr extends React.Component {
       return
     }
     if (this.hosts[this.editInput.hostname]) {
-      Message.error("主机名重复，请重新修改")
-      return
+        Message.error("主机名重复，请重新修改")
+        return
     }
+    console.log("saveeeeeeee", this.hosts)
+
     this.editInput.key = this.editInput.hostname
+    let newItem = record.key !== record.hostname
     let playload = {
       index: index,
       machine: this.editInput,
-      oldmachine: record
+      cb:(newhost, oldhost) => {
+         if(oldhost) {delete this.hosts[oldhost]}
+         this.hosts[newhost]= true
+        }
     }
 
-    if (this.new) {
+    if (newItem) {
       this
         .props
         .dispatch
         .fetchAddMachine(playload)
     } else {
+      playload.oldmachine = record
       this
         .props
         .dispatch
         .fetchSaveMachine(playload)
     }
-    this.new = false
   }
 
-  editDo(index) {
+  editDo(index,record) {
     const {editState} = this.props.data
     if (editState) {
       Message.error("存在正在编辑的选项，请保存后再添加!")
@@ -109,6 +112,7 @@ export default class machineMgr extends React.Component {
       .props
       .dispatch
       .editMachine(index)
+    delete this.hosts[record.hostname] 
   }
 
   deleteDo(index, record) {
@@ -124,11 +128,12 @@ export default class machineMgr extends React.Component {
         index: index,
         fetchDel: {
           hostname: record.hostname
-        }
+        },
+        delCB:() => delete this.hosts[record.hostname]
       })
   }
 
-  typeSelect(key, text, record, index) {
+  typeSelect(text, record, index) {
     let {current, pageSize} = this.props.data.page
     let {data} = this.props.data
     if (current > 1) {
@@ -140,7 +145,7 @@ export default class machineMgr extends React.Component {
             defaultValue={typeOption[0]}
             size='small'
             onChange={(value) => {
-            this.editInput[key] = value
+            this.editInput[record.type] = value
           }}>
             {typeOption.map((k) => (
               <Option value={k} key={k}>{k}</Option>
@@ -175,7 +180,7 @@ export default class machineMgr extends React.Component {
             </div>
           : <div>
             <a onClick={(e) => {
-              this.editDo(index)
+              this.editDo(index, record)
             }}>edit</a>
             <span className="ant-divider"/>
             <a onClick={(e) => {
@@ -220,7 +225,7 @@ export default class machineMgr extends React.Component {
           k.render = (text, record, index) => (this.actionHandle(text, record, index))
           break
         case "type":
-          k.render = (text, record, index) => (this.typeSelect(k.key, text, record, index))
+          k.render = (text, record, index) => (this.typeSelect(text, record, index))
           break
         case 'describe':
           break

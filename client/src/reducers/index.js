@@ -26,7 +26,6 @@ const machinesInitState = {
 
 const addmachineData = (oldState, newItem) => {
     const {page, data} = oldState
-    newItem.key = newItem.hostname
     return {
         editState: true,
         page: page,
@@ -59,7 +58,6 @@ const editmachineData = (oldState, index) => {
 const savemachineData = (oldState, save) => {
     const {data} = oldState
     const {index, rsp} = save
-    console.log(save)
     return {
         ...oldState,
         data: [
@@ -86,7 +84,8 @@ const delmachineData = (oldState, index) => {
         page: {
             pageSize: page.pageSize,
             current: page.current + add
-        }
+        },
+        editState: false
     }
 }
 

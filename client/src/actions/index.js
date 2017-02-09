@@ -5,7 +5,6 @@ const actionCreator = (regActionType, type) => {
 }
 
 const rspInitMachines =(dispatch, initFunc, rsp) =>{
-    console.log("initmachine:", rsp)
     if (rsp.Result === "OK") {
         dispatch(machineDispatch.InitMachines({
             data: rsp.Items,
@@ -25,8 +24,8 @@ const fetchInitMachines = (initFunc) => {
 }
 
 const rspSaveMachine = (dispatch, playload, rsp) =>{
-    console.log("recv save machine:", playload, rsp)
     if (rsp.Result === "OK") {
+        playload.cb(rsp.Item.hostname,rsp.oldhost)
         dispatch(machineDispatch.saveMachine({index:playload.index, rsp}))
     } else {
         let rsp = {
@@ -38,25 +37,28 @@ const rspSaveMachine = (dispatch, playload, rsp) =>{
 }
 const fetchSaveMachine = (playload) => {
     return dispatch => {
-        console.log("fetchSaveMachine:",playload)
+        let body = JSON.stringify({
+            oldhost:playload.oldmachine.hostname,
+            Item: playload.machine
+        })
         return fetch("/machine/save", {
             method: "POST",
             headers: {
                 "Content-Type": "application/json"
             },
-                body: JSON.stringify(playload.machine)
+            body,
             })
             .then(response => response.json())
             .then(json=> rspSaveMachine(dispatch, playload, json))
     }
 }
 
-const rspAddMachine = (dispatch, index, rsp) => {
-    console.log("recv rsp AddMachine:", index, rsp)
+const rspAddMachine = (dispatch, playload, rsp) => {
     if (rsp.Result === "OK") {
-        dispatch(machineDispatch.saveMachine({index, rsp}))
+        playload.cb(rsp.Item.hostname)
+        dispatch(machineDispatch.saveMachine({index:playload.index, rsp}))
     } else {
-        dispatch(machineDispatch.delMachine(index))
+        dispatch(machineDispatch.delMachine(playload.index))
     }
 }
 
@@ -71,14 +73,14 @@ const fetchAddMachine = (playload) => {
             body: JSON.stringify(playload.machine)
         })
         .then(response => response.json())
-        .then(json => rspAddMachine(dispatch, playload.index, json))
+        .then(json => rspAddMachine(dispatch, playload, json))
     }
 }
 
-const rspDelMachine = (dispatch, index, rsp) =>{
-    console.log("rspDelMachine:", rsp)
+const rspDelMachine = (dispatch, playload, rsp) =>{
     if(rsp.Result === "OK"){
-        dispatch(machineDispatch.delMachine(index))
+        playload.delCB()
+        dispatch(machineDispatch.delMachine(playload.index))
     }
 }
 
@@ -92,7 +94,7 @@ const fetchDelMachine =(playload)=>{
             body: JSON.stringify(playload.fetchDel)
         })
         .then(response => response.json())
-        .then(json=>rspDelMachine(dispatch, playload.index, json))
+        .then(json=>rspDelMachine(dispatch, playload, json))
     }
 }
 

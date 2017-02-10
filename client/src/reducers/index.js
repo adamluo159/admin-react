@@ -20,7 +20,7 @@ const machinesInitState = {
     data: [],
     page: {
         current: 1,
-        pageSize: 3
+        pageSize: 30
     }
 }
 

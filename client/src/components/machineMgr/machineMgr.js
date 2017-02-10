@@ -18,6 +18,13 @@ export default class machineMgr extends React.Component {
     this.hosts = {
       "hosttmp": true
     }
+    this.columnsRender = {
+      "hostname": (text, record, index) => (this.actionClick("hostname", text, record, index)),
+      "IP": (text, record, index) => (this.actionClick("IP", text, record, index)),
+      "outIP": (text, record, index) => (this.actionClick("outIP", text, record, index)),
+      "type": (text, record, index) => (this.typeSelect(text, record, index)),
+      "action": (text, record, index) => (this.actionHandle(text, record, index))
+    }
   }
   componentWillMount() {
     this
@@ -68,20 +75,20 @@ export default class machineMgr extends React.Component {
       return
     }
     if (this.hosts[this.editInput.hostname]) {
-        Message.error("主机名重复，请重新修改")
-        return
+      Message.error("主机名重复，请重新修改")
+      return
     }
-    console.log("saveeeeeeee", this.hosts)
-
     this.editInput.key = this.editInput.hostname
     let newItem = record.key !== record.hostname
     let playload = {
       index: index,
       machine: this.editInput,
-      cb:(newhost, oldhost) => {
-         if(oldhost) {delete this.hosts[oldhost]}
-         this.hosts[newhost]= true
+      cb: (newhost, oldhost) => {
+        if (oldhost) {
+          delete this.hosts[oldhost]
         }
+        this.hosts[newhost] = true
+      }
     }
 
     if (newItem) {
@@ -98,7 +105,7 @@ export default class machineMgr extends React.Component {
     }
   }
 
-  editDo(index,record) {
+  editDo(index, record) {
     const {editState} = this.props.data
     if (editState) {
       Message.error("存在正在编辑的选项，请保存后再添加!")
@@ -112,7 +119,7 @@ export default class machineMgr extends React.Component {
       .props
       .dispatch
       .editMachine(index)
-    delete this.hosts[record.hostname] 
+    delete this.hosts[record.hostname]
   }
 
   deleteDo(index, record) {
@@ -129,7 +136,7 @@ export default class machineMgr extends React.Component {
         fetchDel: {
           hostname: record.hostname
         },
-        delCB:() => delete this.hosts[record.hostname]
+        delCB: () => delete this.hosts[record.hostname]
       })
   }
 
@@ -220,19 +227,9 @@ export default class machineMgr extends React.Component {
   render() {
     const {data, page} = this.props.data
     machineColumns.forEach((k) => {
-      switch (k.key) {
-        case "action":
-          k.render = (text, record, index) => (this.actionHandle(text, record, index))
-          break
-        case "type":
-          k.render = (text, record, index) => (this.typeSelect(text, record, index))
-          break
-        case 'describe':
-          break
-        default:
-          k.render = (text, record, index) => (this.actionClick(k.key, text, record, index))
-          break
-      }
+      k.render = this.columnsRender[k.key]
+        ? this.columnsRender[k.key]
+        : k.render
     })
     return (
       <div>

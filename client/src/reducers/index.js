@@ -1,5 +1,6 @@
 import {combineReducers} from 'redux'
-import {actions} from '../actions'
+import {machineActions} from '../actions/machineAction'
+import {layoutActions} from '../actions/layoutAction'
 
 const initState = {
     loading: true
@@ -8,8 +9,8 @@ const layout = (state = {
     selectKey: 'machineMgr'
 }, action) => {
     switch (action.type) {
-        case actions.SELECT_MAINLAYOUT_KEY:
-            return action.playload
+        case layoutActions.SELECT_MAINLAYOUT_KEY:
+            return  action.playload
         default:
             return state
     }
@@ -97,12 +98,12 @@ const objReduxHandle = (oldState, playload) => {
 }
 
 const reduxHandle = {}
-reduxHandle[actions.INIT_MACHINES] = objReduxHandle
-reduxHandle[actions.ADD_MACHINE] = addmachineData
-reduxHandle[actions.EDIT_MACHINE] = editmachineData
-reduxHandle[actions.PAGE_MACHINE] = objReduxHandle
-reduxHandle[actions.DEL_MACHINE] = delmachineData
-reduxHandle[actions.SAVE_MACHINE] = savemachineData
+reduxHandle[machineActions.INIT_MACHINES] = objReduxHandle
+reduxHandle[machineActions.ADD_MACHINE] = addmachineData
+reduxHandle[machineActions.EDIT_MACHINE] = editmachineData
+reduxHandle[machineActions.PAGE_MACHINE] = objReduxHandle
+reduxHandle[machineActions.DEL_MACHINE] = delmachineData
+reduxHandle[machineActions.SAVE_MACHINE] = savemachineData
 
 const machines = (state = machinesInitState, action) => {
     let handle = reduxHandle[action.type]

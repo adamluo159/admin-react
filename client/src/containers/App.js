@@ -1,17 +1,17 @@
 import React, {PropTypes} from 'react';
 import ReactDOM from 'react-dom';
 import {connect} from 'react-redux'
-import {Icon, Row, Col} from 'antd';
+import {Row, Col} from 'antd';
 
 import Layout from '../components/layout/layout'
 import MachineMgr from '../components/machineMgr/machineMgr'
+import Zone from '../components/zone/zone' 
 
 import actionDispatchFunc from '../actions'
 
 const mainLays = {
-  "machineMgr": (e) => {
-    return <MachineMgr data={e.machines} dispatch={e.machineD}></MachineMgr>
-  }
+  "machineMgr": (e) => <MachineMgr data={e.machines} dispatch={e.machineD}></MachineMgr>,
+  "zone": (e) => <Zone> </Zone>
 }
 
 class App extends React.Component {
@@ -48,10 +48,7 @@ App.PropTypes = {
         IP: PropTypes.string.isRequired,
         outIP: PropTypes.string.isRequired,
         type: PropTypes.string.isRequired,
-        edit: PropTypes.bool.isRequired
       })),
-      page: PropTypes.shape({current: PropTypes.number.isRequired, pageSize: PropTypes.number.isRequired}),
-      cur: PropTypes.number.isRequired
     })
   })
 }

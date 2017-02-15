@@ -1,6 +1,6 @@
 import {layoutActions} from '../actions/layoutAction'
 const layout = (state = {
-    selectKey: 'machineMgr'
+    selectKey: 'zone'
 }, action) => {
     switch (action.type) {
         case layoutActions.SELECT_MAINLAYOUT_KEY:

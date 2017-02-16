@@ -91,10 +91,10 @@ export const zoneOptions = {
 }
 export const formItemLayout = {
   labelCol: {
-    span: 5
+    span: 8,
   },
   wrapperCol: {
-    span: 12
+    span: 16,
   }
 }
 

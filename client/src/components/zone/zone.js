@@ -62,9 +62,10 @@ const zone = Form.create()(React.createClass({
     const {getFieldDecorator, getFieldsValue} = this.props.form
     let layout = item.layout ? {...item.layout} : {...formItemLayout}
     let options = item.options ? {...item.options} : {...zoneOptions}
+    console.log(item, layout)
     return (
       <Col span={24} key={item.label}>
-      <FormItem layout label={item.label}>
+      <FormItem {...layout} label={item.label}>
         {getFieldDecorator(item.Id, options)(tag)}
       </FormItem>
       </Col>
@@ -115,13 +116,13 @@ const zone = Form.create()(React.createClass({
   render() {
     return (
       <div>
-        <Row>
-          <Col span={24}>
+       <Row>
           <div id='leftSelect'>
             <ZoneHead channelData={this.channelData} zoneData={this.ZoneHeadData} showFunc={this.ShowZoneInfo}></ZoneHead>
           </div>
-          </Col>
-          <Col span={12}>
+       </Row>
+       <Row>
+          <Col span={8}>
           {
             this.init ? 
               this.zoneContent()
@@ -129,7 +130,7 @@ const zone = Form.create()(React.createClass({
               <p> 无信息</p>
           }
           </Col>
-        </Row>
+       </Row>
       </div>
     )
   }

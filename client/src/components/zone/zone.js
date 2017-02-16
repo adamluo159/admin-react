@@ -2,7 +2,7 @@ import React, { Component } from 'react'
 import { Select, Message, Button, Input, Row, Col, Form, Switch } from 'antd'
 import './zone.css'
 import ZoneHead from './zoneHead'
-import { zoneConfig, zoneOptions, formItemLayout, ZoneData } from '../../constant'
+import { zoneConfig, zoneOptions, formItemLayout, zoneData } from '../../constant'
 
 const Option = Select.Option
 const FormItem = Form.Item
@@ -10,8 +10,31 @@ const zone = Form.create()(React.createClass({
   componentWillMount() {
     this.renderItems = []
     this.init = false
-    this.data = {
-      ...ZoneData
+
+    console.log(zoneData)
+    let zData = Object.keys(zoneData)
+
+    this.channelData=[]
+    this.ZoneHeadData={}
+    for(let i =0; i < zData.length; i++){
+      let zone = zoneData[zData[i]]
+      let headInfo = {
+        zid: zone.zid,
+        zoneName: zone.zoneName
+      }
+      for(let c=0; c < zone.channels.length; c++){
+        let channel = zone.channels[c]
+        if (channel === undefined){
+          continue
+        }
+        if(this.ZoneHeadData[channel]){
+          this.ZoneHeadData[channel].push(headInfo)
+        }else{
+          this.ZoneHeadData[channel]=[]
+          this.ZoneHeadData[channel].push(headInfo)
+          this.channelData.push(channel)
+        }
+      }
     }
 
     this.initZone = {
@@ -43,12 +66,10 @@ const zone = Form.create()(React.createClass({
     let options = item.options ? {...item.options} : {...zoneOptions}
     
     let curzone = getFieldsValue()
-    console.log(item.Id, curzone[item.Id], this.initZone[item.Id])
 
     if (curzone[item.Id] == undefined){
         options.initialValue=this.initZone[item.Id]
     }
-    console.log("aaa", options.initialValue)
     
     return (
       <Col span={24} key={item.label}>
@@ -114,7 +135,7 @@ const zone = Form.create()(React.createClass({
         <Row>
           <Col span={24}>
           <div id='leftSelect'>
-            <ZoneHead></ZoneHead>
+            <ZoneHead  channelData={this.channelData} zoneData={this.ZoneHeadData}  ></ZoneHead>
           </div>
           </Col>
           <Col span={12}>

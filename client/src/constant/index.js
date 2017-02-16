@@ -98,23 +98,23 @@ export const formItemLayout = {
   }
 }
 
-export const ZoneData = [
-  {
+export const zoneData = {
+  "1": {
     channels: ['IOS', 'yyb'],
     whitelst: true,
     zid: '1',
     zoneDBHost: '1',
     zoneHost: 'host1',
-    zoneName: '大保健',
+    zoneName: '一区大保健',
     zonelogdbHost: 'logdb02'
   },
-  {
+  "2": {
     channels: ['IOS'],
     whitelst: true,
     zid: '2',
     zoneDBHost: 'hostdb1',
     zoneHost: 'host1',
-    zoneName: '小宝剑',
+    zoneName: '一区小宝剑',
     zonelogdbHost: 'logdb02'
   },
-]
+}

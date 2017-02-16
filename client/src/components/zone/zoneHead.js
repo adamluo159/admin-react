@@ -2,51 +2,47 @@ import React, {Component} from 'react';
 import {Select} from 'antd';
 const Option = Select.Option;
 
-const channelData = ['IOS', 'yyb'];
-const cityData = {
-    IOS: [
-        '一区大保健', '二区小保健'
-    ],
-    yyb: ['1服大宝剑', '2服小宝剑']
-};
-
 class zoneHead extends Component {
     constructor(props) {
         super(props);
+        let {zoneData, channelData} = props
         this.state = {
-            cities: cityData[channelData[0]],
-            secondCity: cityData[channelData[0]][0]
+            zonelst: zoneData[channelData[0]],
+            selectZone: zoneData[channelData[0]][0],
+            curChannel: channelData[0],
         }
     }
-   handleChannelChange(value) {
-        this.setState({cities: cityData[value], secondCity: cityData[value][0]
+    handleChannelChange(value) {
+        let {zoneData, channelData} = this.props
+        this.setState({zonelst: zoneData[value], selectZone: zoneData[value][0], curChannel:value
         });
     }
     onZoneChange(value) {
-        this.setState({secondCity: value});
+        let {zoneData, channelData} = this.props
+        let {curChannel} = this.state
+        this.setState({selectZone: zoneData[curChannel][value]});
     }
     render() {
-        const channelOptions = channelData.map(province => <Option key={province}>{province}</Option>);
-        const zoneOptions = this
-            .state
-            .cities
-            .map(city => <Option key={city}>{city}</Option>);
+        let {zoneData, channelData} = this.props
+        let {zonelst, selectZone} = this.state
+        const channelOptions = channelData.map(channel => <Option key={channel}>{channel}</Option>);
+        const zoneOptions = zonelst.map((zone,index) => <Option key={index}>{zone.zoneName}</Option>);
         return (
             <div>
                 <Select
                     defaultValue={channelData[0]}
                     style={{
-                    width: 90
+                    width: 200
                 }}
-                    onChange={(e)=>this.handleChannelChange(e)}>
+                    onChange={(e) => this.handleChannelChange(e)}>
                     {channelOptions}
                 </Select>
                 <Select
-                    value={this.state.secondCity}
+                    value={selectZone.zoneName}
                     style={{
-                    width: 90
+                    width: 200
                 }}
-                    onChange={(e)=>this.onZoneChange(e)}>
+                    onChange={(e) => this.onZoneChange(e)}>
                     {zoneOptions}
                 </Select>
             </div>

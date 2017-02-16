@@ -108,7 +108,7 @@ const zone = Form.create()(React.createClass({
     return (
       <Form onSubmit={this.handleChange}>
         {content.slice(0, content.length)}
-        <Button type="primary" htmlType="submit">Submit</Button>
+        <Button type="primary" htmlType="submit">提交</Button>
       </Form>
     )
   },
@@ -117,11 +117,12 @@ const zone = Form.create()(React.createClass({
     return (
       <div>
        <Row>
-          <div id='leftSelect'>
+          <div id="zoneHead">
             <ZoneHead channelData={this.channelData} zoneData={this.ZoneHeadData} showFunc={this.ShowZoneInfo}></ZoneHead>
           </div>
        </Row>
        <Row>
+         <div id="zoneContent">
           <Col span={8}>
           {
             this.init ? 
@@ -130,6 +131,7 @@ const zone = Form.create()(React.createClass({
               <p> 无信息</p>
           }
           </Col>
+          </div>
        </Row>
       </div>
     )

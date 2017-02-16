@@ -1,6 +1,9 @@
 #zoneHead {
     padding: 20px 20px 150px;
 }
+#zoneSplit {
+    padding: 10px 0px
+}
 
 #zoneContent {
     padding:0px 20px;

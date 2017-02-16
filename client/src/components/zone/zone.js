@@ -8,9 +8,7 @@ const Option = Select.Option
 const FormItem = Form.Item
 const zone = Form.create()(React.createClass({
   componentWillMount() {
-    this.renderItems = []
     this.init = false
-
     let zData = Object.keys(zoneData)
     this.channelData=[]
     this.ZoneHeadData={}
@@ -37,6 +35,7 @@ const zone = Form.create()(React.createClass({
   },
   ShowZoneInfo(zid) {
       this.init = true
+      this.adding = false
       let zone = zoneData[zid]
       let {setFieldsValue} = this.props.form
       let showzone = {
@@ -44,6 +43,22 @@ const zone = Form.create()(React.createClass({
           edit: false
       }
       setFieldsValue(showzone)
+  },
+
+  AddZoneInfo(){
+    console.log("aacdcdcdcdc")
+    if(this.adding == true){
+      return 
+    }
+
+    this.init = true
+    this.adding= true
+    let {resetFields, setFieldsValue} = this.props.form
+    resetFields()
+    setFieldsValue({
+      "edit": true
+    })
+
   },
 
   handleChange(value) {
@@ -62,7 +77,6 @@ const zone = Form.create()(React.createClass({
     const {getFieldDecorator, getFieldsValue} = this.props.form
     let layout = item.layout ? {...item.layout} : {...formItemLayout}
     let options = item.options ? {...item.options} : {...zoneOptions}
-    console.log(item, layout)
     return (
       <Col span={24} key={item.label}>
       <FormItem {...layout} label={item.label}>
@@ -92,7 +106,8 @@ const zone = Form.create()(React.createClass({
       },
       options: {}
     }
-    renderItems.push(this.dCreator(switchEdit, <Switch checkedChildren={'编辑'} unCheckedChildren={'查看'} />))
+    
+    renderItems.push(this.dCreator(switchEdit, <Switch disabled={this.adding} checkedChildren={'编辑'} unCheckedChildren={'查看'} />))
     for (let i = 0; i < zoneInput.length; i++) {
       renderItems.push(this.dCreator(zoneInput[i], <Input disabled={disabled} />))
     }
@@ -114,11 +129,16 @@ const zone = Form.create()(React.createClass({
   },
 
   render() {
+    console.log("ccxxz")
     return (
       <div>
        <Row>
           <div id="zoneHead">
-            <ZoneHead channelData={this.channelData} zoneData={this.ZoneHeadData} showFunc={this.ShowZoneInfo}></ZoneHead>
+            <ZoneHead channelData={this.channelData} 
+                      zoneData={this.ZoneHeadData} 
+                      showFunc={this.ShowZoneInfo}
+                      addZoneFunc={this.AddZoneInfo}>
+            </ZoneHead>
           </div>
        </Row>
        <Row>

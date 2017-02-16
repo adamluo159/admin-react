@@ -11,9 +11,7 @@ const zone = Form.create()(React.createClass({
     this.renderItems = []
     this.init = false
 
-    console.log(zoneData)
     let zData = Object.keys(zoneData)
-
     this.channelData=[]
     this.ZoneHeadData={}
     for(let i =0; i < zData.length; i++){
@@ -36,18 +34,18 @@ const zone = Form.create()(React.createClass({
         }
       }
     }
-
-    this.initZone = {
-      channels: ['IOS','yyb'],
-      edit: false,
-      whitelst: true,
-      zid: "1",
-      zoneDBHost: "1", 
-      zoneHost: "1", 
-      zoneName: "1",
-      zonelogdbHost: "1"
-    }
   },
+  ShowZoneInfo(zid) {
+      this.init = true
+      let zone = zoneData[zid]
+      let {setFieldsValue} = this.props.form
+      let showzone = {
+          ...zone,
+          edit: false
+      }
+      setFieldsValue(showzone)
+  },
+
   handleChange(value) {
     value.preventDefault()
     const {form} = this.props
@@ -64,13 +62,6 @@ const zone = Form.create()(React.createClass({
     const {getFieldDecorator, getFieldsValue} = this.props.form
     let layout = item.layout ? {...item.layout} : {...formItemLayout}
     let options = item.options ? {...item.options} : {...zoneOptions}
-    
-    let curzone = getFieldsValue()
-
-    if (curzone[item.Id] == undefined){
-        options.initialValue=this.initZone[item.Id]
-    }
-    
     return (
       <Col span={24} key={item.label}>
       <FormItem layout label={item.label}>
@@ -85,12 +76,11 @@ const zone = Form.create()(React.createClass({
       span: 16,
       offset: 8
     }
-    const {channels, zoneInput, wihtelst} = zoneConfig
+    const {channels, zoneInput, whitelst} = zoneConfig
     const {getFieldValue} = this.props.form
     let loading = false
-    let disabled = getFieldValue("edit")
-
-    this.renderItems = []
+    let disabled = getFieldValue("edit") ? false : true
+    let renderItems = []
     let switchEdit = {
       Id: 'edit',
       label: '',
@@ -101,32 +91,25 @@ const zone = Form.create()(React.createClass({
       },
       options: {}
     }
-    this.renderItems.push(this.dCreator(switchEdit, <Switch checkedChildren={'查看'} unCheckedChildren={'编辑'} />))
-
+    renderItems.push(this.dCreator(switchEdit, <Switch checkedChildren={'编辑'} unCheckedChildren={'查看'} />))
     for (let i = 0; i < zoneInput.length; i++) {
-      this.renderItems.push(this.dCreator(zoneInput[i], <Input disabled={disabled} />))
+      renderItems.push(this.dCreator(zoneInput[i], <Input disabled={disabled} />))
     }
-    let ckinds = channels.kinds.map(k => <Option key={k}>
-                                           {k}
-                                         </Option>)
-    this.renderItems.push(this.dCreator(channels, <Select multiple disabled={disabled}>
-                                                    {ckinds}
-                                                  </Select>))
-    this.renderItems.push(this.dCreator(wihtelst, <Switch disabled={disabled} checkedChildren={'开'} unCheckedChildren={'关'} />))
+    let ckinds = channels.kinds.map(k => <Option key={k}>{k}</Option>)
+    renderItems.push(this.dCreator(channels, <Select multiple disabled={disabled}>{ckinds}</Select>))
+    renderItems.push(this.dCreator(whitelst, <Switch disabled={disabled} checkedChildren={'开'} unCheckedChildren={'关'} />))
+
+    return renderItems
   },
 
-  zoneContent(disabled) {
-    this.renderTabs(disabled)
+  zoneContent() {
+    let content=this.renderTabs()
     return (
       <Form onSubmit={this.handleChange}>
-        {this.renderItems.slice(0, this.renderItems.length)}
+        {content.slice(0, content.length)}
         <Button type="primary" htmlType="submit">Submit</Button>
       </Form>
     )
-  },
-
-  switchToEdit(e) {
-    this.disabled = e
   },
 
   render() {
@@ -135,11 +118,16 @@ const zone = Form.create()(React.createClass({
         <Row>
           <Col span={24}>
           <div id='leftSelect'>
-            <ZoneHead  channelData={this.channelData} zoneData={this.ZoneHeadData}  ></ZoneHead>
+            <ZoneHead channelData={this.channelData} zoneData={this.ZoneHeadData} showFunc={this.ShowZoneInfo}></ZoneHead>
           </div>
           </Col>
           <Col span={12}>
-          {this.zoneContent()}
+          {
+            this.init ? 
+              this.zoneContent()
+            :
+              <p> 无信息</p>
+          }
           </Col>
         </Row>
       </div>

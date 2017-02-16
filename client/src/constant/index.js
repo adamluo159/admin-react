@@ -71,7 +71,7 @@ export const zoneConfig = {
       label: 'logdb主机名'
     }
   ],
-  wihtelst: {
+  whitelst: {
     Id: 'whitelst',
     label: '白名单'
   },

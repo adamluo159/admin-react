@@ -5,6 +5,7 @@ const Option = Select.Option;
 class zoneHead extends Component {
     constructor(props) {
         super(props);
+        console.log(props)
         let {zoneData, channelData} = props
         this.state = {
             zonelst: zoneData[channelData[0]],
@@ -18,9 +19,12 @@ class zoneHead extends Component {
         });
     }
     onZoneChange(value) {
-        let {zoneData, channelData} = this.props
+        let {zoneData, channelData, showFunc} = this.props
         let {curChannel} = this.state
-        this.setState({selectZone: zoneData[curChannel][value]});
+        let zone = zoneData[curChannel][value]
+        showFunc(zone.zid)
+        console.log("aaa", zone)
+        this.setState({selectZone: zone});
     }
     render() {
         let {zoneData, channelData} = this.props

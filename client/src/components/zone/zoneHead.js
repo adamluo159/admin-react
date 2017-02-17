@@ -5,12 +5,19 @@ const Option = Select.Option;
 class zoneHead extends Component {
     constructor(props) {
         super(props);
-        console.log(props)
         let {zoneData, channelData} = props
-        this.state = {
-            zonelst: zoneData[channelData[0]],
-            selectZone: zoneData[channelData[0]][0],
-            curChannel: channelData[0],
+        if (channelData.length > 0) {
+            this.state = {
+                zonelst: zoneData[channelData[0]],
+                selectZone: zoneData[channelData[0]][0],
+                curChannel: channelData[0],
+            }
+        } else {
+            this.state = {
+                zonelst: [],
+                selectZone: {},
+                curChannel: "",
+            }
         }
     }
     handleChannelChange(value) {
@@ -24,14 +31,14 @@ class zoneHead extends Component {
         let {curChannel} = this.state
         let zone = zoneData[curChannel][value]
         showFunc(zone.zid)
-        console.log("aaa", zone)
         this.setState({ selectZone: zone });
     }
-    onbtnAddZone(value){
-        value.preventDefault()
+    onbtnAddZone() {
         let {addZoneFunc} = this.props
-        console.log("headheadhead",value)
-        addZoneFunc()
+        addZoneFunc(this.AddResult)
+    }
+    AddResult(zone) {
+        this.setState({ selectZone: zone });
     }
 
     render() {
@@ -39,25 +46,39 @@ class zoneHead extends Component {
         let {zonelst, selectZone} = this.state
         const channelOptions = channelData.map(channel => <Option key={channel}>{channel}</Option>);
         const zoneOptions = zonelst.map((zone, index) => <Option key={index}>{zone.zoneName}</Option>);
+        let channelValue, zoneValue
+        if (channelData.length > 0) {
+            channelValue = channelData[0]
+            zoneValue = selectZone.zoneName
+        } else {
+            channelValue = ""
+            zoneValue = ""
+
+        }
+        let width = {
+            width: '100px'
+        }
         return (
             <div>
                 <Row>
-                    <Col span={2}>
+                    <Col span={5}>
                         <Select
                             defaultValue={channelData[0]}
-                            onChange={(e) => this.handleChannelChange(e)}>
+                            onChange={(e) => this.handleChannelChange(e)}
+                            style={width}>
                             {channelOptions}
                         </Select>
                     </Col>
                     <Col span={5}>
                         <Select
-                            value={selectZone.zoneName}
-                            onChange={(e) => this.onZoneChange(e)}>
+                            defaultValue={selectZone.zoneName}
+                            onChange={(e) => this.onZoneChange(e)}
+                            style={width}>
                             {zoneOptions}
                         </Select>
                     </Col>
                     <Col span={5}>
-                        <Button type="primary" onClick={addZoneFunc}>添加区服信息</Button>
+                        <Button type="primary" onClick={() => this.onbtnAddZone()}>添加区服信息</Button>
                     </Col>
                 </Row>
             </div>

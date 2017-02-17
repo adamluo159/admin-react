@@ -1,19 +1,37 @@
 import fetch from 'isomorphic-fetch'
-import {actionCreator} from '../utils/utils'
+import { actionCreator } from '../utils/utils'
+
+const fetchInitZones = (initFunc) => {
+    return dispatch => {
+        //dispatch(machineDispatch.reqZones())
+        return fetch("/zone", )
+            .then(response => response.json())
+            .then(json => initFunc(json))
+    }
+}
+
+const fetchAddZone = (playload) => {
+    return dispatch => {
+        //dispatch(machineDispatch.reqZones())
+        return fetch("/zone/add", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify(playload.obj)
+            })
+            .then(response => response.json())
+            .then(json => playload.RecvZone(json))
+    }
+}
+
 
 export const zoneActions = {}
 const mapZone = {
-    //界面表现的action
-    "InitZones": actionCreator(zoneActions, 'INIT_ZONES'),
-    "addZone": actionCreator(zoneActions, 'ADD_ZONE'),
-    "editZone": actionCreator(zoneActions, 'EDIT_ZONE'),
-    "saveZone": actionCreator(zoneActions, 'SAVE_ZONE'),
-    "delZone": actionCreator(zoneActions, 'DEL_MACHINE'),
-
     //网络请求的action
-//    "fetchInitZones": fetchInitMachines,
-//    "fetchSaveZone": fetchSaveMachine,
-//    "fetchAddZone": fetchAddMachine,
-//    "fetchDelZone": fetchDelMachine
+    "fetchInitZones": fetchInitZones,
+    "fetchAddZone": fetchAddZone,
+    //"fetchSaveZone": fetchSaveZone,
+    //"fetchDelZone": fetchDelZone
 }
 export default mapZone

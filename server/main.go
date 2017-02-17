@@ -5,6 +5,7 @@ import (
 
 	"github.com/adamluo159/admin-react/server/db"
 	"github.com/adamluo159/admin-react/server/machine"
+	"github.com/adamluo159/admin-react/server/zone"
 	"github.com/labstack/echo"
 )
 
@@ -23,6 +24,7 @@ func main() {
 	e := echo.New()
 	e.Use(ServerHeader)
 	machine.Register(e)
+	zone.Register(e)
 
 	e.Static("/", "../client/")
 	e.File("/", "../client/index.html")

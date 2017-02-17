@@ -11,7 +11,7 @@ import actionDispatchFunc from '../actions'
 
 const mainLays = {
   "machineMgr": (e) => <MachineMgr data={e.machines} dispatch={e.machineD}></MachineMgr>,
-  "zone": (e) => <Zone> </Zone>
+  "zone": (e) => <Zone dispatch={e.zoneD}> </Zone>
 }
 
 class App extends React.Component {

@@ -36,6 +36,7 @@ const zone = Form.create()(React.createClass({
         zid: zone.zid,
         zoneName: zone.zoneName
       }
+
       this.zoneData[zone.zid] = zone
       for (let c = 0; c < zone.channels.length; c++) {
         let channel = zone.channels[c]
@@ -51,7 +52,6 @@ const zone = Form.create()(React.createClass({
         }
       }
     }
-    console.log("cccccc", json)
     setFieldsValue({
       edit: false
     })
@@ -71,15 +71,13 @@ const zone = Form.create()(React.createClass({
     setFieldsValue(showzone)
   },
 
-  AddZoneInfo(AddResult) {
+  AddZoneInfo() {
     if (this.adding == true) {
       return
     }
-    console.log(AddResult)
 
     this.initShow = true
     this.adding = true
-    this.AddResult = AddResult
     let {resetFields, setFieldsValue} = this.props.form
     resetFields()
     setFieldsValue({
@@ -93,27 +91,42 @@ const zone = Form.create()(React.createClass({
     form.validateFields((err, values) => {
       if (!err) {
         values.zid = Number(values.zid)
-        dispatch.fetchAddZone({
-          obj: values,
-          RecvZone: this.RecvZone
-        })
-        this.loading = true
+        console.log(values, this.adding)
+        if(this.adding){
+          dispatch.fetchAddZone({
+            obj: values,
+            addZone: this.addZone
+          })
+        }else{
+          let oldzone = this.zoneData[values.zid]
+          dispatch.fetchSaveZone({
+            obj: values,
+            oldZoneName:  oldzone.zoneName,
+            oldZid: oldzone.zid,
+            saveZone: this.saveZone
+          })
+        }
+       this.loading = true
       }
     })
   },
 
-  RecvZone(json) {
+  addZone(json) {
     this.loading = false
     let {resetFields, setFieldsValue} = this.props.form
     let zone = json.Item
-    if (json.Result == "OK") {
+    if (json.Result != "OK") {
       let a = {
-        ...zone,
         edit: false,
       }
-      this.adding = false
       setFieldsValue(a)
+      return 
     }
+    let a = {
+      ...zone,
+      edit: false,
+    }
+    this.adding = false
     this.zoneData[zone.zid] = zone
     let headInfo = {
       zid: zone.zid,
@@ -133,7 +146,50 @@ const zone = Form.create()(React.createClass({
       }
     }
 
-    this.AddResult(json.Item)
+    setFieldsValue(a)
+  },
+
+  saveZone(json){
+    this.loading = false
+    let {resetFields, setFieldsValue} = this.props.form
+    let zone = json.Item
+    console.log(json)
+    if (json.Result != "OK") {
+      let a = {
+        edit: true,
+      }
+      setFieldsValue(a)
+      return 
+    }
+    this.zoneData[zone.zid] = zone
+    let headInfo = {
+      zid: zone.zid,
+      zoneName: zone.zoneName
+    }
+    for (let c = 0; c < zone.channels.length; c++) {
+      let channel = zone.channels[c]
+      if (channel === undefined) {
+        continue
+      }
+      let zoneHead = this.ZoneHeadData[channel]
+      if (zoneHead) {
+        let newChannelData = false
+        zoneHead.forEach(k=> newChannelData= (k.zid==zone.zid)? false: true);
+        if(newChannelData){
+          this.ZoneHeadData[channel].push(headInfo)
+        }
+      } else {
+        this.ZoneHeadData[channel] = []
+        this.ZoneHeadData[channel].push(headInfo)
+        this.channelData.push(channel)
+      }
+    }
+    let a = {
+      ...zone,
+      edit: false,
+    }
+    this.fresh(this.ZoneHeadData)
+    setFieldsValue(a)
   },
 
   dCreator(item, tag) {
@@ -183,10 +239,11 @@ const zone = Form.create()(React.createClass({
     const {getFieldValue} = this.props.form
     let disabled = getFieldValue("edit") ? false : true
     let content = this.renderTabs(disabled)
+    let buttonText = this.adding ? "新增提交": "保存"
     return (
       <Form onSubmit={this.handleChange}>
         {content.slice(0, content.length)}
-        <Button type="primary" htmlType="submit" disabled={disabled} loading={this.loading}>提交</Button>
+        <Button type="primary" htmlType="submit" disabled={disabled} loading={this.loading}>{buttonText}</Button>
       </Form>
     )
   },
@@ -201,7 +258,8 @@ const zone = Form.create()(React.createClass({
                 <ZoneHead channelData={this.channelData}
                   zoneData={this.ZoneHeadData}
                   showFunc={this.ShowZoneInfo}
-                  addZoneFunc={this.AddZoneInfo}>
+                  addZoneFunc={this.AddZoneInfo}
+                  registerFunc={(e)=>this.fresh=e}>
                 </ZoneHead>
                 :
                 <p>Loading</p>

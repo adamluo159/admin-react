@@ -22,8 +22,9 @@ type Zone struct {
 }
 
 type SaveZoneReq struct {
-	Oldhost string
-	Item    Zone
+	OldZoneName string
+	OldZid      int
+	Item        Zone
 }
 
 //回复信息
@@ -79,10 +80,8 @@ func SaveZone(c echo.Context) error {
 		ret.Result = "FALSE"
 		return c.JSON(http.StatusOK, ret)
 	}
-	query := bson.M{
-		"zid":      m.Item.Zid,
-		"zoneName": m.Item.ZoneName,
-	}
+	fmt.Println("get save info:", m)
+	query := bson.M{"zid": m.OldZid, "zoneName": m.OldZoneName}
 	err = cl.Update(query, &m.Item)
 	if err != nil {
 		fmt.Println("SaveZone, update:", err.Error())
@@ -90,6 +89,31 @@ func SaveZone(c echo.Context) error {
 	} else {
 		ret.Item = m.Item
 	}
+
+	//if m.OldZoneName != m.Item.ZoneName || m.OldZid != m.Item.Zid {
+	//	del := bson.M{"zid": m.OldZid, "zoneName": m.OldZoneName}
+	//	err = cl.Remove(del)
+	//	if err != nil {
+	//		fmt.Println(err.Error())
+	//	}
+	//	err = cl.Insert(m.Item)
+	//	if err != nil {
+	//		fmt.Println(err.Error())
+	//		ret.Result = "FALSE"
+	//	} else {
+	//		ret.Item = m.Item
+	//	}
+	//} else {
+	//	query := bson.M{"zid": m.Item.Zid, "zoneName": m.Item.ZoneName}
+	//	err = cl.Update(query, &m.Item)
+	//	if err != nil {
+	//		fmt.Println("SaveZone, update:", err.Error())
+	//		ret.Result = "FALSE"
+	//	} else {
+	//		ret.Item = m.Item
+	//	}
+	//}
+
 	return c.JSON(http.StatusOK, ret)
 }
 

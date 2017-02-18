@@ -5,7 +5,7 @@ const Option = Select.Option;
 class zoneHead extends Component {
     constructor(props) {
         super(props);
-        let {zoneData, channelData} = props
+        let {zoneData, channelData, registerFunc} = props
         if (channelData.length > 0) {
             this.state = {
                 zonelst: zoneData[channelData[0]],
@@ -19,6 +19,7 @@ class zoneHead extends Component {
                 curChannel: "",
             }
         }
+        registerFunc(this.freshData)
     }
     handleChannelChange(value) {
         let {zoneData, channelData} = this.props
@@ -31,14 +32,13 @@ class zoneHead extends Component {
         let {curChannel} = this.state
         let zone = zoneData[curChannel][value]
         showFunc(zone.zid)
-        this.setState({ selectZone: zone });
+        //this.setState({ selectZone: zone });
     }
-    onbtnAddZone() {
-        let {addZoneFunc} = this.props
-        addZoneFunc(this.AddResult)
-    }
-    AddResult(zone) {
-        this.setState({ selectZone: zone });
+
+    freshData(zonelst){
+        //this.setState({
+        //    zonelst
+        //})
     }
 
     render() {
@@ -78,7 +78,7 @@ class zoneHead extends Component {
                         </Select>
                     </Col>
                     <Col span={5}>
-                        <Button type="primary" onClick={() => this.onbtnAddZone()}>添加区服信息</Button>
+                        <Button type="primary" onClick={addZoneFunc}>添加区服信息</Button>
                     </Col>
                 </Row>
             </div>

@@ -3,6 +3,7 @@ package zone
 import (
 	"fmt"
 	"net/http"
+	"strconv"
 
 	"github.com/adamluo159/admin-react/server/db"
 	"github.com/labstack/echo"
@@ -90,30 +91,18 @@ func SaveZone(c echo.Context) error {
 		ret.Item = m.Item
 	}
 
-	//if m.OldZoneName != m.Item.ZoneName || m.OldZid != m.Item.Zid {
-	//	del := bson.M{"zid": m.OldZid, "zoneName": m.OldZoneName}
-	//	err = cl.Remove(del)
-	//	if err != nil {
-	//		fmt.Println(err.Error())
-	//	}
-	//	err = cl.Insert(m.Item)
-	//	if err != nil {
-	//		fmt.Println(err.Error())
-	//		ret.Result = "FALSE"
-	//	} else {
-	//		ret.Item = m.Item
-	//	}
-	//} else {
-	//	query := bson.M{"zid": m.Item.Zid, "zoneName": m.Item.ZoneName}
-	//	err = cl.Update(query, &m.Item)
-	//	if err != nil {
-	//		fmt.Println("SaveZone, update:", err.Error())
-	//		ret.Result = "FALSE"
-	//	} else {
-	//		ret.Item = m.Item
-	//	}
-	//}
+	return c.JSON(http.StatusOK, ret)
+}
 
+func SynMachine(c echo.Context) error {
+	ret := ZoneRsp{
+		Result: "OK",
+	}
+	zid, _ := strconv.Atoi(c.QueryParam("zid"))
+	if zid == 0 {
+		ret.Result = "FALSE"
+	}
+	fmt.Println("recv", zid, ret)
 	return c.JSON(http.StatusOK, ret)
 }
 
@@ -173,5 +162,6 @@ func Register(e *echo.Echo) {
 	e.GET("/zone", GetZones)
 	e.POST("/zone/add", AddZone)
 	e.POST("/zone/save", SaveZone)
+	e.GET("/zone/synMachine", SynMachine)
 	//e.POST("/zone/del", DelZone)
 }

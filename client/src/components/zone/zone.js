@@ -14,6 +14,7 @@ const newZone = Form.create()(React.createClass({
     this.ZoneHeadData = {}
     this.zoneData = {}
     this.zoneNameToZid = {}
+    this.synZid = 0
 
     let {dispatch} = this.props
     dispatch.fetchInitZones(this.InitZones)
@@ -61,6 +62,7 @@ const newZone = Form.create()(React.createClass({
 
   ShowZoneInfo(zid) {
     zid = Number(zid)
+    this.synZid = zid
     this.initShow = true
     this.adding = false
     let zone = this.zoneData[zid]
@@ -116,6 +118,12 @@ const newZone = Form.create()(React.createClass({
        this.loading = true
       }
     })
+  },
+  synMachine(e){
+    e.preventDefault()
+    console.log(this.props)
+    const {fetchSynMachine} = this.props.dispatch
+    fetchSynMachine({zid:this.synZid})
   },
 
   addZone(json) {
@@ -282,7 +290,12 @@ const newZone = Form.create()(React.createClass({
     return (
       <Form onSubmit={this.handleChange}>
         {content.slice(0, content.length)}
-        <Button type="primary" htmlType="submit" disabled={disabled} loading={this.loading}>{buttonText}</Button>
+        <Col span={4}>
+          <Button type="primary" htmlType="submit" disabled={disabled} loading={this.loading}>{buttonText}</Button>
+        </Col>
+        <Col span={4}>
+          <Button type="primary" disabled={!disabled} onClick={(e)=>this.synMachine(e)} >同步配置到机器上</Button>
+        </Col>
       </Form>
     )
   },

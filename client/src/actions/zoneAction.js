@@ -40,8 +40,19 @@ const fetchSaveZone = (playload) => {
             body
         })
             .then(response => response.json())
-            .then(json => playload.saveZone({oldzid:playload.oldZid, json:json}))
+            .then(json => playload.saveZone({ oldzid: playload.oldZid, json: json }))
     }
+}
+const fetchSynMachine = (obj) => {
+    console.log("syn:", obj)
+    return dispatch => {
+        return fetch("/zone/synMachine?zid=" + obj.zid, {
+            method: "GET",
+        })
+            .then(response =>response.json())
+            .then(json => console.log("synRsp:", json))
+    }
+
 }
 
 
@@ -52,6 +63,7 @@ const mapZone = {
     "fetchInitZones": fetchInitZones,
     "fetchAddZone": fetchAddZone,
     "fetchSaveZone": fetchSaveZone,
+    "fetchSynMachine": fetchSynMachine,
     //"fetchDelZone": fetchDelZone
 }
 export default mapZone

@@ -40,7 +40,7 @@ const fetchSaveZone = (playload) => {
             body
         })
             .then(response => response.json())
-            .then(json => playload.saveZone(json))
+            .then(json => playload.saveZone({oldzid:playload.oldZid, json:json}))
     }
 }
 

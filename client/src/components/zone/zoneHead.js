@@ -34,13 +34,6 @@ class zoneHead extends Component {
         showFunc(zone.zid)
         //this.setState({ selectZone: zone });
     }
-
-    freshData(zonelst){
-        //this.setState({
-        //    zonelst
-        //})
-    }
-
     render() {
         let {zoneData, channelData, addZoneFunc} = this.props
         let {zonelst, selectZone} = this.state

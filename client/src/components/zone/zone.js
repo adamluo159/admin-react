@@ -6,13 +6,14 @@ import { zoneConfig, zoneOptions, formItemLayout } from '../../constant'
 
 const Option = Select.Option
 const FormItem = Form.Item
-const zone = Form.create()(React.createClass({
+const newZone = Form.create()(React.createClass({
   componentWillMount() {
     this.initShow = false
     this.initHead = false
     this.channelData = []
     this.ZoneHeadData = {}
     this.zoneData = {}
+    this.zoneNameToZid = {}
 
     let {dispatch} = this.props
     dispatch.fetchInitZones(this.InitZones)
@@ -38,6 +39,7 @@ const zone = Form.create()(React.createClass({
       }
 
       this.zoneData[zone.zid] = zone
+      this.zoneNameToZid[zone.zoneName] = zone.zid
       for (let c = 0; c < zone.channels.length; c++) {
         let channel = zone.channels[c]
         if (channel === undefined) {
@@ -67,7 +69,6 @@ const zone = Form.create()(React.createClass({
       ...zone,
       edit: false
     }
-    console.log("show:", zone)
     setFieldsValue(showzone)
   },
 
@@ -91,7 +92,6 @@ const zone = Form.create()(React.createClass({
     form.validateFields((err, values) => {
       if (!err) {
         values.zid = Number(values.zid)
-        console.log(values, this.adding)
         if(this.adding){
           dispatch.fetchAddZone({
             obj: values,
@@ -99,6 +99,13 @@ const zone = Form.create()(React.createClass({
           })
         }else{
           let oldzone = this.zoneData[values.zid]
+          if(oldzone == undefined){
+            let oldzid = this.zoneNameToZid[values.zoneName]
+            oldzone = this.zoneData[oldzid]
+          }
+          if(oldzone == undefined){
+            return
+          }
           dispatch.fetchSaveZone({
             obj: values,
             oldZoneName:  oldzone.zoneName,
@@ -128,6 +135,7 @@ const zone = Form.create()(React.createClass({
     }
     this.adding = false
     this.zoneData[zone.zid] = zone
+    this.zoneNameToZid[zone.zoneName] = zone.zid
     let headInfo = {
       zid: zone.zid,
       zoneName: zone.zoneName
@@ -149,47 +157,78 @@ const zone = Form.create()(React.createClass({
     setFieldsValue(a)
   },
 
-  saveZone(json){
+  saveZone(rsp){
     this.loading = false
     let {resetFields, setFieldsValue} = this.props.form
-    let zone = json.Item
-    console.log(json)
-    if (json.Result != "OK") {
+    
+    let newZone = rsp.json.Item
+    let newChannels = newZone.channels
+
+    let oldzid = rsp.oldzid
+    let oldchannels = this.zoneData[oldzid].channels
+    if (rsp.json.Result != "OK") {
       let a = {
         edit: true,
       }
       setFieldsValue(a)
       return 
     }
-    this.zoneData[zone.zid] = zone
+    let delFunc = (obj) => obj.zid != oldzid
+    //this.nameToZid[zone.name] = zone.zid
+    for(let i = 0; i < oldchannels.length; i++){
+      let delC = oldchannels[i]
+      let zonelst = this.ZoneHeadData[delC]
+      let newlst = zonelst.filter(delFunc)
+      if(newlst.length == 0){
+        delete this.ZoneHeadData[delC]
+      }else{
+        this.ZoneHeadData[delC] = newlst
+      }
+    }
     let headInfo = {
-      zid: zone.zid,
-      zoneName: zone.zoneName
+      zid: newZone.zid,
+      zoneName: newZone.zoneName
     }
-    for (let c = 0; c < zone.channels.length; c++) {
-      let channel = zone.channels[c]
-      if (channel === undefined) {
-        continue
-      }
-      let zoneHead = this.ZoneHeadData[channel]
-      if (zoneHead) {
-        let newChannelData = false
-        zoneHead.forEach(k=> newChannelData= (k.zid==zone.zid)? false: true);
-        if(newChannelData){
-          this.ZoneHeadData[channel].push(headInfo)
+    for (let c = 0; c < newZone.channels.length; c++) {
+      let channel = newZone.channels[c]
+      let zonelst = this.ZoneHeadData[channel]
+      if(zonelst){
+        let index = zonelst.indexOf(headInfo)
+        if (index === -1) {
+          zonelst.push(headInfo)
+        } else {
+          zonelst[index] = headInfo
         }
-      } else {
-        this.ZoneHeadData[channel] = []
-        this.ZoneHeadData[channel].push(headInfo)
-        this.channelData.push(channel)
+      }else{
+        zonelst = []
+        zonelst.push(headInfo)
+        if(this.channelData.indexOf(channel) === -1){
+          this.channelData.push(channel)
+        }
       }
+      this.ZoneHeadData[channel] = zonelst
     }
+    let newChannelData = []
+    this.channelData.forEach(k=>{
+      if(this.ZoneHeadData[k]){
+        newChannelData.push(k)
+    }})
+    this.channelData = newChannelData
     let a = {
-      ...zone,
+      ...newZone,
       edit: false,
     }
-    this.fresh(this.ZoneHeadData)
     setFieldsValue(a)
+
+    let oldZoneName = this.zoneData[oldzid].zoneName
+    if(newZone.zoneName != oldZoneName){
+      delete this.zoneNameToZid[oldZoneName]
+    }
+    if (newZone.zid != oldzid){
+      delete this.zoneData[oldzid]
+    }
+    this.zoneData[newZone.zid] = newZone
+    this.zoneNameToZid[newZone.zoneName] = newZone.zid
   },
 
   dCreator(item, tag) {
@@ -282,4 +321,4 @@ const zone = Form.create()(React.createClass({
     )
   }
 }))
-export default zone
+export default newZone

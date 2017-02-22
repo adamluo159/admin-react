@@ -6,8 +6,8 @@ import (
 	"strconv"
 
 	"github.com/adamluo159/admin-react/server/db"
+	"github.com/adamluo159/struct2lua"
 	"github.com/labstack/echo"
-	"gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
 )
 
@@ -90,6 +90,8 @@ func SaveZone(c echo.Context) error {
 	} else {
 		ret.Item = m.Item
 	}
+	s := struct2lua.ToLuaConfig(m)
+	fmt.Println(s)
 
 	return c.JSON(http.StatusOK, ret)
 }

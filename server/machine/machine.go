@@ -10,6 +10,18 @@ import (
 	"gopkg.in/mgo.v2/bson"
 )
 
+const (
+	CharDBPort    int = 9000
+	GatePort      int = 9100
+	CenterPort    int = 9200
+	logicPort     int = 9300
+	ClientPort    int = 9400
+	MasterPort    int = 9500
+	LoginPort     int = 9550
+	LogPort       int = 9600
+	AccountDBPort int = 8500
+)
+
 //机器信息
 type Machine struct {
 	Key      string `bson:"key" json:"key"`
@@ -153,4 +165,14 @@ func Register(e *echo.Echo) {
 	e.POST("/machine/add", AddMachine)
 	e.POST("/machine/save", SaveMachine)
 	e.POST("/machine/del", DelMachine)
+}
+
+func GetMachineByName(name string) (*Machine, error) {
+	m := Machine{}
+	get := bson.M{"hostname": name}
+	err := cl.Find(get).One(&m)
+	if err != nil {
+		return nil, err
+	}
+	return &m, nil
 }

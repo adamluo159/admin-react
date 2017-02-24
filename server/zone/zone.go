@@ -3,13 +3,16 @@ package zone
 import (
 	"fmt"
 	"net/http"
+
+	mgo "gopkg.in/mgo.v2"
+	"gopkg.in/mgo.v2/bson"
+
 	"strconv"
 
 	"github.com/adamluo159/admin-react/server/db"
+	"github.com/adamluo159/admin-react/server/machine"
 	"github.com/adamluo159/struct2lua"
 	"github.com/labstack/echo"
-	"gopkg.in/mgo.v2"
-	"gopkg.in/mgo.v2/bson"
 )
 
 //区服信息
@@ -34,6 +37,40 @@ type ZoneRsp struct {
 	Result string
 	Item   Zone
 	Items  []Zone
+}
+
+type Connect struct {
+	ID   int
+	Port int
+	IP   string
+}
+
+type MysqlLua struct {
+	IP             string
+	Port           int
+	UserName       string
+	PassWord       string
+	FlushFrequency int
+	DataBase       string
+}
+
+type RedisLua struct {
+	IP       string
+	Port     int
+	Password string
+}
+
+type Gate struct {
+	ID             int
+	Zid            int
+	ServerIP       string
+	ServerPort     int
+	ClientIP       string
+	ClientPort     int
+	ChannelIds     []string
+	Open           bool
+	Name           string
+	ConnectServers map[string]interface{}
 }
 
 var (
@@ -91,21 +128,7 @@ func SaveZone(c echo.Context) error {
 	} else {
 		ret.Item = m.Item
 	}
-	s := struct2lua.ToLuaConfig("zone", m)
-	fmt.Println(s)
 
-	return c.JSON(http.StatusOK, ret)
-}
-
-func SynMachine(c echo.Context) error {
-	ret := ZoneRsp{
-		Result: "OK",
-	}
-	zid, _ := strconv.Atoi(c.QueryParam("zid"))
-	if zid == 0 {
-		ret.Result = "FALSE"
-	}
-	fmt.Println("recv", zid, ret)
 	return c.JSON(http.StatusOK, ret)
 }
 
@@ -167,4 +190,100 @@ func Register(e *echo.Echo) {
 	e.POST("/zone/save", SaveZone)
 	e.GET("/zone/synMachine", SynMachine)
 	//e.POST("/zone/del", DelZone)
+}
+
+func SynMachine(c echo.Context) error {
+	ret := ZoneRsp{
+		Result: "OK",
+	}
+	zid, err := strconv.Atoi(c.QueryParam("zid"))
+	if err != nil {
+		ret.Result = err.Error()
+		return c.JSON(http.StatusOK, ret)
+	}
+
+	zone := Zone{}
+	query := bson.M{"zid": zid}
+	cl.Find(query).One(&zone)
+
+	//zoneDBquery := bson.M{"zoneDBHost": zone.ZoneDBHost}
+	//zonelogquery := bson.M{"zonelogdbHost": zone.ZonelogdbHost}
+
+	//zoneDBCount, zdberr := cl.Find(zoneDBquery).Count()
+	//if zdberr != nil {
+	//	ret.Result = zdberr.Error()
+	//	return c.JSON(http.StatusOK, ret)
+	//}
+	//zonelogDBCount, zlogerr := cl.Find(zonelogquery).Count()
+	//if zlogerr != nil {
+	//	ret.Result = zlogerr.Error()
+	//	return c.JSON(http.StatusOK, ret)
+	//}
+
+	//zonedbm, dberr := machine.GetMachineByName(zone.ZoneDBHost)
+	//if dberr != nil {
+	//	ret.Result = dberr.Error()
+	//}
+
+	//logm, logerr := machine.GetMachineByName(zone.ZonelogdbHost)
+	//if logerr != nil {
+	//	ret.Result = logerr.Error()
+	//}
+
+	gerr := GateLua(&zone)
+	if gerr != nil {
+		ret.Result = gerr.Error()
+		return c.JSON(http.StatusOK, ret)
+	}
+
+	return c.JSON(http.StatusOK, ret)
+}
+
+func GateLua(zone *Zone) error {
+	zonequery := bson.M{"zoneHost": zone.ZoneHost}
+	zoneCount, zerr := cl.Find(zonequery).Count()
+	if zerr != nil {
+		return zerr
+	}
+	zonem, err := machine.GetMachineByName(zone.ZoneHost)
+	if err != nil {
+		return err
+	}
+	masterm, merr := machine.GetMachineByName("cghost2")
+	if merr != nil {
+		return merr
+	}
+	gateLua := Gate{
+		ID:             zone.Zid,
+		Zid:            zone.Zid,
+		ServerIP:       zonem.IP,
+		ServerPort:     machine.GatePort + zoneCount,
+		ClientIP:       zonem.OutIP,
+		ClientPort:     machine.ClientPort + zoneCount,
+		ChannelIds:     zone.Channels,
+		Open:           zone.Whitelst,
+		Name:           zone.ZoneName,
+		ConnectServers: make(map[string]interface{}),
+	}
+	gateLua.ConnectServers["CharDB"] = Connect{
+		ID:   zone.Zid,
+		IP:   zonem.IP,
+		Port: machine.CharDBPort + zoneCount,
+	}
+	gateLua.ConnectServers["Master"] = Connect{
+		ID:   1,
+		IP:   masterm.IP,
+		Port: machine.MasterPort,
+	}
+	gateLua.ConnectServers["Log"] = Connect{
+		ID:   zone.Zid,
+		IP:   zonem.IP,
+		Port: machine.LogPort + zoneCount,
+	}
+
+	trans := struct2lua.ToLuaConfig("Gate", zone.Zid, gateLua)
+	if trans == false {
+		fmt.Println("gate cannt wirte lua file")
+	}
+	return nil
 }

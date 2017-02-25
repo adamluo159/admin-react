@@ -11,15 +11,20 @@ import (
 )
 
 const (
-	CharDBPort    int = 9000
-	GatePort      int = 9100
-	CenterPort    int = 9200
-	logicPort     int = 9300
-	ClientPort    int = 9400
-	MasterPort    int = 9500
-	LoginPort     int = 9550
-	LogPort       int = 9600
-	AccountDBPort int = 8500
+	CharDBPort    int    = 9000
+	GatePort      int    = 9100
+	CenterPort    int    = 9200
+	LogicPort     int    = 9300
+	ClientPort    int    = 9400
+	MasterPort    int    = 9500
+	LoginPort     int    = 9550
+	LogPort       int    = 9600
+	AccountDBPort int    = 8500
+	UserName      string = "cgyx"
+	PassWord      string = "cgyx"
+	RedisPort     int    = 6379
+	MysqlPort     int    = 3306
+	GameConfigDir string = "GameConfig/"
 )
 
 //机器信息

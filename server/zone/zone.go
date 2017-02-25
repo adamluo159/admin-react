@@ -3,6 +3,7 @@ package zone
 import (
 	"fmt"
 	"net/http"
+	"os"
 
 	mgo "gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
@@ -39,42 +40,9 @@ type ZoneRsp struct {
 	Items  []Zone
 }
 
-type Connect struct {
-	ID   int
-	Port int
-	IP   string
-}
-
-type MysqlLua struct {
-	IP             string
-	Port           int
-	UserName       string
-	PassWord       string
-	FlushFrequency int
-	DataBase       string
-}
-
-type RedisLua struct {
-	IP       string
-	Port     int
-	Password string
-}
-
-type Gate struct {
-	ID             int
-	Zid            int
-	ServerIP       string
-	ServerPort     int
-	ClientIP       string
-	ClientPort     int
-	ChannelIds     []string
-	Open           bool
-	Name           string
-	ConnectServers map[string]interface{}
-}
-
 var (
-	cl *mgo.Collection
+	cl       *mgo.Collection
+	GlobalDB MysqlLua
 )
 
 //获取区服信息
@@ -184,7 +152,7 @@ func Register(e *echo.Echo) {
 		fmt.Printf("mongodb ensureindex err:%s", err.Error())
 		panic(0)
 	}
-
+	os.Mkdir(machine.GameConfigDir, os.ModeDir)
 	e.GET("/zone", GetZones)
 	e.POST("/zone/add", AddZone)
 	e.POST("/zone/save", SaveZone)
@@ -206,40 +174,6 @@ func SynMachine(c echo.Context) error {
 	query := bson.M{"zid": zid}
 	cl.Find(query).One(&zone)
 
-	//zoneDBquery := bson.M{"zoneDBHost": zone.ZoneDBHost}
-	//zonelogquery := bson.M{"zonelogdbHost": zone.ZonelogdbHost}
-
-	//zoneDBCount, zdberr := cl.Find(zoneDBquery).Count()
-	//if zdberr != nil {
-	//	ret.Result = zdberr.Error()
-	//	return c.JSON(http.StatusOK, ret)
-	//}
-	//zonelogDBCount, zlogerr := cl.Find(zonelogquery).Count()
-	//if zlogerr != nil {
-	//	ret.Result = zlogerr.Error()
-	//	return c.JSON(http.StatusOK, ret)
-	//}
-
-	//zonedbm, dberr := machine.GetMachineByName(zone.ZoneDBHost)
-	//if dberr != nil {
-	//	ret.Result = dberr.Error()
-	//}
-
-	//logm, logerr := machine.GetMachineByName(zone.ZonelogdbHost)
-	//if logerr != nil {
-	//	ret.Result = logerr.Error()
-	//}
-
-	gerr := GateLua(&zone)
-	if gerr != nil {
-		ret.Result = gerr.Error()
-		return c.JSON(http.StatusOK, ret)
-	}
-
-	return c.JSON(http.StatusOK, ret)
-}
-
-func GateLua(zone *Zone) error {
 	zonequery := bson.M{"zoneHost": zone.ZoneHost}
 	zoneCount, zerr := cl.Find(zonequery).Count()
 	if zerr != nil {
@@ -249,6 +183,35 @@ func GateLua(zone *Zone) error {
 	if err != nil {
 		return err
 	}
+
+	dir := machine.GameConfigDir + "zone" + strconv.Itoa(zone.Zid)
+	os.Mkdir(dir, os.ModeDir)
+	curDir := dir + "/"
+	gerr := GateLua(&zone, zonem, zoneCount, curDir)
+	if gerr != nil {
+		ret.Result = gerr.Error()
+		return c.JSON(http.StatusOK, ret)
+	}
+	cerr := CenterLua(&zone, zonem, zoneCount, curDir)
+	if cerr != nil {
+		ret.Result = cerr.Error()
+		return c.JSON(http.StatusOK, ret)
+	}
+	lerr := LogLua(&zone, zonem, zoneCount, curDir)
+	if lerr != nil {
+		ret.Result = lerr.Error()
+		return c.JSON(http.StatusOK, ret)
+	}
+	logicerr := LogicLua(&zone, zonem, zoneCount, curDir)
+	if logicerr != nil {
+		ret.Result = logicerr.Error()
+		return c.JSON(http.StatusOK, ret)
+	}
+
+	return c.JSON(http.StatusOK, ret)
+}
+
+func GateLua(zone *Zone, zonem *machine.Machine, zoneCount int, Dir string) error {
 	masterm, merr := machine.GetMachineByName("cghost2")
 	if merr != nil {
 		return merr
@@ -280,10 +243,145 @@ func GateLua(zone *Zone) error {
 		IP:   zonem.IP,
 		Port: machine.LogPort + zoneCount,
 	}
-
-	trans := struct2lua.ToLuaConfig("Gate", zone.Zid, gateLua)
+	trans := struct2lua.ToLuaConfig(Dir, "Gate", gateLua)
 	if trans == false {
 		fmt.Println("gate cannt wirte lua file")
 	}
+	return nil
+}
+
+func CenterLua(zone *Zone, zonem *machine.Machine, zoneCount int, Dir string) error {
+	centerLua := Center{
+		ID:   zone.Zid,
+		Zid:  zone.Zid,
+		IP:   zonem.IP,
+		Port: machine.CenterPort + zoneCount,
+		OnlineNumberCheckTime: 60 * 5,
+		SingleServerLoad:      4000,
+		ConnectServers:        make(map[string]interface{}),
+	}
+
+	centerLua.ConnectServers["CharDB"] = Connect{
+		ID:   zone.Zid,
+		IP:   zonem.IP,
+		Port: machine.CharDBPort + zoneCount,
+	}
+	centerLua.ConnectServers["Gate"] = Connect{
+		ID:   zone.Zid,
+		IP:   zonem.IP,
+		Port: machine.GatePort + zoneCount,
+	}
+	centerLua.ConnectServers["Log"] = Connect{
+		ID:   zone.Zid,
+		IP:   zonem.IP,
+		Port: machine.LogPort + zoneCount,
+	}
+
+	trans := struct2lua.ToLuaConfig(Dir, "Center", centerLua)
+	if trans == false {
+		fmt.Println("center cannt wirte lua file")
+	}
+	return nil
+}
+
+func CharDBLua(zone *Zone, zonem *machine.Machine, zoneCount int, Dir string) error {
+	zoneDBquery := bson.M{"zoneDBHost": zone.ZoneDBHost}
+	zoneDBCount, zdberr := cl.Find(zoneDBquery).Count()
+	if zdberr != nil {
+		return zdberr
+	}
+	zonedbm, dberr := machine.GetMachineByName(zone.ZoneDBHost)
+	if dberr != nil {
+		return dberr
+	}
+
+	mysqldbName := "zone" + strconv.Itoa(zone.Zid)
+	charDBLua := CharDB{
+		ID:   zone.Zid,
+		Zid:  zone.Zid,
+		IP:   zonem.IP,
+		Port: machine.CharDBPort + zoneCount,
+		Mysql: MysqlLua{
+			IP:             zonedbm.IP,
+			Port:           machine.MysqlPort,
+			UserName:       machine.UserName,
+			PassWord:       machine.PassWord,
+			FlushFrequency: 300,
+			DataBase:       mysqldbName,
+		},
+		Redis: RedisLua{
+			IP:       zonedbm.IP,
+			Port:     machine.RedisPort + zoneDBCount,
+			Password: machine.PassWord,
+		},
+	}
+	trans := struct2lua.ToLuaConfig(Dir, "CharDB", charDBLua)
+	if trans == false {
+		fmt.Println("chardb cannt wirte lua file")
+	}
+	return nil
+}
+
+func LogicLua(zone *Zone, zonem *machine.Machine, zoneCount int, Dir string) error {
+	logicLua := Logic{
+		ID:             1,
+		Zid:            zone.Zid,
+		IP:             zonem.IP,
+		Port:           machine.LogicPort + zoneCount*3 + 1,
+		ConnectServers: make(map[string]interface{}),
+	}
+	logicLua.ConnectServers["CharDB"] = Connect{
+		ID:   zone.Zid,
+		IP:   zonem.IP,
+		Port: machine.CharDBPort + zoneCount,
+	}
+	logicLua.ConnectServers["Gate"] = Connect{
+		ID:   zone.Zid,
+		IP:   zonem.IP,
+		Port: machine.LogicPort + zoneCount,
+	}
+	logicLua.ConnectServers["Center"] = Connect{
+		ID:   zone.Zid,
+		IP:   zonem.IP,
+		Port: machine.CenterPort + zoneCount,
+	}
+	logicLua.ConnectServers["Log"] = Connect{
+		ID:   zone.Zid,
+		IP:   zonem.IP,
+		Port: machine.LogPort + zoneCount,
+	}
+
+	trans := struct2lua.ToLuaConfig(Dir, "Logic", logicLua)
+	if trans == false {
+		fmt.Println("logic cannt wirte lua file")
+	}
+
+	return nil
+}
+
+func LogLua(zone *Zone, zonem *machine.Machine, zoneCount int, Dir string) error {
+	logm, logerr := machine.GetMachineByName(zone.ZonelogdbHost)
+	if logerr != nil {
+		return logerr
+	}
+	logLua := Log{
+		ID:   zone.Zid,
+		IP:   zonem.IP,
+		Port: machine.LogPort + zoneCount,
+		ZoneLogMysql: MysqlLua{
+			IP:             logm.IP,
+			Port:           machine.MysqlPort,
+			UserName:       machine.UserName,
+			PassWord:       machine.PassWord,
+			FlushFrequency: 300,
+			DataBase:       "zonelog" + strconv.Itoa(zone.Zid),
+		},
+		GlobalLogMysql: GlobalDB,
+	}
+	trans := struct2lua.ToLuaConfig(Dir, "Log", logLua)
+	if trans == false {
+		fmt.Println("log cannt wirte lua file")
+	}
+
 	return nil
 }

@@ -2,6 +2,8 @@ package zone
 
 import (
 	"fmt"
+	"io/ioutil"
+	"log"
 	"net/http"
 	"os"
 
@@ -9,6 +11,8 @@ import (
 	"gopkg.in/mgo.v2/bson"
 
 	"strconv"
+
+	"os/exec"
 
 	"github.com/adamluo159/admin-react/server/db"
 	"github.com/adamluo159/admin-react/server/machine"
@@ -166,7 +170,7 @@ func SynMachine(c echo.Context) error {
 	}
 	zid, err := strconv.Atoi(c.QueryParam("zid"))
 	if err != nil {
-		ret.Result = err.Error()
+		ret.Result = "zid" + err.Error()
 		return c.JSON(http.StatusOK, ret)
 	}
 
@@ -189,30 +193,57 @@ func SynMachine(c echo.Context) error {
 	curDir := dir + "/"
 	gerr := GateLua(&zone, zonem, zoneCount, curDir)
 	if gerr != nil {
-		ret.Result = gerr.Error()
+		ret.Result = "gate " + gerr.Error()
 		return c.JSON(http.StatusOK, ret)
 	}
 	cerr := CenterLua(&zone, zonem, zoneCount, curDir)
 	if cerr != nil {
-		ret.Result = cerr.Error()
+		ret.Result = "center" + cerr.Error()
 		return c.JSON(http.StatusOK, ret)
 	}
 	lerr := LogLua(&zone, zonem, zoneCount, curDir)
 	if lerr != nil {
-		ret.Result = lerr.Error()
+		ret.Result = "log" + lerr.Error()
 		return c.JSON(http.StatusOK, ret)
 	}
 	logicerr := LogicLua(&zone, zonem, zoneCount, curDir)
 	if logicerr != nil {
-		ret.Result = logicerr.Error()
+		ret.Result = "logic" + logicerr.Error()
 		return c.JSON(http.StatusOK, ret)
 	}
 
+	// 执行系统命令
+	// 第一个参数是命令名称
+	// 后面参数可以有多个，命令参数
+	fmt.Println("begin to exex")
+	cmd := exec.Command("sh", "GameConfig/gitCommit", "zoneo")
+	// 获取输出对象，可以从该对象中读取输出结果
+	stdout, err := cmd.StdoutPipe()
+	if err != nil {
+		log.Fatal(err)
+	}
+	// 保证关闭输出流
+	defer stdout.Close()
+	// 运行命令
+	if err := cmd.Start(); err != nil {
+		log.Fatal(err)
+	}
+	// 读取输出结果
+	opBytes, err := ioutil.ReadAll(stdout)
+	if err != nil {
+		log.Fatal(err)
+	}
+	fmt.Println(string(opBytes))
+	//	if exeErr != nil {
+	//		ret.Result = exeErr.Error()
+	//		return c.JSON(http.StatusOK, ret)
+	//	}
+	//
 	return c.JSON(http.StatusOK, ret)
 }
 
 func GateLua(zone *Zone, zonem *machine.Machine, zoneCount int, Dir string) error {
-	masterm, merr := machine.GetMachineByName("cghost2")
+	masterm, merr := machine.GetMachineByName("master")
 	if merr != nil {
 		return merr
 	}

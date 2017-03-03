@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 
+	"github.com/adamluo159/admin-react/server/agentServer"
 	"github.com/adamluo159/admin-react/server/db"
 	"github.com/adamluo159/admin-react/server/machine"
 	"github.com/adamluo159/admin-react/server/zone"
@@ -26,7 +27,10 @@ func main() {
 	machine.Register(e)
 	zone.Register(e)
 
+	agentServer.New(":3300")
+
 	e.Static("/", "../client/")
 	e.File("/", "../client/index.html")
 	e.Logger.Fatal(e.Start(":1323"))
+
 }

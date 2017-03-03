@@ -156,7 +156,6 @@ func Register(e *echo.Echo) {
 		fmt.Printf("mongodb ensureindex err:%s", err.Error())
 		panic(0)
 	}
-	os.Mkdir(machine.GameConfigDir, os.ModeDir)
 	e.GET("/zone", GetZones)
 	e.POST("/zone/add", AddZone)
 	e.POST("/zone/save", SaveZone)
@@ -187,9 +186,11 @@ func SynMachine(c echo.Context) error {
 	if err != nil {
 		return err
 	}
+	hostdir := "GameConfig/" + zonem.Hostname
+	os.Mkdir(hostdir, os.ModePerm)
 
-	dir := machine.GameConfigDir + "zone" + strconv.Itoa(zone.Zid)
-	os.Mkdir(dir, os.ModeDir)
+	dir := hostdir + "/zone" + strconv.Itoa(zone.Zid)
+	os.Mkdir(dir, os.ModePerm)
 	curDir := dir + "/"
 	gerr := GateLua(&zone, zonem, zoneCount, curDir)
 	if gerr != nil {
@@ -212,33 +213,12 @@ func SynMachine(c echo.Context) error {
 		return c.JSON(http.StatusOK, ret)
 	}
 
-	// 执行系统命令
-	// 第一个参数是命令名称
-	// 后面参数可以有多个，命令参数
-	fmt.Println("begin to exex")
-	cmd := exec.Command("sh", "GameConfig/gitCommit", "zoneo")
-	// 获取输出对象，可以从该对象中读取输出结果
-	stdout, err := cmd.StdoutPipe()
-	if err != nil {
-		log.Fatal(err)
+	exeErr := ExeShell("GameConfig/gitCommit", "add or update zone"+strconv.Itoa(zone.Zid))
+	if exeErr != nil {
+		ret.Result = exeErr.Error()
+		return c.JSON(http.StatusOK, ret)
 	}
-	// 保证关闭输出流
-	defer stdout.Close()
-	// 运行命令
-	if err := cmd.Start(); err != nil {
-		log.Fatal(err)
-	}
-	// 读取输出结果
-	opBytes, err := ioutil.ReadAll(stdout)
-	if err != nil {
-		log.Fatal(err)
-	}
-	fmt.Println(string(opBytes))
-	//	if exeErr != nil {
-	//		ret.Result = exeErr.Error()
-	//		return c.JSON(http.StatusOK, ret)
-	//	}
-	//
+
 	return c.JSON(http.StatusOK, ret)
 }
 
@@ -414,5 +394,35 @@ func LogLua(zone *Zone, zonem *machine.Machine, zoneCount int, Dir string) error
 		fmt.Println("log cannt wirte lua file")
 	}
 
+	return nil
+}
+
+func ExeShell(dir string, args string) error {
+
+	fmt.Println("begin execute shell.....")
+	// 执行系统命令
+	// 第一个参数是命令名称
+	// 后面参数可以有多个，命令参数
+	cmd := exec.Command("sh", dir, args) //"GameConfig/gitCommit", "zoneo")
+	// 获取输出对象，可以从该对象中读取输出结果
+	stdout, err := cmd.StdoutPipe()
+	if err != nil {
+		log.Fatal(err)
+		return err
+	}
+	// 保证关闭输出流
+	defer stdout.Close()
+	// 运行命令
+	if err := cmd.Start(); err != nil {
+		log.Fatal(err)
+		return err
+	}
+	// 读取输出结果
+	opBytes, err := ioutil.ReadAll(stdout)
+	if err != nil {
+		log.Fatal(err)
+		return err
+	}
+	fmt.Println(string(opBytes))
 	return nil
 }

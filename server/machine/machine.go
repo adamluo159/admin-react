@@ -24,7 +24,6 @@ const (
 	PassWord      string = "cgyx"
 	RedisPort     int    = 6379
 	MysqlPort     int    = 3306
-	GameConfigDir string = "GameConfig/"
 )
 
 //机器信息

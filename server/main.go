@@ -27,7 +27,7 @@ func main() {
 	machine.Register(e)
 	zone.Register(e)
 
-	agentServer.New(":3300")
+	go agentServer.New(":3300")
 
 	e.Static("/", "../client/")
 	e.File("/", "../client/index.html")

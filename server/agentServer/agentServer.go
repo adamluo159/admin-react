@@ -2,6 +2,7 @@ package agentServer
 
 import (
 	"bufio"
+	"bytes"
 	"encoding/binary"
 	"encoding/json"
 	"log"
@@ -30,6 +31,7 @@ type server struct {
 
 var gserver *server
 var tmpCid int
+var msgMap map[string]func(c *Client, a *AgentMsg)
 
 const timeOutSec int64 = 20
 
@@ -50,24 +52,68 @@ func (c *Client) listen() {
 		}
 		a := AgentMsg{}
 		json.Unmarshal(buffer[4:dataLength+4], &a)
-		log.Println("recv agent msg, msg: ", a, dataLength, len)
-		if a.Cmd == "ping" {
-			c.pingTime = time.Now()
+		msgfunc := msgMap[a.Cmd]
+		if msgfunc == nil {
+			log.Println("cannt recv agent msg, msg: ", a, dataLength, len)
+		} else {
+			msgfunc(c, &a)
+			log.Println("recv agent msg, msg: ", a, dataLength, len)
 		}
+
 	}
 }
 
 // Send text message to client
-func (c *Client) Send(message string) error {
-	log.Println("send msg:", message)
-	_, err := c.conn.Write([]byte(message))
-	return err
-}
+//func (c *Client) Send(message string) error {
+//	log.Println("send msg:", message)
+//	_, err := c.conn.Write([]byte(message))
+//	return err
+//}
 
 // Send bytes to client
-func (c *Client) SendBytes(b []byte) error {
-	_, err := c.conn.Write(b)
-	return err
+func (c *Client) SendBytes(cmd string, jdata string) error {
+	a := AgentMsg{
+		Cmd:  cmd,
+		Data: jdata,
+	}
+	data, err := json.Marshal(a)
+	if err != nil {
+		return err
+	}
+	lenData := (uint32)(len(data))
+	s := make([]byte, 4)
+	binary.LittleEndian.PutUint32(s, lenData)
+	buff := bytes.NewBuffer(s)
+	buff.Write(data)
+
+	empty := make([]byte, 1024-buff.Len())
+	buff.Write(empty)
+
+	_, serr := c.conn.Write(buff.Bytes())
+	//log.Println("send msg:", len(buff.Bytes()), lenData, string(buff.Bytes()))
+	return serr
+}
+
+func (c *Client) SendBytesCmd(cmd string) error {
+	a := AgentMsg{
+		Cmd: cmd,
+	}
+	data, err := json.Marshal(a)
+	if err != nil {
+		return err
+	}
+	lenData := (uint32)(len(data))
+	s := make([]byte, 4)
+	binary.LittleEndian.PutUint32(s, lenData)
+	buff := bytes.NewBuffer(s)
+	buff.Write(data)
+
+	empty := make([]byte, 1024-buff.Len())
+	buff.Write(empty)
+
+	_, serr := c.conn.Write(buff.Bytes())
+	log.Println("send msg:", len(buff.Bytes()), lenData, string(buff.Bytes()))
+	return serr
 }
 
 func (c *Client) Conn() net.Conn {
@@ -119,8 +165,6 @@ func (s *server) CheckTimeout() {
 		now := time.Now().Unix()
 		for _, v := range s.clients {
 			diffSec = now - v.pingTime.Unix()
-			log.Println("host now:", now)
-			log.Println("host pingtime:", v.pingTime.Unix())
 
 			if diffSec > timeOutSec {
 				DisConnect(v)
@@ -128,8 +172,6 @@ func (s *server) CheckTimeout() {
 		}
 		for _, v := range s.tmpClients {
 			diffSec = now - v.pingTime.Unix()
-			log.Println("now:", now)
-			log.Println("pingtime:", v.pingTime.Unix())
 			if diffSec > timeOutSec {
 				DisConnect(v)
 			}
@@ -146,6 +188,9 @@ func New(address string) {
 		clients:    make(map[string]*Client),
 		tmpClients: make(map[int]*Client),
 	}
+	msgMap = make(map[string]func(c *Client, a *AgentMsg))
+	msgMap["token"] = TokenCheck
+	msgMap["ping"] = Ping
 
 	gserver.OnNewClient(NewClient)
 	//gserver.OnNewMessage(OnMessage)

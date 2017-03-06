@@ -14,6 +14,7 @@ import (
 
 	"os/exec"
 
+	"github.com/adamluo159/admin-react/server/agentServer"
 	"github.com/adamluo159/admin-react/server/db"
 	"github.com/adamluo159/admin-react/server/machine"
 	"github.com/adamluo159/struct2lua"
@@ -212,12 +213,18 @@ func SynMachine(c echo.Context) error {
 		ret.Result = "logic" + logicerr.Error()
 		return c.JSON(http.StatusOK, ret)
 	}
+	charErr := CharDBLua(&zone, zonem, zoneCount, curDir)
+	if charErr != nil {
+		ret.Result = "chardb" + charErr.Error()
+		return c.JSON(http.StatusOK, ret)
+	}
 
 	exeErr := ExeShell("GameConfig/gitCommit", "add or update zone"+strconv.Itoa(zone.Zid))
 	if exeErr != nil {
 		ret.Result = exeErr.Error()
 		return c.JSON(http.StatusOK, ret)
 	}
+	agentServer.Update(zonem.Hostname)
 
 	return c.JSON(http.StatusOK, ret)
 }
@@ -254,7 +261,15 @@ func GateLua(zone *Zone, zonem *machine.Machine, zoneCount int, Dir string) erro
 		IP:   zonem.IP,
 		Port: machine.LogPort + zoneCount,
 	}
-	trans := struct2lua.ToLuaConfig(Dir, "Gate", gateLua)
+	srv := make(map[string]int)
+	srv["nType"] = machine.GateServer
+	head := machine.ServerConfigHead{
+		NET_TIMEOUT_MSEC:  machine.NetTimeOut,
+		NET_MAX_CONNETION: machine.NetMaxConnection,
+		StartService:      []machine.SRV{srv},
+	}
+
+	trans := struct2lua.ToLuaConfig(Dir, "Gate", gateLua, head)
 	if trans == false {
 		fmt.Println("gate cannt wirte lua file")
 	}
@@ -287,8 +302,15 @@ func CenterLua(zone *Zone, zonem *machine.Machine, zoneCount int, Dir string) er
 		IP:   zonem.IP,
 		Port: machine.LogPort + zoneCount,
 	}
+	srv := make(map[string]int)
+	srv["nType"] = machine.CenterServer
+	head := machine.ServerConfigHead{
+		NET_TIMEOUT_MSEC:  machine.NetTimeOut,
+		NET_MAX_CONNETION: machine.NetMaxConnection,
+		StartService:      []machine.SRV{srv},
+	}
 
-	trans := struct2lua.ToLuaConfig(Dir, "Center", centerLua)
+	trans := struct2lua.ToLuaConfig(Dir, "Center", centerLua, head)
 	if trans == false {
 		fmt.Println("center cannt wirte lua file")
 	}
@@ -326,7 +348,15 @@ func CharDBLua(zone *Zone, zonem *machine.Machine, zoneCount int, Dir string) er
 			Password: machine.PassWord,
 		},
 	}
-	trans := struct2lua.ToLuaConfig(Dir, "CharDB", charDBLua)
+	srv := make(map[string]int)
+	srv["nType"] = machine.DbproxyServer
+	head := machine.ServerConfigHead{
+		NET_TIMEOUT_MSEC:  machine.NetTimeOut,
+		NET_MAX_CONNETION: machine.NetMaxConnection,
+		StartService:      []machine.SRV{srv},
+	}
+
+	trans := struct2lua.ToLuaConfig(Dir, "CharDB", charDBLua, head)
 	if trans == false {
 		fmt.Println("chardb cannt wirte lua file")
 	}
@@ -361,8 +391,15 @@ func LogicLua(zone *Zone, zonem *machine.Machine, zoneCount int, Dir string) err
 		IP:   zonem.IP,
 		Port: machine.LogPort + zoneCount,
 	}
+	srv := make(map[string]int)
+	srv["nType"] = machine.LogServer
+	head := machine.ServerConfigHead{
+		NET_TIMEOUT_MSEC:  machine.NetTimeOut,
+		NET_MAX_CONNETION: machine.NetMaxConnection,
+		StartService:      []machine.SRV{srv},
+	}
 
-	trans := struct2lua.ToLuaConfig(Dir, "Logic", logicLua)
+	trans := struct2lua.ToLuaConfig(Dir, "Logic", logicLua, head)
 	if trans == false {
 		fmt.Println("logic cannt wirte lua file")
 	}
@@ -389,7 +426,14 @@ func LogLua(zone *Zone, zonem *machine.Machine, zoneCount int, Dir string) error
 		},
 		GlobalLogMysql: GlobalDB,
 	}
-	trans := struct2lua.ToLuaConfig(Dir, "Log", logLua)
+	srv := make(map[string]int)
+	srv["nType"] = machine.LogServer
+	head := machine.ServerConfigHead{
+		NET_TIMEOUT_MSEC:  machine.NetTimeOut,
+		NET_MAX_CONNETION: machine.NetMaxConnection,
+		StartService:      []machine.SRV{srv},
+	}
+	trans := struct2lua.ToLuaConfig(Dir, "Log", logLua, head)
 	if trans == false {
 		fmt.Println("log cannt wirte lua file")
 	}

@@ -11,20 +11,37 @@ import (
 )
 
 const (
-	CharDBPort    int    = 9000
-	GatePort      int    = 9100
-	CenterPort    int    = 9200
-	LogicPort     int    = 9300
-	ClientPort    int    = 9400
+	CharDBPort    int    = 7000
+	GatePort      int    = 7100
+	CenterPort    int    = 7200
+	LogicPort     int    = 7300
+	ClientPort    int    = 7400
 	MasterPort    int    = 9500
-	LoginPort     int    = 9550
-	LogPort       int    = 9600
-	AccountDBPort int    = 8500
-	UserName      string = "cgyx"
-	PassWord      string = "cgyx"
+	LoginPort     int    = 7550
+	LogPort       int    = 7600
+	AccountDBPort int    = 6500
+	UserName      string = "root"
+	PassWord      string = "cg2016"
 	RedisPort     int    = 6379
 	MysqlPort     int    = 3306
+
+	NetTimeOut       int = 1000 * 3600
+	NetMaxConnection int = 5000
+	DbproxyServer    int = 1
+	LoginServer      int = 2
+	CenterServer     int = 3
+	LogicServer      int = 4
+	LogServer        int = 5
+	MasterServer     int = 6
+	GateServer       int = 7
 )
+
+type SRV map[string]int
+type ServerConfigHead struct {
+	NET_TIMEOUT_MSEC  int
+	NET_MAX_CONNETION int
+	StartService      []SRV
+}
 
 //机器信息
 type Machine struct {

@@ -3,8 +3,8 @@ package agentServer
 import (
 	"crypto/md5"
 	"encoding/hex"
-	"encoding/json"
 	"log"
+	"time"
 )
 
 type AgentMsg struct {
@@ -16,17 +16,11 @@ type AgentMsg struct {
 func NewClient(c *Client) {
 	log.Println("new Client", c.conn.RemoteAddr().String())
 
-	a := AgentMsg{}
-	a.Cmd = "connected"
-	data, err := json.Marshal(a)
-	if err != nil {
-		log.Println("newclient error, ", err.Error())
-	}
 	tmpCid++
 	c.tmpCid = tmpCid
 	c.Server.tmpClients[tmpCid] = c
 
-	c.SendBytes(data)
+	c.SendBytesCmd("connected")
 }
 
 func DisConnect(c *Client) {
@@ -40,7 +34,7 @@ func DisConnect(c *Client) {
 	c.Close()
 }
 
-func TokenCheck(c *Client, a *AgentMsg) error {
+func TokenCheck(c *Client, a *AgentMsg) {
 	log.Println("recv agen token msg, token:", (*a).Data, " host:", (*a).Host)
 	md5Ctx := md5.New()
 	md5Ctx.Write([]byte("cgyx2017"))
@@ -48,21 +42,18 @@ func TokenCheck(c *Client, a *AgentMsg) error {
 	token := hex.EncodeToString(cipherStr)
 	if token != (*a).Data {
 		log.Println("token cannt be checked, ip and adress:", c.conn.RemoteAddr().String())
-		return nil
+		return
 	}
 
-	rsp := AgentMsg{}
-	rsp.Cmd = "checked"
-	rsp.Data = "OK"
-	data, err := json.Marshal(rsp)
-	if err != nil {
-		return err
-	}
 	c.host = a.Host
 	c.Server.clients[a.Host] = c
 	delete(c.Server.tmpClients, c.tmpCid)
 	c.tmpCid = 0
-	return c.SendBytes(data)
+	c.SendBytes("checked", "OK")
+}
+
+func Ping(c *Client, a *AgentMsg) {
+	c.pingTime = time.Now()
 }
 
 func Start(host string, zone string) {
@@ -70,16 +61,8 @@ func Start(host string, zone string) {
 	if c == nil {
 		return
 	}
-	a := AgentMsg{
-		Cmd:  "start",
-		Data: zone,
-	}
-	data, err := json.Marshal(a)
-	if err != nil {
-		log.Println(host + "  start: " + err.Error())
-		return
-	}
-	err = c.SendBytes(data)
+
+	err := c.SendBytes("start", zone)
 	if err != nil {
 		log.Println(host + "  start: " + err.Error())
 	}
@@ -90,17 +73,22 @@ func Stop(host string, zone string) {
 	if c == nil {
 		return
 	}
-	a := AgentMsg{
-		Cmd:  "stop",
-		Data: zone,
-	}
-	data, err := json.Marshal(a)
+
+	err := c.SendBytesCmd("stop")
 	if err != nil {
 		log.Println(host + "  stop: " + err.Error())
+	}
+}
+
+func Update(host string) {
+	log.Println(" recv web cmd update", host)
+	c := gserver.clients[host]
+	if c == nil {
+		log.Println("cannt find client hostname:", host, gserver.clients, gserver.tmpClients)
 		return
 	}
-	err = c.SendBytes(data)
+	err := c.SendBytesCmd("update")
 	if err != nil {
-		log.Println(host + "  stop: " + err.Error())
+		log.Println(host + "  update: " + err.Error())
 	}
 }

@@ -28,7 +28,7 @@ type Gate struct {
 	ServerPort     int
 	ClientIP       string
 	ClientPort     int
-	ChannelIds     []string
+	ChannelIds     []int
 	Open           bool
 	Name           string
 	ConnectServers map[string]interface{}

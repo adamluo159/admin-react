@@ -46,8 +46,9 @@ type ZoneRsp struct {
 }
 
 var (
-	cl       *mgo.Collection
-	GlobalDB MysqlLua
+	cl              *mgo.Collection
+	GlobalDB        MysqlLua
+	Str2IntChannels map[string]int
 )
 
 //获取区服信息
@@ -133,6 +134,11 @@ func getM(c *echo.Context) (*Zone, error) {
 
 //区服模块注册
 func Register(e *echo.Echo) {
+	Str2IntChannels = make(map[string]int)
+	Str2IntChannels["ios"] = 1
+	Str2IntChannels["yyb"] = 2
+	Str2IntChannels["xiaomi"] = 3
+
 	cl = db.Session.DB("zone").C("zone")
 	if cl == nil {
 		fmt.Printf("cannt find Collection about zone")
@@ -234,6 +240,14 @@ func GateLua(zone *Zone, zonem *machine.Machine, zoneCount int, Dir string) erro
 	if merr != nil {
 		return merr
 	}
+
+	s := make([]int, len(zone.Channels))
+	n := 0
+	for _, v := range zone.Channels {
+		s[n] = Str2IntChannels[v]
+		n++
+	}
+
 	gateLua := Gate{
 		ID:             zone.Zid,
 		Zid:            zone.Zid,
@@ -241,7 +255,7 @@ func GateLua(zone *Zone, zonem *machine.Machine, zoneCount int, Dir string) erro
 		ServerPort:     machine.GatePort + zoneCount,
 		ClientIP:       zonem.OutIP,
 		ClientPort:     machine.ClientPort + zoneCount,
-		ChannelIds:     zone.Channels,
+		ChannelIds:     s,
 		Open:           zone.Whitelst,
 		Name:           zone.ZoneName,
 		ConnectServers: make(map[string]interface{}),

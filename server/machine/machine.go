@@ -34,6 +34,8 @@ const (
 	LogServer        int = 5
 	MasterServer     int = 6
 	GateServer       int = 7
+
+	MasterCount int = 1
 )
 
 type SRV map[string]int

@@ -10,7 +10,7 @@ type MysqlLua struct {
 	IP             string
 	Port           int
 	UserName       string
-	PassWord       string
+	Password       string
 	FlushFrequency int
 	DataBase       string
 }

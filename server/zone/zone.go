@@ -233,7 +233,7 @@ func SynMachine(c echo.Context) error {
 	if err != nil {
 		return err
 	}
-	hostdir := "GameConfig/" + zonem.Hostname
+	hostdir := os.Getenv("HOME") + "/GameConfig/" + zonem.Hostname
 	os.Mkdir(hostdir, os.ModePerm)
 
 	dir := hostdir + "/zone" + strconv.Itoa(zone.Zid)
@@ -265,7 +265,8 @@ func SynMachine(c echo.Context) error {
 		return c.JSON(http.StatusOK, ret)
 	}
 
-	exeErr := ExeShell("GameConfig/gitCommit", "add or update zone"+strconv.Itoa(zone.Zid))
+	commitstr := os.Getenv("HOME") + "/GameConfig/gitCommit"
+	exeErr := ExeShell(commitstr, "add or update zone"+strconv.Itoa(zone.Zid))
 	if exeErr != nil {
 		ret.Result = exeErr.Error()
 		return c.JSON(http.StatusOK, ret)
@@ -503,7 +504,7 @@ func LogLua(zone *Zone, zonem *machine.Machine, zoneCount int, Dir string) error
 
 func ExeShell(dir string, args string) error {
 
-	fmt.Println("begin execute shell.....")
+	fmt.Println("begin execute shell.....", dir, "--", args)
 	// 执行系统命令
 	// 第一个参数是命令名称
 	// 后面参数可以有多个，命令参数

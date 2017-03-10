@@ -313,16 +313,15 @@ const newZone = Form.create()(React.createClass({
     const { getFieldValue } = this.props.form
     let disabled = getFieldValue("edit") ? false : true
     let content = this.renderTabs(disabled)
-    let buttonText = this.adding ? "新增提交" : "保存"
+    let buttonText = this.adding ? "新增" : "保存"
     return (
       <Form onSubmit={this.handleChange}>
         {content.slice(0, content.length)}
-        <Row>
-          <Col span={5}>
+          <Col span={6}>
             <Button type="primary" htmlType="submit" disabled={disabled} loading={this.loading}>{buttonText}</Button>
           </Col>
-          <Col span={9}>
-            <Button type="primary" disabled={!disabled} onClick={(e) => this.synMachine(e)} >同步机器配置</Button>
+          <Col span={8}>
+            <Button type="primary" disabled={!disabled} onClick={(e) => this.synMachine(e)} >同步机器</Button>
           </Col>
           <Col span={5}>
             <Button type="primary" disabled={!disabled} onClick={(e) => this.startZone(e)} >启服</Button>
@@ -330,7 +329,6 @@ const newZone = Form.create()(React.createClass({
           <Col span={5}>
             <Button type="primary" disabled={!disabled} onClick={(e) => this.stopZone(e)} >关服</Button>
           </Col>
-        </Row>
       </Form>
     )
   },

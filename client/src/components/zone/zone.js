@@ -16,13 +16,13 @@ const newZone = Form.create()(React.createClass({
     this.zoneNameToZid = {}
     this.synZid = 0
 
-    let {dispatch} = this.props
+    let { dispatch } = this.props
     dispatch.fetchInitZones(this.InitZones)
   },
 
   InitZones(json) {
     this.initHead = true
-    let {setFieldsValue} = this.props.form
+    let { setFieldsValue } = this.props.form
 
     if (json.Result != "OK") {
       setFieldsValue({
@@ -66,7 +66,7 @@ const newZone = Form.create()(React.createClass({
     this.initShow = true
     this.adding = false
     let zone = this.zoneData[zid]
-    let {setFieldsValue} = this.props.form
+    let { setFieldsValue } = this.props.form
     let showzone = {
       ...zone,
       edit: false
@@ -81,7 +81,7 @@ const newZone = Form.create()(React.createClass({
 
     this.initShow = true
     this.adding = true
-    let {resetFields, setFieldsValue} = this.props.form
+    let { resetFields, setFieldsValue } = this.props.form
     resetFields()
     setFieldsValue({
       "edit": true
@@ -90,52 +90,51 @@ const newZone = Form.create()(React.createClass({
 
   handleChange(value) {
     value.preventDefault()
-    const {form, dispatch} = this.props
+    const { form, dispatch } = this.props
     form.validateFields((err, values) => {
       if (!err) {
         values.zid = Number(values.zid)
-        if(this.adding){
+        if (this.adding) {
           dispatch.fetchAddZone({
             obj: values,
             addZone: this.addZone
           })
-        }else{
+        } else {
           let oldzone = this.zoneData[values.zid]
-          if(oldzone == undefined){
+          if (oldzone == undefined) {
             let oldzid = this.zoneNameToZid[values.zoneName]
             oldzone = this.zoneData[oldzid]
           }
-          if(oldzone == undefined){
+          if (oldzone == undefined) {
             return
           }
           dispatch.fetchSaveZone({
             obj: values,
-            oldZoneName:  oldzone.zoneName,
+            oldZoneName: oldzone.zoneName,
             oldZid: oldzone.zid,
             saveZone: this.saveZone
           })
         }
-       this.loading = true
+        this.loading = true
       }
     })
   },
-  synMachine(e){
+  synMachine(e) {
     e.preventDefault()
-    console.log(this.props)
-    const {fetchSynMachine} = this.props.dispatch
-    fetchSynMachine({zid:this.synZid})
+    const { fetchSynMachine } = this.props.dispatch
+    fetchSynMachine({ zid: this.synZid, hostname: this.zoneData[this.synZid].hostname })
   },
 
   addZone(json) {
     this.loading = false
-    let {resetFields, setFieldsValue} = this.props.form
+    let { resetFields, setFieldsValue } = this.props.form
     let zone = json.Item
     if (json.Result != "OK") {
       let a = {
         edit: false,
       }
       setFieldsValue(a)
-      return 
+      return
     }
     let a = {
       ...zone,
@@ -165,10 +164,10 @@ const newZone = Form.create()(React.createClass({
     setFieldsValue(a)
   },
 
-  saveZone(rsp){
+  saveZone(rsp) {
     this.loading = false
-    let {resetFields, setFieldsValue} = this.props.form
-    
+    let { resetFields, setFieldsValue } = this.props.form
+
     let newZone = rsp.json.Item
     let newChannels = newZone.channels
 
@@ -179,17 +178,17 @@ const newZone = Form.create()(React.createClass({
         edit: true,
       }
       setFieldsValue(a)
-      return 
+      return
     }
     let delFunc = (obj) => obj.zid != oldzid
     //this.nameToZid[zone.name] = zone.zid
-    for(let i = 0; i < oldchannels.length; i++){
+    for (let i = 0; i < oldchannels.length; i++) {
       let delC = oldchannels[i]
       let zonelst = this.ZoneHeadData[delC]
       let newlst = zonelst.filter(delFunc)
-      if(newlst.length == 0){
+      if (newlst.length == 0) {
         delete this.ZoneHeadData[delC]
-      }else{
+      } else {
         this.ZoneHeadData[delC] = newlst
       }
     }
@@ -200,27 +199,28 @@ const newZone = Form.create()(React.createClass({
     for (let c = 0; c < newZone.channels.length; c++) {
       let channel = newZone.channels[c]
       let zonelst = this.ZoneHeadData[channel]
-      if(zonelst){
+      if (zonelst) {
         let index = zonelst.indexOf(headInfo)
         if (index === -1) {
           zonelst.push(headInfo)
         } else {
           zonelst[index] = headInfo
         }
-      }else{
+      } else {
         zonelst = []
         zonelst.push(headInfo)
-        if(this.channelData.indexOf(channel) === -1){
+        if (this.channelData.indexOf(channel) === -1) {
           this.channelData.push(channel)
         }
       }
       this.ZoneHeadData[channel] = zonelst
     }
     let newChannelData = []
-    this.channelData.forEach(k=>{
-      if(this.ZoneHeadData[k]){
+    this.channelData.forEach(k => {
+      if (this.ZoneHeadData[k]) {
         newChannelData.push(k)
-    }})
+      }
+    })
     this.channelData = newChannelData
     let a = {
       ...newZone,
@@ -229,18 +229,45 @@ const newZone = Form.create()(React.createClass({
     setFieldsValue(a)
 
     let oldZoneName = this.zoneData[oldzid].zoneName
-    if(newZone.zoneName != oldZoneName){
+    if (newZone.zoneName != oldZoneName) {
       delete this.zoneNameToZid[oldZoneName]
     }
-    if (newZone.zid != oldzid){
+    if (newZone.zid != oldzid) {
       delete this.zoneData[oldzid]
     }
     this.zoneData[newZone.zid] = newZone
     this.zoneNameToZid[newZone.zoneName] = newZone.zid
   },
 
+  startZone(e) {
+    e.preventDefault()
+    const { fetchStartZone } = this.props.dispatch
+    fetchStartZone({
+      obj: { zid: this.synZid, ZoneHost: this.zoneData[this.synZid].zoneHost },
+      startZoneRsp: this.startZoneRsp,
+    })
+  },
+
+  startZoneRsp(jsp) {
+    console.log("start zone:", jsp)
+  },
+
+  stopZone(e) {
+    e.preventDefault()
+    const { fetchStopZone } = this.props.dispatch
+    fetchStopZone({
+      obj: { zid: this.synZid, ZoneHost: this.zoneData[this.synZid].zoneHost },
+      stopZoneRsp: this.startZoneRsp,
+    })
+
+  },
+  stopZoneRsp(jsp) {
+    console.log("stop zone:", jsp)
+  },
+
+
   dCreator(item, tag) {
-    const {getFieldDecorator, getFieldsValue} = this.props.form
+    const { getFieldDecorator, getFieldsValue } = this.props.form
     let layout = item.layout ? { ...item.layout } : { ...formItemLayout }
     let options = item.options ? { ...item.options } : { ...zoneOptions }
     return (
@@ -257,7 +284,7 @@ const newZone = Form.create()(React.createClass({
       span: 16,
       offset: 8
     }
-    const {channels, zoneInput, whitelst} = zoneConfig
+    const { channels, zoneInput, whitelst } = zoneConfig
     let loading = false
     let renderItems = []
     let switchEdit = {
@@ -283,19 +310,27 @@ const newZone = Form.create()(React.createClass({
   },
 
   zoneContent() {
-    const {getFieldValue} = this.props.form
+    const { getFieldValue } = this.props.form
     let disabled = getFieldValue("edit") ? false : true
     let content = this.renderTabs(disabled)
-    let buttonText = this.adding ? "新增提交": "保存"
+    let buttonText = this.adding ? "新增提交" : "保存"
     return (
       <Form onSubmit={this.handleChange}>
         {content.slice(0, content.length)}
-        <Col span={4}>
-          <Button type="primary" htmlType="submit" disabled={disabled} loading={this.loading}>{buttonText}</Button>
-        </Col>
-        <Col span={4}>
-          <Button type="primary" disabled={!disabled} onClick={(e)=>this.synMachine(e)} >同步配置到机器上</Button>
-        </Col>
+        <Row>
+          <Col span={5}>
+            <Button type="primary" htmlType="submit" disabled={disabled} loading={this.loading}>{buttonText}</Button>
+          </Col>
+          <Col span={9}>
+            <Button type="primary" disabled={!disabled} onClick={(e) => this.synMachine(e)} >同步机器配置</Button>
+          </Col>
+          <Col span={5}>
+            <Button type="primary" disabled={!disabled} onClick={(e) => this.startZone(e)} >启服</Button>
+          </Col>
+          <Col span={5}>
+            <Button type="primary" disabled={!disabled} onClick={(e) => this.stopZone(e)} >关服</Button>
+          </Col>
+        </Row>
       </Form>
     )
   },
@@ -311,7 +346,7 @@ const newZone = Form.create()(React.createClass({
                   zoneData={this.ZoneHeadData}
                   showFunc={this.ShowZoneInfo}
                   addZoneFunc={this.AddZoneInfo}
-                  registerFunc={(e)=>this.fresh=e}>
+                  registerFunc={(e) => this.fresh = e}>
                 </ZoneHead>
                 :
                 <p>Loading</p>

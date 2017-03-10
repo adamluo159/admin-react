@@ -4,6 +4,7 @@ import (
 	"crypto/md5"
 	"encoding/hex"
 	"log"
+	"strconv"
 	"time"
 )
 
@@ -56,28 +57,32 @@ func Ping(c *Client, a *AgentMsg) {
 	c.pingTime = time.Now()
 }
 
-func Start(host string, zone string) {
+func StartZone(host string, zid int) bool {
+	log.Println(" recv web cmd startzone", host, " zid:", zid)
 	c := gserver.clients[host]
 	if c == nil {
-		return
+		return false
 	}
-
+	zone := "zone" + strconv.Itoa(zid)
 	err := c.SendBytes("start", zone)
 	if err != nil {
-		log.Println(host + "  start: " + err.Error())
+		log.Println(host + "  startzone: " + err.Error())
 	}
+	return true
 }
 
-func Stop(host string, zone string) {
+func StopZone(host string, zid int) bool {
+	log.Println(" recv web cmd stopzone", host, " zid:", zid)
 	c := gserver.clients[host]
 	if c == nil {
-		return
+		return false
 	}
-
-	err := c.SendBytesCmd("stop")
+	zone := "zone" + strconv.Itoa(zid)
+	err := c.SendBytes("stop", zone)
 	if err != nil {
-		log.Println(host + "  stop: " + err.Error())
+		log.Println(host + "  stopzone: " + err.Error())
 	}
+	return true
 }
 
 func Update(host string) {

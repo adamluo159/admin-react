@@ -196,8 +196,9 @@ func CharDBLua(zone *Zone, zonem *machine.Machine, zoneCount int, Dir string) er
 			DataBase:       mysqldbName,
 		},
 		Redis: RedisLua{
-			IP:       zonedbm.IP,
-			Port:     machine.RedisPort + zoneDBCount,
+			IP: zonedbm.IP,
+			//Port:     machine.RedisPort + zoneDBCount,
+			Port:     machine.RedisPort,
 			Password: "",
 		},
 	}

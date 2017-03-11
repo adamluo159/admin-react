@@ -10,7 +10,7 @@ module.exports = {
         historyApiFallback: true,
         inline: true
     },
-    devtool : 'source-map',
+    //devtool : 'source-map',
     //插件项
     plugins: [commonsPlugin, hot],
     //页面入口文件配置

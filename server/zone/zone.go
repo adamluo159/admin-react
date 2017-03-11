@@ -125,16 +125,19 @@ func SynMachine(c echo.Context) error {
 	ret := ZoneRsp{
 		Result: "OK",
 	}
+
 	zid, err := strconv.Atoi(c.QueryParam("zid"))
 	if err != nil {
 		ret.Result = "zid" + err.Error()
 		return c.JSON(http.StatusOK, ret)
 	}
+
 	hostname := c.QueryParam("hostname")
-	if hostname != "" {
+	if hostname == "" {
 		ret.Result = "hostname none"
 		return c.JSON(http.StatusOK, ret)
 	}
+
 	WriteZoneConfigLua(zid, &ret, hostname)
 	agentServer.Update(hostname)
 	return c.JSON(http.StatusOK, ret)

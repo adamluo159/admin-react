@@ -122,7 +122,7 @@ const newZone = Form.create()(React.createClass({
   synMachine(e) {
     e.preventDefault()
     const { fetchSynMachine } = this.props.dispatch
-    fetchSynMachine({ zid: this.synZid, hostname: this.zoneData[this.synZid].hostname })
+    fetchSynMachine({ zid: this.synZid, hostname: this.zoneData[this.synZid].zoneHost })
   },
 
   addZone(json) {

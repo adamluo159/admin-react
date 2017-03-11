@@ -1,7 +1,6 @@
 package zone
 
 import (
-	"fmt"
 	"io/ioutil"
 	"log"
 	"os"
@@ -124,7 +123,7 @@ func GateLua(zone *Zone, zonem *machine.Machine, zoneCount int, Dir string) erro
 
 	trans := struct2lua.ToLuaConfig(Dir, "Gate", gateLua, head, 0)
 	if trans == false {
-		fmt.Println("gate cannt wirte lua file")
+		log.Println("gate cannt wirte lua file")
 	}
 	return nil
 }
@@ -165,7 +164,7 @@ func CenterLua(zone *Zone, zonem *machine.Machine, zoneCount int, Dir string) er
 
 	trans := struct2lua.ToLuaConfig(Dir, "Center", centerLua, head, 0)
 	if trans == false {
-		fmt.Println("center cannt wirte lua file")
+		log.Println("center cannt wirte lua file")
 	}
 	return nil
 }
@@ -213,7 +212,7 @@ func CharDBLua(zone *Zone, zonem *machine.Machine, zoneCount int, Dir string) er
 
 	trans := struct2lua.ToLuaConfig(Dir, "CharDB", charDBLua, head, 0)
 	if trans == false {
-		fmt.Println("chardb cannt wirte lua file")
+		log.Println("chardb cannt wirte lua file")
 	}
 	return nil
 }
@@ -261,7 +260,7 @@ func LogicLua(zone *Zone, zonem *machine.Machine, zoneCount int, Dir string) err
 
 		trans := struct2lua.ToLuaConfig(Dir, "Logic", logicLua, head, k)
 		if trans == false {
-			fmt.Println("logic cannt wirte lua file")
+			log.Println("logic cannt wirte lua file")
 		}
 	}
 
@@ -296,7 +295,7 @@ func LogLua(zone *Zone, zonem *machine.Machine, zoneCount int, Dir string) error
 	}
 	trans := struct2lua.ToLuaConfig(Dir, "Log", logLua, head, 0)
 	if trans == false {
-		fmt.Println("log cannt wirte lua file")
+		log.Println("log cannt wirte lua file")
 	}
 
 	return nil
@@ -304,7 +303,7 @@ func LogLua(zone *Zone, zonem *machine.Machine, zoneCount int, Dir string) error
 
 func ExeShell(dir string, args string) error {
 
-	fmt.Println("begin execute shell.....", dir, "--", args)
+	log.Println("begin execute shell.....", dir, "--", args)
 	// 执行系统命令
 	// 第一个参数是命令名称
 	// 后面参数可以有多个，命令参数
@@ -328,6 +327,7 @@ func ExeShell(dir string, args string) error {
 		log.Fatal(err)
 		return err
 	}
-	fmt.Println(string(opBytes))
+	cmd.Wait()
+	log.Println(string(opBytes))
 	return nil
 }

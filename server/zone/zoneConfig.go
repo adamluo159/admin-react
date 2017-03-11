@@ -171,11 +171,12 @@ func CenterLua(zone *Zone, zonem *machine.Machine, zoneCount int, Dir string) er
 }
 
 func CharDBLua(zone *Zone, zonem *machine.Machine, zoneCount int, Dir string) error {
-	zoneDBquery := bson.M{"zoneDBHost": zone.ZoneDBHost}
-	zoneDBCount, zdberr := cl.Find(zoneDBquery).Count()
-	if zdberr != nil {
-		return zdberr
-	}
+	//这个后面再加，现在假设所有服都用6379作缓存
+	//zoneDBquery := bson.M{"zoneDBHost": zone.ZoneDBHost}
+	//zoneDBCount, zdberr := cl.Find(zoneDBquery).Count()
+	//if zdberr != nil {
+	//	return zdberr
+	//}
 	zonedbm, dberr := machine.GetMachineByName(zone.ZoneDBHost)
 	if dberr != nil {
 		return dberr

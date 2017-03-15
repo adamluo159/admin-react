@@ -25,7 +25,7 @@ const (
 	RedisPort     int    = 6379
 	MysqlPort     int    = 3306
 
-	NetTimeOut       int = 1000 * 3600
+	NetTimeOut       int = 1000 * 30
 	NetMaxConnection int = 5000
 	DbproxyServer    int = 1
 	LoginServer      int = 2

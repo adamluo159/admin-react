@@ -36,6 +36,7 @@ const (
 	GateServer       int = 7
 
 	MasterCount int = 1
+	LogMaxLine  int = 10000
 )
 
 type SRV map[string]int
@@ -43,6 +44,9 @@ type ServerConfigHead struct {
 	NET_TIMEOUT_MSEC  int
 	NET_MAX_CONNETION int
 	StartService      []SRV
+	LOG_DIR           string
+	LOG_INDEX         string
+	LOG_MAXLINE       int
 }
 
 //机器信息

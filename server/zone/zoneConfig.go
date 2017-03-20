@@ -113,12 +113,16 @@ func GateLua(zone *Zone, zonem *machine.Machine, zoneCount int, Dir string) erro
 		IP:   zonem.IP,
 		Port: machine.LogPort + zoneCount,
 	}
+
 	srv := make(map[string]int)
 	srv["nType"] = machine.GateServer
 	head := machine.ServerConfigHead{
 		NET_TIMEOUT_MSEC:  machine.NetTimeOut,
 		NET_MAX_CONNETION: machine.NetMaxConnection,
 		StartService:      []machine.SRV{srv},
+		LOG_DIR:           "gate_log",
+		LOG_INDEX:         "gate",
+		LOG_MAXLINE:       machine.LogMaxLine,
 	}
 
 	trans := struct2lua.ToLuaConfig(Dir, "Gate", gateLua, head, 0)
@@ -160,6 +164,9 @@ func CenterLua(zone *Zone, zonem *machine.Machine, zoneCount int, Dir string) er
 		NET_TIMEOUT_MSEC:  machine.NetTimeOut,
 		NET_MAX_CONNETION: machine.NetMaxConnection,
 		StartService:      []machine.SRV{srv},
+		LOG_DIR:           "center_log",
+		LOG_INDEX:         "cener",
+		LOG_MAXLINE:       machine.LogMaxLine,
 	}
 
 	trans := struct2lua.ToLuaConfig(Dir, "Center", centerLua, head, 0)
@@ -208,6 +215,9 @@ func CharDBLua(zone *Zone, zonem *machine.Machine, zoneCount int, Dir string) er
 		NET_TIMEOUT_MSEC:  machine.NetTimeOut,
 		NET_MAX_CONNETION: machine.NetMaxConnection,
 		StartService:      []machine.SRV{srv},
+		LOG_DIR:           "chardb_log",
+		LOG_INDEX:         "chardb",
+		LOG_MAXLINE:       machine.LogMaxLine,
 	}
 
 	trans := struct2lua.ToLuaConfig(Dir, "CharDB", charDBLua, head, 0)
@@ -258,6 +268,11 @@ func LogicLua(zone *Zone, zonem *machine.Machine, zoneCount int, Dir string) err
 		logicLua.Port = machine.LogicPort + zoneCount*3 + k
 		logicLua.MapIds = v
 
+		s := "logic" + strconv.Itoa(k)
+		head.LOG_DIR = s + "_log"
+		head.LOG_INDEX = s
+		head.LOG_MAXLINE = machine.LogMaxLine
+
 		trans := struct2lua.ToLuaConfig(Dir, "Logic", logicLua, head, k)
 		if trans == false {
 			log.Println("logic cannt wirte lua file")
@@ -292,6 +307,9 @@ func LogLua(zone *Zone, zonem *machine.Machine, zoneCount int, Dir string) error
 		NET_TIMEOUT_MSEC:  machine.NetTimeOut,
 		NET_MAX_CONNETION: machine.NetMaxConnection,
 		StartService:      []machine.SRV{srv},
+		LOG_DIR:           "yylog_log",
+		LOG_INDEX:         "yylog",
+		LOG_MAXLINE:       machine.LogMaxLine,
 	}
 	trans := struct2lua.ToLuaConfig(Dir, "Log", logLua, head, 0)
 	if trans == false {

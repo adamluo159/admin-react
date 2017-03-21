@@ -44,7 +44,6 @@ type ServerConfigHead struct {
 	NET_TIMEOUT_MSEC  int
 	NET_MAX_CONNETION int
 	StartService      []SRV
-	LOG_DIR           string
 	LOG_INDEX         string
 	LOG_MAXLINE       int
 }

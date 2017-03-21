@@ -117,10 +117,9 @@ func GateLua(zone *Zone, zonem *machine.Machine, zoneCount int, Dir string) erro
 	srv := make(map[string]int)
 	srv["nType"] = machine.GateServer
 	head := machine.ServerConfigHead{
-		NET_TIMEOUT_MSEC:  machine.NetTimeOut,
+		NET_TIMEOUT_MSEC:  3600000,
 		NET_MAX_CONNETION: machine.NetMaxConnection,
 		StartService:      []machine.SRV{srv},
-		LOG_DIR:           "gate_log",
 		LOG_INDEX:         "gate",
 		LOG_MAXLINE:       machine.LogMaxLine,
 	}
@@ -164,7 +163,6 @@ func CenterLua(zone *Zone, zonem *machine.Machine, zoneCount int, Dir string) er
 		NET_TIMEOUT_MSEC:  machine.NetTimeOut,
 		NET_MAX_CONNETION: machine.NetMaxConnection,
 		StartService:      []machine.SRV{srv},
-		LOG_DIR:           "center_log",
 		LOG_INDEX:         "cener",
 		LOG_MAXLINE:       machine.LogMaxLine,
 	}
@@ -215,7 +213,6 @@ func CharDBLua(zone *Zone, zonem *machine.Machine, zoneCount int, Dir string) er
 		NET_TIMEOUT_MSEC:  machine.NetTimeOut,
 		NET_MAX_CONNETION: machine.NetMaxConnection,
 		StartService:      []machine.SRV{srv},
-		LOG_DIR:           "chardb_log",
 		LOG_INDEX:         "chardb",
 		LOG_MAXLINE:       machine.LogMaxLine,
 	}
@@ -269,7 +266,6 @@ func LogicLua(zone *Zone, zonem *machine.Machine, zoneCount int, Dir string) err
 		logicLua.MapIds = v
 
 		s := "logic" + strconv.Itoa(k)
-		head.LOG_DIR = s + "_log"
 		head.LOG_INDEX = s
 		head.LOG_MAXLINE = machine.LogMaxLine
 
@@ -307,7 +303,6 @@ func LogLua(zone *Zone, zonem *machine.Machine, zoneCount int, Dir string) error
 		NET_TIMEOUT_MSEC:  machine.NetTimeOut,
 		NET_MAX_CONNETION: machine.NetMaxConnection,
 		StartService:      []machine.SRV{srv},
-		LOG_DIR:           "yylog_log",
 		LOG_INDEX:         "yylog",
 		LOG_MAXLINE:       machine.LogMaxLine,
 	}

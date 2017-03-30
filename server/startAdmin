@@ -1,0 +1,2 @@
+#!/bin/sh
+nohup ./server > admin.log 2>&1 &

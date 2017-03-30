@@ -3,6 +3,8 @@ package main
 import (
 	"fmt"
 
+	"time"
+
 	"github.com/adamluo159/admin-react/server/agentServer"
 	"github.com/adamluo159/admin-react/server/db"
 	"github.com/adamluo159/admin-react/server/machine"
@@ -18,15 +20,30 @@ func ServerHeader(next echo.HandlerFunc) echo.HandlerFunc {
 	}
 }
 
-func main() {
+func DbPing(e *echo.Echo) {
+	for {
+		err := db.Session.Ping()
+		if err != nil {
+			rerr := db.ReConnect()
+			if rerr == nil {
+				machine.Register(e)
+				zone.Register(e)
+			}
+		}
+		time.Sleep(time.Second * 10)
+	}
+}
 
-	db.Connect()
+func main() {
 
 	e := echo.New()
 	e.Use(ServerHeader)
+
+	db.Connect()
 	machine.Register(e)
 	zone.Register(e)
 
+	go DbPing(e)
 	go agentServer.New(":3300")
 
 	e.Static("/", "../client/")

@@ -31,7 +31,23 @@ func Connect() {
 
 	s.SetSafe(&mgo.Safe{})
 	fmt.Println("Connected to", MongoDBUrl)
-	fmt.Println("DialInfo", MongoDBUrl)
 	Session = s
 	Mongo = mongo
+}
+
+func ReConnect() error {
+	mongo, err := mgo.ParseURL(MongoDBUrl)
+	s, err := mgo.Dial(MongoDBUrl)
+	if err != nil {
+		fmt.Printf("Can't Reconnect to mongo, go error %v\n", err)
+		return err
+	}
+
+	s.SetSafe(&mgo.Safe{})
+	fmt.Println("ReConnected to", MongoDBUrl)
+
+	Session.Close()
+	Session = s
+	Mongo = mongo
+	return nil
 }

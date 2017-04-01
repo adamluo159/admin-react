@@ -9,8 +9,8 @@ import (
 
 	"strconv"
 
-	"github.com/adamluo159/admin-react/server/agentServer"
 	"github.com/adamluo159/admin-react/server/db"
+	"github.com/adamluo159/gameAgent/agentServer"
 	"github.com/labstack/echo"
 )
 

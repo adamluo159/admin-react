@@ -1,8 +1,12 @@
 package agentServer
 
 import (
+	"bufio"
+	"bytes"
 	"crypto/md5"
+	"encoding/binary"
 	"encoding/hex"
+	"encoding/json"
 	"log"
 	"strconv"
 	"time"
@@ -14,29 +18,79 @@ type AgentMsg struct {
 	Data string
 }
 
-func NewClient(c *Client) {
-	log.Println("new Client", c.conn.RemoteAddr().String())
-
-	tmpCid++
-	c.tmpCid = tmpCid
-	c.Server.tmpClients[tmpCid] = c
-
-	c.SendBytesCmd("connected")
+// Read client data from channel
+func (c *Client) OnMessage() {
+	buffer := make([]byte, 1024)
+	for {
+		reader := bufio.NewReader(c.conn)
+		len, err := reader.Read(buffer)
+		if err != nil {
+			log.Println("msg error:", err.Error())
+			return
+		}
+		dataLength := binary.LittleEndian.Uint32(buffer)
+		if dataLength <= 0 || dataLength > 1020 {
+			continue
+		}
+		a := AgentMsg{}
+		json.Unmarshal(buffer[4:dataLength+4], &a)
+		msgfunc := msgMap[a.Cmd]
+		if msgfunc == nil {
+			log.Println("cannt recv agent msg, msg: ", a, dataLength, len)
+		} else {
+			msgfunc(c, &a)
+			log.Println("recv agent msg, msg: ", a, dataLength, len)
+		}
+	}
 }
 
-func DisConnect(c *Client) {
-	if c.tmpCid > 0 {
-		delete(c.Server.tmpClients, c.tmpCid)
-		log.Println(" client DisConnect: tmpCid:", c.tmpCid)
-	} else {
-		delete(c.Server.clients, c.host)
-		log.Println(" client DisConnect: host:", c.host)
+// Send bytes to client
+func (c *Client) SendBytes(cmd string, jdata string) error {
+	a := AgentMsg{
+		Cmd:  cmd,
+		Data: jdata,
 	}
-	c.Close()
+	data, err := json.Marshal(a)
+	if err != nil {
+		return err
+	}
+	lenData := (uint32)(len(data))
+	s := make([]byte, 4)
+	binary.LittleEndian.PutUint32(s, lenData)
+	buff := bytes.NewBuffer(s)
+	buff.Write(data)
+
+	empty := make([]byte, 1024-buff.Len())
+	buff.Write(empty)
+
+	_, serr := c.conn.Write(buff.Bytes())
+	//log.Println("send msg:", len(buff.Bytes()), lenData, string(buff.Bytes()))
+	return serr
+}
+
+func (c *Client) SendBytesCmd(cmd string) error {
+	a := AgentMsg{
+		Cmd: cmd,
+	}
+	data, err := json.Marshal(a)
+	if err != nil {
+		return err
+	}
+	lenData := (uint32)(len(data))
+	s := make([]byte, 4)
+	binary.LittleEndian.PutUint32(s, lenData)
+	buff := bytes.NewBuffer(s)
+	buff.Write(data)
+
+	empty := make([]byte, 1024-buff.Len())
+	buff.Write(empty)
+
+	_, serr := c.conn.Write(buff.Bytes())
+	log.Println("send msg:", len(buff.Bytes()), lenData, string(buff.Bytes()))
+	return serr
 }
 
 func TokenCheck(c *Client, a *AgentMsg) {
-	log.Println("recv agen token msg, token:", (*a).Data, " host:", (*a).Host)
 	md5Ctx := md5.New()
 	md5Ctx.Write([]byte("cgyx2017"))
 	cipherStr := md5Ctx.Sum(nil)
@@ -47,9 +101,7 @@ func TokenCheck(c *Client, a *AgentMsg) {
 	}
 
 	c.host = a.Host
-	c.Server.clients[a.Host] = c
-	delete(c.Server.tmpClients, c.tmpCid)
-	c.tmpCid = 0
+	gserver.clients[a.Host] = c
 	c.SendBytes("checked", "OK")
 }
 
@@ -89,7 +141,7 @@ func Update(host string) {
 	log.Println(" recv web cmd update", host)
 	c := gserver.clients[host]
 	if c == nil {
-		log.Println("cannt find client hostname:", host, gserver.clients, gserver.tmpClients)
+		log.Println("cannt find client hostname:", host, gserver.clients)
 		return
 	}
 	err := c.SendBytesCmd("update")

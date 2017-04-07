@@ -4,8 +4,10 @@ import (
 	"log"
 
 	"github.com/adamluo159/admin-react/server/db"
+	"github.com/adamluo159/admin-react/server/machine"
 	"github.com/labstack/echo"
 	mgo "gopkg.in/mgo.v2"
+	"gopkg.in/mgo.v2/bson"
 )
 
 //区服模块注册
@@ -85,4 +87,19 @@ func Register(e *echo.Echo) {
 	e.POST("/zone/startZone", StartZone)
 	e.POST("/zone/stopZone", StopZone)
 	//e.POST("/zone/del", DelZone)
+}
+
+func GetZoneRelation(zid int) *machine.RelationZone {
+	z := Zone{}
+	err := cl.Find(bson.M{"zid": zid}).One(&z)
+	if err != nil {
+		log.Println("GetZoneRelation err", err.Error())
+		return nil
+	}
+	return &machine.RelationZone{
+		Zid:           zid,
+		ZoneHost:      z.ZoneHost,
+		ZoneDBHost:    z.ZoneDBHost,
+		ZonelogdbHost: z.ZonelogdbHost,
+	}
 }

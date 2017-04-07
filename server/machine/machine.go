@@ -2,12 +2,25 @@ package machine
 
 import (
 	"fmt"
+	"log"
 
 	"github.com/adamluo159/admin-react/server/db"
 	"github.com/labstack/echo"
 	"gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
 )
+
+var (
+	cl *mgo.Collection
+)
+
+//机器信息
+type Machine struct {
+	Hostname     string `json:"hostname" bson:"hostname"`
+	IP           string
+	OutIP        string   `json:"outIP" bson:"outIP"`
+	Applications []string `json:"applications"`
+}
 
 const (
 	CharDBPort    int    = 7000
@@ -55,7 +68,7 @@ func Register(e *echo.Echo) {
 		panic(0)
 	}
 	i := mgo.Index{
-		Key:    []string{"key", "hostname"},
+		Key:    []string{"hostname"},
 		Unique: true,
 	}
 	err := cl.EnsureIndex(i)
@@ -70,12 +83,22 @@ func Register(e *echo.Echo) {
 	e.POST("/machine/del", DelMachine)
 }
 
-func GetMachineByName(name string) (*Machine, error) {
+func GetMachineByName(name string) *Machine {
 	m := Machine{}
-	get := bson.M{"hostname": name}
-	err := cl.Find(get).One(&m)
+	err := cl.Find(bson.M{"hostname": name}).One(&m)
 	if err != nil {
-		return nil, err
+		log.Println(" GetMachineByName name: ", name, err.Error())
+		return nil
 	}
-	return &m, nil
+	return &m
+}
+
+func UpdateMachineApplications(host string, apps []string) {
+	log.Println(" UpdateMachineApplications, ", apps)
+	err := cl.Update(bson.M{"hostname": host}, bson.M{"$set": bson.M{"applications": apps}})
+	if err != nil {
+		log.Println("UpdateMachineApplications update err, ", err.Error())
+		return
+	}
+
 }

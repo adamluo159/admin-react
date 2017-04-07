@@ -1,6 +1,7 @@
 package zone
 
 import (
+	"errors"
 	"io/ioutil"
 	"log"
 	"os"
@@ -28,9 +29,9 @@ func WriteZoneConfigLua(zid int, ret *ZoneRsp, hostName string) {
 		ret.Result = "cannt Find zoneCount--" + zerr.Error()
 		return
 	}
-	zonem, err := machine.GetMachineByName(zone.ZoneHost)
-	if err != nil {
-		ret.Result = "cannt Find zoneMachine--" + err.Error()
+	zonem := machine.GetMachineByName(zone.ZoneHost)
+	if zonem == nil {
+		ret.Result = "cannt Find zoneMachine--"
 		return
 	}
 	hostdir := os.Getenv("HOME") + "/GameConfig/" + zonem.Hostname
@@ -74,9 +75,9 @@ func WriteZoneConfigLua(zid int, ret *ZoneRsp, hostName string) {
 }
 
 func GateLua(zone *Zone, zonem *machine.Machine, zoneCount int, Dir string) error {
-	masterm, merr := machine.GetMachineByName("master")
-	if merr != nil {
-		return merr
+	masterm := machine.GetMachineByName("master")
+	if masterm == nil {
+		return errors.New(" GateLua cannt find machine")
 	}
 
 	s := make([]int, len(zone.Channels))
@@ -181,9 +182,9 @@ func CharDBLua(zone *Zone, zonem *machine.Machine, zoneCount int, Dir string) er
 	//if zdberr != nil {
 	//	return zdberr
 	//}
-	zonedbm, dberr := machine.GetMachineByName(zone.ZoneDBHost)
-	if dberr != nil {
-		return dberr
+	zonedbm := machine.GetMachineByName(zone.ZoneDBHost)
+	if zonedbm == nil {
+		return errors.New("CharDBLua cannt find machine")
 	}
 
 	mysqldbName := "cgzone" + strconv.Itoa(zone.Zid)
@@ -279,9 +280,9 @@ func LogicLua(zone *Zone, zonem *machine.Machine, zoneCount int, Dir string) err
 }
 
 func LogLua(zone *Zone, zonem *machine.Machine, zoneCount int, Dir string) error {
-	logm, logerr := machine.GetMachineByName(zone.ZonelogdbHost)
-	if logerr != nil {
-		return logerr
+	logm := machine.GetMachineByName(zone.ZonelogdbHost)
+	if logm == nil {
+		return errors.New("LogLua cannt find machine")
 	}
 	logLua := Log{
 		ID:   zone.Zid,

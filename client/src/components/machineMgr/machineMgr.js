@@ -15,6 +15,7 @@ const Option = Select.Option;
 export default class machineMgr extends React.Component {
   constructor(props) {
     super(props);
+    //记录当前已经存在的机器名
     this.hosts = {
       "hosttmp": true
     }
@@ -22,7 +23,6 @@ export default class machineMgr extends React.Component {
       "hostname": (text, record, index) => (this.actionClick("hostname", text, record, index)),
       "IP": (text, record, index) => (this.actionClick("IP", text, record, index)),
       "outIP": (text, record, index) => (this.actionClick("outIP", text, record, index)),
-      "type": (text, record, index) => (this.typeSelect(text, record, index)),
       "action": (text, record, index) => (this.actionHandle(text, record, index))
     }
   }
@@ -51,7 +51,6 @@ export default class machineMgr extends React.Component {
       hostname: 'hosttmp',
       IP: "",
       outIP: "",
-      type: "login",
       key: "tmp"
     }
 
@@ -138,31 +137,6 @@ export default class machineMgr extends React.Component {
         },
         delCB: () => delete this.hosts[record.hostname]
       })
-  }
-
-  typeSelect(text, record, index) {
-    let {current, pageSize} = this.props.data.page
-    let {data} = this.props.data
-    if (current > 1) {
-      index = pageSize * (current - 1) + index
-    }
-    return (record.edit
-      ? <div>
-          <Select
-            defaultValue={typeOption[0]}
-            size='small'
-            onChange={(value) => {
-            this.editInput[record.type] = value
-          }}>
-            {typeOption.map((k) => (
-              <Option value={k} key={k}>{k}</Option>
-            ))
-}
-          </Select>
-        </div>
-      : <div className="editable-row-text">
-        {text}
-      </div>)
   }
 
   actionHandle(text, record, index) {

@@ -22,12 +22,6 @@ export const machineColumns = [{
   width: '10%'
 },
   {
-    title: '类型',
-    dataIndex: 'type',
-    key: 'type',
-    width: '10%'
-  },
-  {
     title: '内网IP',
     dataIndex: 'IP',
     key: 'IP',
@@ -41,16 +35,15 @@ export const machineColumns = [{
   },
   {
     title: '机器用途',
-    dataIndex: 'describe',
-    key: 'describe',
-    width: '35%'
+    dataIndex: 'applications',
+    key: 'applications',
+    width: '45%'
   },
   {
     title: 'Action',
     key: 'action',
     width: '15%'
   }]
-export const typeOption = ['login', 'master', 'zone', 'pay', 'db', 'logdb']
 
 export const zoneConfig = {
   zoneInput: [
@@ -96,25 +89,4 @@ export const formItemLayout = {
   wrapperCol: {
     span: 16,
   }
-}
-
-export const zoneData = {
-  "1": {
-    channels: ['IOS', 'yyb'],
-    whitelst: true,
-    zid: '1',
-    zoneDBHost: '1',
-    zoneHost: 'host1',
-    zoneName: '一区大保健',
-    zonelogdbHost: 'logdb02'
-  },
-  "2": {
-    channels: ['IOS'],
-    whitelst: true,
-    zid: '2',
-    zoneDBHost: 'hostdb1',
-    zoneHost: 'host1',
-    zoneName: '一区小宝剑',
-    zonelogdbHost: 'logdb02'
-  },
 }

@@ -1,42 +1,44 @@
 import fetch from 'isomorphic-fetch'
-import {actionCreator} from '../utils/utils'
+import { actionCreator } from '../utils/utils'
 
-const rspInitMachines =(dispatch, initFunc, rsp) =>{
-    if (rsp.Result === "OK") {
-        dispatch(mapMachine.InitMachines({
-            data: rsp.Items,
-            editState: false
-        }))
-        initFunc()
+const rspInitMachines = (dispatch, initFunc, rsp) => {
+    console.log(rsp)
+    if (rsp.Items == null) {
+        return
     }
+    dispatch(mapMachine.InitMachines({
+        data: rsp.Items,
+        editState: false
+    }))
+    initFunc()
 }
 
 const fetchInitMachines = (initFunc) => {
     return dispatch => {
         //dispatch(machineDispatch.reqMachines())
-        return fetch("/machine",)
+        return fetch("/machine", )
             .then(response => response.json())
             .then(json => rspInitMachines(dispatch, initFunc, json))
     }
 }
 
-const rspSaveMachine = (dispatch, playload, rsp) =>{
+const rspSaveMachine = (dispatch, playload, rsp) => {
     if (rsp.Result === "OK") {
-        playload.cb(rsp.Item.hostname,rsp.oldhost)
-        dispatch(mapMachine.saveMachine({index:playload.index, rsp}))
+        playload.cb(rsp.Item.hostname, rsp.oldhost)
+        dispatch(mapMachine.saveMachine({ index: playload.index, rsp }))
     } else {
         let rsp = {
-            Item:playload.oldmachine
+            Item: playload.oldmachine
         }
         rsp.Item.edit = false
-        dispatch(mapMachine.saveMachine({index:playload.index, rsp}))
+        dispatch(mapMachine.saveMachine({ index: playload.index, rsp }))
     }
 }
 
 const fetchSaveMachine = (playload) => {
     return dispatch => {
         let body = JSON.stringify({
-            oldhost:playload.oldmachine.hostname,
+            oldhost: playload.oldmachine.hostname,
             Item: playload.machine
         })
         return fetch("/machine/save", {
@@ -45,16 +47,16 @@ const fetchSaveMachine = (playload) => {
                 "Content-Type": "application/json"
             },
             body,
-            })
+        })
             .then(response => response.json())
-            .then(json=> rspSaveMachine(dispatch, playload, json))
+            .then(json => rspSaveMachine(dispatch, playload, json))
     }
 }
 
 const rspAddMachine = (dispatch, playload, rsp) => {
     if (rsp.Result === "OK") {
         playload.cb(rsp.Item.hostname)
-        dispatch(mapMachine.saveMachine({index:playload.index, rsp}))
+        dispatch(mapMachine.saveMachine({ index: playload.index, rsp }))
     } else {
         dispatch(mapMachine.delMachine(playload.index))
     }
@@ -70,29 +72,29 @@ const fetchAddMachine = (playload) => {
             },
             body: JSON.stringify(playload.machine)
         })
-        .then(response => response.json())
-        .then(json => rspAddMachine(dispatch, playload, json))
+            .then(response => response.json())
+            .then(json => rspAddMachine(dispatch, playload, json))
     }
 }
 
-const rspDelMachine = (dispatch, playload, rsp) =>{
-    if(rsp.Result === "OK"){
+const rspDelMachine = (dispatch, playload, rsp) => {
+    if (rsp.Result === "OK") {
         playload.delCB()
         dispatch(mapMachine.delMachine(playload.index))
     }
 }
 
-const fetchDelMachine =(playload)=>{
-    return dispatch =>{
+const fetchDelMachine = (playload) => {
+    return dispatch => {
         return fetch("/machine/del", {
-            method:"POST", 
-            headers:{
+            method: "POST",
+            headers: {
                 "Content-Type": "application/json"
             },
             body: JSON.stringify(playload.fetchDel)
         })
-        .then(response => response.json())
-        .then(json=>rspDelMachine(dispatch, playload, json))
+            .then(response => response.json())
+            .then(json => rspDelMachine(dispatch, playload, json))
     }
 }
 

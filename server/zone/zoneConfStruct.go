@@ -69,3 +69,8 @@ type Log struct {
 	ZoneLogMysql   MysqlLua
 	GlobalLogMysql MysqlLua
 }
+
+type LogDBConf struct {
+	DirName string
+	IP      string
+}

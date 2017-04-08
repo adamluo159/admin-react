@@ -2,11 +2,14 @@ package zone
 
 import (
 	"errors"
+	"fmt"
 	"io/ioutil"
 	"log"
 	"os"
 	"os/exec"
 	"strconv"
+
+	"encoding/json"
 
 	"github.com/adamluo159/admin-react/server/machine"
 	"github.com/adamluo159/struct2lua"
@@ -311,6 +314,24 @@ func LogLua(zone *Zone, zonem *machine.Machine, zoneCount int, Dir string) error
 	if trans == false {
 		log.Println("log cannt wirte lua file")
 	}
+
+	l := LogDBConf{
+		DirName: "zonelogdb" + strconv.Itoa(zone.Zid),
+		IP:      logm.IP,
+	}
+
+	c, err := json.Marshal(l)
+	if err != nil {
+		log.Println("Loglua cannt code logdbconf json, ", zone.Zid, err.Error())
+		return nil
+	}
+	f, err := os.Create(Dir + "logdbconf")
+	if err != nil {
+		fmt.Println(err.Error())
+		return nil
+	}
+	f.Write(c)
+	defer f.Close()
 
 	return nil
 }

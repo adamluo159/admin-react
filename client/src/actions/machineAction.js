@@ -2,7 +2,6 @@ import fetch from 'isomorphic-fetch'
 import {actionCreator} from '../utils/utils'
 
 const rspInitMachines =(dispatch, initFunc, rsp) =>{
-    console.log(rsp, rsp.Items[0].applications.toString())
     if (rsp.Items== null){
         return 
     }

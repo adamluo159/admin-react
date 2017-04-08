@@ -25,24 +25,24 @@ export const machineColumns = [{
     title: '内网IP',
     dataIndex: 'IP',
     key: 'IP',
-    width: '15%'
+    width: '10%'
   },
   {
     title: '外网IP',
     dataIndex: 'outIP',
     key: 'outIP',
-    width: '15%'
+    width: '10%'
   },
   {
     title: '机器用途',
     dataIndex: 'applications',
     key: 'applications',
-    width: '45%'
+    width: '50%'
   },
   {
     title: 'Action',
     key: 'action',
-    width: '15%'
+    width: '20%'
   }]
 
 export const zoneConfig = {

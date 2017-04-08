@@ -3,6 +3,7 @@ package machine
 import (
 	"fmt"
 	"log"
+	"strconv"
 
 	"github.com/adamluo159/admin-react/server/db"
 	"github.com/labstack/echo"
@@ -12,6 +13,18 @@ import (
 
 var (
 	cl *mgo.Collection
+)
+
+type RelationZone struct {
+	Zid           int
+	ZoneHost      string
+	ZoneDBHost    string
+	ZonelogdbHost string
+}
+
+const (
+	RelationDel int = 1
+	RelationAdd int = 2
 )
 
 //机器信息
@@ -101,4 +114,63 @@ func UpdateMachineApplications(host string, apps []string) {
 		return
 	}
 
+}
+
+func SliceString(A *[]string, name string, op int) {
+	index := -1
+	for i := range *A {
+		if name == (*A)[i] {
+			index = i
+			break
+		}
+	}
+	if (index == -1 && RelationDel == op) ||
+		(index >= 0 && RelationAdd == op) {
+		return
+	}
+
+	switch op {
+	case RelationDel:
+		(*A) = append((*A)[:index], (*A)[index+1:]...)
+	case RelationAdd:
+		log.Println("SliceString ", (*A), name)
+		(*A) = append((*A), name)
+		log.Println("SliceString11 ", (*A), name)
+	default:
+		log.Println("SliceString op wrong ", op)
+	}
+}
+
+func UpdateZone(old *RelationZone, new *RelationZone) {
+	if old == nil || new == nil {
+		log.Println("machine Relation UpdateZone old or new is nil", old, new)
+		return
+	}
+	log.Println("update:", *old, *new)
+	OpZoneRelation(old, RelationDel)
+	OpZoneRelation(new, RelationAdd)
+}
+
+func OpZoneRelation(r *RelationZone, op int) {
+	z := GetMachineByName((*r).ZoneHost)
+	if z != nil {
+		name := "zone" + strconv.Itoa((*r).Zid)
+		SliceString(&z.Applications, name, op)
+		UpdateMachineApplications(z.Hostname, z.Applications)
+		log.Println("aa:", z.Hostname, z.Applications, op)
+	}
+	db := GetMachineByName((*r).ZoneDBHost)
+	if db != nil {
+		name := "zonedb" + strconv.Itoa((*r).Zid)
+		SliceString(&db.Applications, name, op)
+		UpdateMachineApplications(db.Hostname, db.Applications)
+		log.Println("aa:", db.Hostname, db.Applications, op)
+	}
+	logdb := GetMachineByName((*r).ZonelogdbHost)
+	if logdb != nil {
+		name := "zonelogdb" + strconv.Itoa((*r).Zid)
+		SliceString(&logdb.Applications, name, op)
+		UpdateMachineApplications(logdb.Hostname, logdb.Applications)
+		log.Println("aa:", logdb.Hostname, logdb.Applications, op)
+	}
 }

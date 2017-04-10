@@ -16,6 +16,10 @@ import (
 	"gopkg.in/mgo.v2/bson"
 )
 
+const (
+	confDir string = "/gConf/"
+)
+
 func WriteZoneConfigLua(zid int, ret *ZoneRsp, hostName string) {
 	zone := Zone{}
 	query := bson.M{"zid": zid}
@@ -37,7 +41,7 @@ func WriteZoneConfigLua(zid int, ret *ZoneRsp, hostName string) {
 		ret.Result = "cannt Find zoneMachine--"
 		return
 	}
-	hostdir := os.Getenv("HOME") + "/GameConfig/" + zonem.Hostname
+	hostdir := os.Getenv("HOME") + confDir + zonem.Hostname
 	os.Mkdir(hostdir, os.ModePerm)
 
 	dir := hostdir + "/zone" + strconv.Itoa(zone.Zid)
@@ -69,7 +73,7 @@ func WriteZoneConfigLua(zid int, ret *ZoneRsp, hostName string) {
 		return
 	}
 
-	commitstr := os.Getenv("HOME") + "/GameConfig/gitCommit"
+	commitstr := os.Getenv("HOME") + confDir + "gitCommit"
 	exeErr := ExeShell(commitstr, "add or update zone"+strconv.Itoa(zone.Zid))
 	if exeErr != nil {
 		ret.Result = exeErr.Error()

@@ -17,7 +17,7 @@ var (
 const (
 	// MongoDBUrl is the default mongodb url that will be used to connect to the
 	// database.
-	MongoDBUrl = "mongodb://192.168.1.251:27017/"
+	MongoDBUrl = "mongodb://192.168.1.252:27017/"
 )
 
 // Connect connects to mongodb

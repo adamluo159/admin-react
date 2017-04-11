@@ -5,9 +5,9 @@ const rspInitMachines =(dispatch, initFunc, rsp) =>{
     if (rsp.Items== null){
         return 
     }
-    rsp.Items.forEach(element =>{
-        element.applications = element.applications.toString()
-    });
+    //rsp.Items.forEach(element =>{
+    //    element.applications = element.applications.toString()
+    //});
     dispatch(mapMachine.InitMachines({
         data: rsp.Items,
         editState: false

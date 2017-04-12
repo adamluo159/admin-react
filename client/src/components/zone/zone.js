@@ -259,12 +259,19 @@ const newZone = Form.create()(React.createClass({
       obj: { zid: this.synZid, ZoneHost: this.zoneData[this.synZid].zoneHost },
       stopZoneRsp: this.startZoneRsp,
     })
-
   },
   stopZoneRsp(jsp) {
     console.log("stop zone:", jsp)
   },
 
+  deleteZone(e){
+    e.preventDefault()
+    const {fetchDelZone} = this.props.dispatch
+    fetchDelZone({
+       Zid: this.synZid, 
+       ZoneHost: this.zoneData[this.synZid].zoneHost 
+    })
+  },
 
   dCreator(item, tag) {
     const { getFieldDecorator, getFieldsValue } = this.props.form
@@ -315,21 +322,35 @@ const newZone = Form.create()(React.createClass({
     let content = this.renderTabs(disabled)
     let buttonText = this.adding ? "新增" : "保存"
     return (
-      <Form onSubmit={this.handleChange}>
-        {content.slice(0, content.length)}
-          <Col span={6}>
-            <Button type="primary" htmlType="submit" disabled={disabled} loading={this.loading}>{buttonText}</Button>
-          </Col>
-          <Col span={8}>
-            <Button type="primary" disabled={!disabled} onClick={(e) => this.synMachine(e)} >同步机器</Button>
-          </Col>
-          <Col span={5}>
-            <Button type="primary" disabled={!disabled} onClick={(e) => this.startZone(e)} >启服</Button>
-          </Col>
-          <Col span={5}>
-            <Button type="primary" disabled={!disabled} onClick={(e) => this.stopZone(e)} >关服</Button>
-          </Col>
-      </Form>
+        <div>
+        <Row>
+          <Form onSubmit={this.handleChange}>
+            {content.slice(0, content.length)}
+            <Col span={6}>
+              <Button type="primary" htmlType="submit" disabled={disabled} loading={this.loading}>{buttonText}</Button>
+            </Col>
+            <Col span={6}>
+              <Button type="primary" disabled={!disabled} onClick={(e) => this.synMachine(e)} >同步机器</Button>
+            </Col>
+            <Col span={6}>
+              <Button type="primary" disabled={!disabled} onClick={(e) => this.startZone(e)} >启服</Button>
+            </Col>
+            <Col span={6}>
+              <Button type="primary" disabled={!disabled} onClick={(e) => this.stopZone(e)} >关服</Button>
+            </Col>
+         </Form>
+       </Row>
+       <Row>
+           <div id="buttonp">
+              <Col span={6}>
+                <Button type="danger" disabled={!disabled} onClick={(e) => this.deleteZone(e)} >删除</Button>
+              </Col>
+              <Col span={6}>
+                <Button type="danger" disabled={!disabled} onClick={(e) => this.deleteZone(e)} >更新logdb</Button>
+              </Col>
+           </div>
+       </Row>
+       </div>
     )
   },
 

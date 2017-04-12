@@ -44,7 +44,6 @@ const fetchSaveZone = (playload) => {
     }
 }
 const fetchSynMachine = (obj) => {
-    console.log("syn:", obj)
     return dispatch => {
         return fetch("/zone/synMachine?zid=" + obj.zid + "&hostname=" + obj.hostname, {
             method: "GET",
@@ -52,7 +51,21 @@ const fetchSynMachine = (obj) => {
             .then(response =>response.json())
             .then(json => console.log("synRsp:", json))
     }
-
+}
+const fetchDelZone = (playload) =>{
+    console.log("delzone, ", playload)
+        return dispatch => {
+        //dispatch(machineDispatch.reqZones())
+        return fetch("/zone/del", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify(playload)
+        })
+        .then(response => response.json())
+        .then(json=> console.log("delzone:", json))
+    }
 }
 
 const  fetchStartZone = (playload) => {
@@ -95,6 +108,6 @@ const mapZone = {
     "fetchSynMachine": fetchSynMachine,
     "fetchStartZone": fetchStartZone,
     "fetchStopZone": fetchStopZone,
-    //"fetchDelZone": fetchDelZone
+    "fetchDelZone": fetchDelZone
 }
 export default mapZone

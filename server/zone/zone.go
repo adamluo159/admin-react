@@ -86,7 +86,8 @@ func Register(e *echo.Echo) {
 	e.GET("/zone/synMachine", SynMachine)
 	e.POST("/zone/startZone", StartZone)
 	e.POST("/zone/stopZone", StopZone)
-	//e.POST("/zone/del", DelZone)
+	e.POST("/zone/del", DelZone)
+	e.POST("/zone/updateZonelogdb", UpdateZonelogdb)
 }
 
 func GetZoneRelation(zid int) *machine.RelationZone {

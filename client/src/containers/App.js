@@ -1,7 +1,8 @@
-import React, {PropTypes} from 'react';
+import React from 'react';
 import ReactDOM from 'react-dom';
 import {connect} from 'react-redux'
 import {Row, Col} from 'antd';
+import Types from 'prop-types';
 
 import Layout from '../components/layout/layout'
 import MachineMgr from '../components/machineMgr/machineMgr'
@@ -37,17 +38,18 @@ class App extends React.Component {
     )
   }
 }
-App.PropTypes = {
-  layout: PropTypes.shape({selectKey: PropTypes.string.isRequired}),
-  mainLayouts: PropTypes.shape({
-    machines: PropTypes.arrayOf({
-      editState: PropTypes.bool.isRequired,
-      data: PropTypes.arrayOf(PropTypes.shape({
-        key: PropTypes.string.isRequired,
-        hostname: PropTypes.string.isRequired,
-        IP: PropTypes.string.isRequired,
-        outIP: PropTypes.string.isRequired,
-        type: PropTypes.string.isRequired,
+
+App.propTypes = {
+  layout: Types.shape({selectKey: Types.string}),
+  mainLayouts: Types.shape({
+    machines: Types.arrayOf({
+      editState: Types.bool.isRequired,
+      data: Types.arrayOf(Types.shape({
+        key: Types.string.isRequired,
+        hostname: Types.string.isRequired,
+        IP: Types.string.isRequired,
+        outIP: Types.string.isRequired,
+        type: Types.string.isRequired,
       })),
     })
   })

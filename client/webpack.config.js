@@ -3,10 +3,10 @@ var path = require('path');
 
 var commonsPlugin = new webpack.optimize.CommonsChunkPlugin('common.js');
 var hot = new webpack.HotModuleReplacementPlugin();
- 
+
 module.exports = {
-    devServer:{
-        colors : true,
+    devServer: {
+        colors: true,
         historyApiFallback: true,
         inline: true
     },
@@ -32,14 +32,18 @@ module.exports = {
         loaders: [
             { test: /\.css$/, loader: 'style-loader!css-loader' },
             //{ test: /\.js$/, loaders: ['babel'], exclude: /node_modules/},
-            {test: /\.js$/, loaders: ['react-hot', 'babel?presets[]=es2015,presets[]=react,presets[]=stage-0'],exclude: /node_modules/},
-            { test: /\.less$/, loader: 'style!css!less'},
-            { test: /\.(png|jpg)$/, loader: 'url-loader?limit=8192'}
+            { test: /\.js$/, loaders: ['react-hot', 'babel?presets[]=es2015,presets[]=react,presets[]=stage-0'], exclude: /node_modules/ },
+            { test: /\.less$/, loader: 'style!css!less' },
+            { test: /\.(png|jpg)$/, loader: 'url-loader?limit=8192' }
         ]
     },
     //其它解决方案配置
     resolve: {
         //root: 'E:/github/flux-example/src', //绝对路径
+        alias: {
+            'react': path.join(__dirname, 'node_modules', 'react'),
+            'prop-types': path.join(__dirname, 'node_modules', 'prop-types')
+        },
         extensions: ['', '.js', '.json', '.scss'],
         //alias: {
         //    AppStore : 'js/stores/AppStores.js',

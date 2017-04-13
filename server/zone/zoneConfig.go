@@ -80,6 +80,15 @@ func WriteZoneConfigLua(zid int, ret *ZoneRsp, hostName string) {
 		return
 	}
 }
+func DelZoneConfig(zid int, hostname string) error {
+	commitstr := os.Getenv("HOME") + confDir + "gitDelete"
+	dir := hostname + "/" + "zone" + strconv.Itoa(zid)
+	exeErr := ExeShell(commitstr, dir)
+	if exeErr != nil {
+		return exeErr
+	}
+	return nil
+}
 
 func GateLua(zone *Zone, zonem *machine.Machine, zoneCount int, Dir string) error {
 	masterm := machine.GetMachineByName("master")

@@ -9,8 +9,8 @@ import {
   Input
 } from 'antd';
 
-import {trim, checkIpFormat} from '../../utils/utils'
-import {typeOption, machineColumns} from '../../constant'
+import { trim, checkIpFormat } from '../../utils/utils'
+import { typeOption, machineColumns } from '../../constant'
 const Option = Select.Option;
 export default class machineMgr extends React.Component {
   constructor(props) {
@@ -149,26 +149,26 @@ export default class machineMgr extends React.Component {
       <div>
         {record.edit
           ? <div>
-              <a
-                onClick={(e) => {
+            <a
+              onClick={(e) => {
                 this.SaveDo(index, record)
-              }}>save</a>
-              <span className="ant-divider"/>
-              <a
-                onClick={(e) => {
+              } }>save</a>
+            <span className="ant-divider" />
+            <a
+              onClick={(e) => {
                 this.deleteDo(index, record)
-              }}>delete</a>
-            </div>
+              } }>delete</a>
+          </div>
           : <div>
             <a onClick={(e) => {
               this.editDo(index, record)
-            }}>edit</a>
-            <span className="ant-divider"/>
+            } }>edit</a>
+            <span className="ant-divider" />
             <a onClick={(e) => {
               this.deleteDo(index, record)
-            }}>delete</a>
+            } }>delete</a>
           </div>
-}
+        }
       </div>
     )
   }
@@ -185,15 +185,15 @@ export default class machineMgr extends React.Component {
       <div>
         {record.edit
           ? <Input
-              defaultValue={text}
-              size="small"
-              onChange={(e) => {
+            defaultValue={text}
+            size="small"
+            onChange={(e) => {
               this.editInput[key] = e.target.value
-            }}/>
+            } } />
           : <div className="editable-row-text">
             {text}
           </div>
-}
+        }
       </div>
     )
   }
@@ -205,6 +205,9 @@ export default class machineMgr extends React.Component {
         ? this.columnsRender[k.key]
         : k.render
     })
+    data.forEach((k)=>{
+      k.key = k.hostname
+    })
     return (
       <div>
         <Button type="primary" onClick={(e) => (this.addClick(e))}>Add</Button>
@@ -213,16 +216,16 @@ export default class machineMgr extends React.Component {
           columns={machineColumns}
           pagination={page}
           onChange={(pagination, filters, sorter) => {
-          this
-            .props
-            .dispatch
-            .pageMachine({
-              page: {
-                current: pagination.current,
-                pageSize: pagination.pageSize
-              }
-            })
-        }}/>
+            this
+              .props
+              .dispatch
+              .pageMachine({
+                page: {
+                  current: pagination.current,
+                  pageSize: pagination.pageSize
+                }
+              })
+          } } />
       </div>
     )
   }

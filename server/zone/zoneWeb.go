@@ -1,13 +1,19 @@
 package zone
 
 import (
+	"io/ioutil"
 	"log"
 	"net/http"
+	"os/exec"
 
 	mgo "gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
 
 	"strconv"
+
+	"errors"
+
+	"fmt"
 
 	"github.com/adamluo159/admin-react/server/machine"
 	"github.com/adamluo159/gameAgent/agentServer"
@@ -26,8 +32,8 @@ type Zone struct {
 }
 
 type ZoneReq struct {
-	Zid      int    `bson:"zid" json:"zid"`
-	ZoneHost string `json:"zoneHost" bson:"zoneHost"`
+	Zid  int
+	Host string
 }
 
 type SaveZoneReq struct {
@@ -124,20 +130,62 @@ func SaveZone(c echo.Context) error {
 }
 
 //删除
-//func DelZone(c echo.Context) error {
-//	m, err := getM(&c)
-//	if err != nil {
-//		return err
-//	}
-//	ret := ZoneRsp{}
-//	ret.Result = "OK"
-//	query := bson.M{"hostname": m.Hostname}
-//	err = cl.Remove(query)
-//	if err != nil {
-//		ret.Result = "FALSE"
-//	}
-//	return c.JSON(http.StatusOK, ret)
-//}
+func DelZone(c echo.Context) error {
+	m, err := getM(&c)
+	if err != nil {
+		return err
+	}
+	ret := ZoneRsp{}
+	dzone := Zone{}
+	ret.Result = "OK"
+	query := bson.M{"zid": m.Zid}
+	err = cl.Find(query).One(&dzone)
+	if err != nil {
+		log.Println("delete zone ok:", dzone, err.Error(), m.Zid)
+		return c.JSON(http.StatusOK, ret)
+	}
+	r := machine.RelationZone{
+		ZoneDBHost:    dzone.ZoneDBHost,
+		ZoneHost:      dzone.ZoneHost,
+		ZonelogdbHost: dzone.ZonelogdbHost,
+		Zid:           dzone.Zid,
+	}
+	log.Println("delete zone :", r)
+	err = DelZoneConfig(r.Zid, r.ZoneHost)
+	if err != nil {
+		ret.Result = "FALSE"
+		return c.JSON(http.StatusOK, ret)
+	}
+	machine.OpZoneRelation(&r, machine.RelationDel)
+	err = cl.Remove(query)
+	if err != nil {
+		ret.Result = "FALSE"
+	}
+	return c.JSON(http.StatusOK, ret)
+}
+
+func UpdateZonelogdb(c echo.Context) error {
+	z := ZoneReq{}
+	err := c.Bind(&z)
+	ret := ZoneRsp{}
+	if err != nil {
+		log.Println(err.Error())
+		ret.Result = "FALSE"
+		return c.JSON(http.StatusOK, ret)
+	}
+	m := machine.GetMachineByName(z.Host)
+	if m == nil {
+		ret.Result = "FAlse"
+		return c.JSON(http.StatusOK, ret)
+	}
+	err = ExecUpdatelogdb(z.Zid, m.IP)
+	if err != nil {
+		ret.Result = err.Error()
+	} else {
+		ret.Result = "OK"
+	}
+	return c.JSON(http.StatusOK, ret)
+}
 
 func SynMachine(c echo.Context) error {
 	ret := ZoneRsp{
@@ -174,11 +222,11 @@ func StartZone(c echo.Context) error {
 	zone := Zone{}
 	query := bson.M{"zid": m.Zid}
 	cl.Find(query).One(&zone)
-	if zone.ZoneHost != m.ZoneHost {
-		log.Printf(ret.Result, "send zid cannt match zonehost, zid:%d zonehost:%s", m.Zid, m.ZoneHost)
+	if zone.ZoneHost != m.Host {
+		log.Printf(ret.Result, "send zid cannt match zonehost, zid:%d zonehost:%s", m.Zid, m.Host)
 		return c.JSON(http.StatusOK, ret)
 	}
-	suc := agentServer.StartZone(m.ZoneHost, m.Zid)
+	suc := agentServer.StartZone(m.Host, m.Zid)
 	if suc == false {
 		return c.JSON(http.StatusOK, ret)
 	}
@@ -198,11 +246,11 @@ func StopZone(c echo.Context) error {
 	zone := Zone{}
 	query := bson.M{"zid": m.Zid}
 	cl.Find(query).One(&zone)
-	if zone.ZoneHost != m.ZoneHost {
-		log.Printf(ret.Result, "stopzone send zid cannt match zonehost, zid:%d zonehost:%s", m.Zid, m.ZoneHost)
+	if zone.ZoneHost != m.Host {
+		log.Printf(ret.Result, "stopzone send zid cannt match zonehost, zid:%d zonehost:%s", m.Zid, m.Host)
 		return c.JSON(http.StatusOK, ret)
 	}
-	suc := agentServer.StopZone(m.ZoneHost, m.Zid)
+	suc := agentServer.StopZone(m.Host, m.Zid)
 	if suc == false {
 		return c.JSON(http.StatusOK, ret)
 	}
@@ -217,4 +265,37 @@ func getM(c *echo.Context) (*Zone, error) {
 		return nil, err
 	}
 	return &m, err
+}
+
+func ExecUpdatelogdb(zid int, arg string) error {
+	logdb := "zonelog" + strconv.Itoa(zid)
+	log.Println("begin execute updatezonelogdb shell.....", zid, "--", arg, logdb)
+	// 执行系统命令
+	// 第一个参数是命令名称
+	// 后面参数可以有多个，命令参数
+	cmd := exec.Command("sh", "update_zonelogdb", logdb, arg) //"GameConfig/gitCommit", "zoneo")
+	// 获取输出对象，可以从该对象中读取输出结果
+	stdout, err := cmd.StdoutPipe()
+	if err != nil {
+		log.Fatal(err)
+		return err
+	}
+	// 保证关闭输出流
+	defer stdout.Close()
+	// 运行命令
+	if err := cmd.Start(); err != nil {
+		log.Fatal(err)
+		return err
+	}
+	// 读取输出结果
+	opBytes, err := ioutil.ReadAll(stdout)
+	if err != nil {
+		log.Fatal(err)
+		return err
+	}
+	cmd.Wait()
+	if logdb != string(opBytes) {
+		return errors.New(fmt.Sprintf("update zonelogdb fail,%s", string(opBytes)))
+	}
+	return nil
 }

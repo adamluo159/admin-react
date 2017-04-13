@@ -68,6 +68,22 @@ const fetchDelZone = (playload) =>{
     }
 }
 
+const fetchUpdateZonelogdb = (playload) =>{
+    console.log("updateZonelogdb, ", playload)
+        return dispatch => {
+        //dispatch(machineDispatch.reqZones())
+        return fetch("/zone/updateZonelogdb", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify(playload)
+        })
+        .then(response => response.json())
+        .then(json=> console.log("updateZonelogdb:", json))
+    }
+}
+
 const  fetchStartZone = (playload) => {
         return dispatch => {
             console.log("fetch start:", playload)
@@ -108,6 +124,7 @@ const mapZone = {
     "fetchSynMachine": fetchSynMachine,
     "fetchStartZone": fetchStartZone,
     "fetchStopZone": fetchStopZone,
-    "fetchDelZone": fetchDelZone
+    "fetchDelZone": fetchDelZone,
+    "fetchUpdateZonelogdb": fetchUpdateZonelogdb,
 }
 export default mapZone

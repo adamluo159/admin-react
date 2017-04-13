@@ -71,7 +71,7 @@ class zoneHead extends Component {
                         </Select>
                     </Col>
                     <Col span={5}>
-                        <Button type="primary" onClick={addZoneFunc}>添加区服信息</Button>
+                        <Button type="primary" onClick={()=>addZoneFunc()}>添加区服信息</Button>
                     </Col>
                 </Row>
             </div>

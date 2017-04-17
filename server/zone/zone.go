@@ -69,6 +69,7 @@ func Register(e *echo.Echo) {
 		210106003,
 		210107001,
 		210107002,
+		210189001,
 	}
 
 	iName := mgo.Index{

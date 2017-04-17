@@ -56,7 +56,7 @@ func SaveMachine(c echo.Context) error {
 	}
 	err := c.Bind(&m)
 	if err != nil {
-		fmt.Println(err.Error())
+		fmt.Println("save machine:", err.Error())
 		ret.Result = "FALSE"
 		return c.JSON(http.StatusOK, ret)
 	}

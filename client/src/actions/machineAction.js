@@ -40,11 +40,13 @@ const rspSaveMachine = (dispatch, playload, rsp) => {
 }
 
 const fetchSaveMachine = (playload) => {
+    playload.machine.applications = playload.machine.applications.split(","); //字符分割 
     return dispatch => {
         let body = JSON.stringify({
             oldhost: playload.oldmachine.hostname,
             Item: playload.machine
         })
+        console.log("aaaaaa:", body)
         return fetch("/machine/save", {
             method: "POST",
             headers: {

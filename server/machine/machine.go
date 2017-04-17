@@ -32,7 +32,7 @@ type Machine struct {
 	Hostname     string `json:"hostname" bson:"hostname"`
 	IP           string
 	OutIP        string   `json:"outIP" bson:"outIP"`
-	Applications []string `json:"applications"`
+	Applications []string `json:"applications" bson:"applications"`
 }
 
 const (
@@ -107,7 +107,6 @@ func GetMachineByName(name string) *Machine {
 }
 
 func UpdateMachineApplications(host string, apps []string) {
-	log.Println(" UpdateMachineApplications, ", apps)
 	err := cl.Update(bson.M{"hostname": host}, bson.M{"$set": bson.M{"applications": apps}})
 	if err != nil {
 		log.Println("UpdateMachineApplications update err, ", err.Error())
@@ -133,9 +132,7 @@ func SliceString(A *[]string, name string, op int) {
 	case RelationDel:
 		(*A) = append((*A)[:index], (*A)[index+1:]...)
 	case RelationAdd:
-		log.Println("SliceString ", (*A), name)
 		(*A) = append((*A), name)
-		log.Println("SliceString11 ", (*A), name)
 	default:
 		log.Println("SliceString op wrong ", op)
 	}
@@ -157,20 +154,17 @@ func OpZoneRelation(r *RelationZone, op int) {
 		name := "zone" + strconv.Itoa((*r).Zid)
 		SliceString(&z.Applications, name, op)
 		UpdateMachineApplications(z.Hostname, z.Applications)
-		log.Println("aa:", z.Hostname, z.Applications, op)
 	}
 	db := GetMachineByName((*r).ZoneDBHost)
 	if db != nil {
 		name := "zonedb" + strconv.Itoa((*r).Zid)
 		SliceString(&db.Applications, name, op)
 		UpdateMachineApplications(db.Hostname, db.Applications)
-		log.Println("aa:", db.Hostname, db.Applications, op)
 	}
 	logdb := GetMachineByName((*r).ZonelogdbHost)
 	if logdb != nil {
 		name := "zonelogdb" + strconv.Itoa((*r).Zid)
 		SliceString(&logdb.Applications, name, op)
 		UpdateMachineApplications(logdb.Hostname, logdb.Applications)
-		log.Println("aa:", logdb.Hostname, logdb.Applications, op)
 	}
 }

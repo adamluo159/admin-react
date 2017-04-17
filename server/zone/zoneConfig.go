@@ -3,15 +3,14 @@ package zone
 import (
 	"errors"
 	"fmt"
-	"io/ioutil"
 	"log"
 	"os"
-	"os/exec"
 	"strconv"
 
 	"encoding/json"
 
 	"github.com/adamluo159/admin-react/server/machine"
+	"github.com/adamluo159/gameAgent/utils"
 	"github.com/adamluo159/struct2lua"
 	"gopkg.in/mgo.v2/bson"
 )
@@ -74,7 +73,7 @@ func WriteZoneConfigLua(zid int, ret *ZoneRsp, hostName string) {
 	}
 
 	commitstr := os.Getenv("HOME") + confDir + "gitCommit"
-	exeErr := ExeShell(commitstr, "add or update zone"+strconv.Itoa(zone.Zid))
+	_, exeErr := utils.ExeShell("sh", commitstr, "add or update zone"+strconv.Itoa(zone.Zid))
 	if exeErr != nil {
 		ret.Result = exeErr.Error()
 		return
@@ -83,7 +82,7 @@ func WriteZoneConfigLua(zid int, ret *ZoneRsp, hostName string) {
 func DelZoneConfig(zid int, hostname string) error {
 	commitstr := os.Getenv("HOME") + confDir + "gitDelete"
 	dir := hostname + "/" + "zone" + strconv.Itoa(zid)
-	exeErr := ExeShell(commitstr, dir)
+	_, exeErr := utils.ExeShell("sh", commitstr, dir)
 	if exeErr != nil {
 		return exeErr
 	}
@@ -346,36 +345,5 @@ func LogLua(zone *Zone, zonem *machine.Machine, zoneCount int, Dir string) error
 	f.Write(c)
 	defer f.Close()
 
-	return nil
-}
-
-func ExeShell(dir string, args string) error {
-
-	log.Println("begin execute shell.....", dir, "--", args)
-	// 执行系统命令
-	// 第一个参数是命令名称
-	// 后面参数可以有多个，命令参数
-	cmd := exec.Command("sh", dir, args) //"GameConfig/gitCommit", "zoneo")
-	// 获取输出对象，可以从该对象中读取输出结果
-	stdout, err := cmd.StdoutPipe()
-	if err != nil {
-		log.Fatal(err)
-		return err
-	}
-	// 保证关闭输出流
-	defer stdout.Close()
-	// 运行命令
-	if err := cmd.Start(); err != nil {
-		log.Fatal(err)
-		return err
-	}
-	// 读取输出结果
-	opBytes, err := ioutil.ReadAll(stdout)
-	if err != nil {
-		log.Fatal(err)
-		return err
-	}
-	cmd.Wait()
-	log.Println(string(opBytes))
 	return nil
 }

@@ -1,22 +1,19 @@
 package zone
 
 import (
-	"io/ioutil"
 	"log"
 	"net/http"
-	"os/exec"
 
 	mgo "gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
 
 	"strconv"
 
-	"errors"
-
 	"fmt"
 
 	"github.com/adamluo159/admin-react/server/machine"
 	"github.com/adamluo159/gameAgent/agentServer"
+	"github.com/adamluo159/gameAgent/utils"
 	"github.com/labstack/echo"
 )
 
@@ -178,9 +175,10 @@ func UpdateZonelogdb(c echo.Context) error {
 		ret.Result = "FAlse"
 		return c.JSON(http.StatusOK, ret)
 	}
-	err = ExecUpdatelogdb(z.Zid, m.IP)
-	if err != nil {
-		ret.Result = err.Error()
+	logdb := "zonelog" + strconv.Itoa(z.Zid)
+	s, _ := utils.ExeShellArgs2("sh", "update_zonelogdb", logdb, m.IP)
+	if logdb != s {
+		ret.Result = fmt.Sprintf("update zonelogdb fail,%s", s)
 	} else {
 		ret.Result = "OK"
 	}
@@ -265,37 +263,4 @@ func getM(c *echo.Context) (*Zone, error) {
 		return nil, err
 	}
 	return &m, err
-}
-
-func ExecUpdatelogdb(zid int, arg string) error {
-	logdb := "zonelog" + strconv.Itoa(zid)
-	log.Println("begin execute updatezonelogdb shell.....", zid, "--", arg, logdb)
-	// 执行系统命令
-	// 第一个参数是命令名称
-	// 后面参数可以有多个，命令参数
-	cmd := exec.Command("sh", "update_zonelogdb", logdb, arg) //"GameConfig/gitCommit", "zoneo")
-	// 获取输出对象，可以从该对象中读取输出结果
-	stdout, err := cmd.StdoutPipe()
-	if err != nil {
-		log.Fatal(err)
-		return err
-	}
-	// 保证关闭输出流
-	defer stdout.Close()
-	// 运行命令
-	if err := cmd.Start(); err != nil {
-		log.Fatal(err)
-		return err
-	}
-	// 读取输出结果
-	opBytes, err := ioutil.ReadAll(stdout)
-	if err != nil {
-		log.Fatal(err)
-		return err
-	}
-	cmd.Wait()
-	if logdb != string(opBytes) {
-		return errors.New(fmt.Sprintf("update zonelogdb fail,%s", string(opBytes)))
-	}
-	return nil
 }

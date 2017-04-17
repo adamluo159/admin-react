@@ -328,7 +328,7 @@ func LogLua(zone *Zone, zonem *machine.Machine, zoneCount int, Dir string) error
 	}
 
 	l := LogDBConf{
-		DirName: "zonelogdb" + strconv.Itoa(zone.Zid),
+		DirName: "zonelog" + strconv.Itoa(zone.Zid),
 		IP:      logm.IP,
 	}
 

@@ -40,7 +40,9 @@ const rspSaveMachine = (dispatch, playload, rsp) => {
 }
 
 const fetchSaveMachine = (playload) => {
-    playload.machine.applications = playload.machine.applications.split(","); //字符分割 
+    if (playload.machine.applications != null) {
+        playload.machine.applications = playload.machine.applications.split(","); //字符分割 
+    }
     return dispatch => {
         let body = JSON.stringify({
             oldhost: playload.oldmachine.hostname,

@@ -138,6 +138,7 @@ func GateLua(zone *Zone, zonem *machine.Machine, zoneCount int, Dir string) erro
 		StartService:      []machine.SRV{srv},
 		LOG_INDEX:         "gate",
 		LOG_MAXLINE:       machine.LogMaxLine,
+		OpenGM:            1,
 	}
 
 	trans := struct2lua.ToLuaConfig(Dir, "Gate", gateLua, head, 0)
@@ -181,6 +182,7 @@ func CenterLua(zone *Zone, zonem *machine.Machine, zoneCount int, Dir string) er
 		StartService:      []machine.SRV{srv},
 		LOG_INDEX:         "cener",
 		LOG_MAXLINE:       machine.LogMaxLine,
+		OpenGM:            1,
 	}
 
 	trans := struct2lua.ToLuaConfig(Dir, "Center", centerLua, head, 0)
@@ -231,6 +233,7 @@ func CharDBLua(zone *Zone, zonem *machine.Machine, zoneCount int, Dir string) er
 		StartService:      []machine.SRV{srv},
 		LOG_INDEX:         "chardb",
 		LOG_MAXLINE:       machine.LogMaxLine,
+		OpenGM:            1,
 	}
 
 	trans := struct2lua.ToLuaConfig(Dir, "CharDB", charDBLua, head, 0)
@@ -274,6 +277,7 @@ func LogicLua(zone *Zone, zonem *machine.Machine, zoneCount int, Dir string) err
 		NET_TIMEOUT_MSEC:  machine.NetTimeOut,
 		NET_MAX_CONNETION: machine.NetMaxConnection,
 		StartService:      []machine.SRV{srv},
+		OpenGM:            1,
 	}
 
 	for k, v := range LogicMap {
@@ -321,6 +325,7 @@ func LogLua(zone *Zone, zonem *machine.Machine, zoneCount int, Dir string) error
 		StartService:      []machine.SRV{srv},
 		LOG_INDEX:         "yylog",
 		LOG_MAXLINE:       machine.LogMaxLine,
+		OpenGM:            1,
 	}
 	trans := struct2lua.ToLuaConfig(Dir, "Log", logLua, head, 0)
 	if trans == false {

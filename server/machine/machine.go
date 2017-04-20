@@ -71,6 +71,7 @@ type ServerConfigHead struct {
 	StartService      []SRV
 	LOG_INDEX         string
 	LOG_MAXLINE       int
+	OpenGM            int
 }
 
 //机器模块注册

@@ -103,7 +103,7 @@ class ZoneClass extends React.Component {
         if (this.adding) {
           dispatch.fetchAddZone({
             obj: values,
-            addZone: (json)=>this.addZone(json)
+            addZone: (json) => this.addZone(json)
           })
         } else {
           let oldzone = this.zoneData[values.zid]
@@ -118,7 +118,7 @@ class ZoneClass extends React.Component {
             obj: values,
             oldZoneName: oldzone.zoneName,
             oldZid: oldzone.zid,
-            saveZone: (json)=>this.saveZone(json)
+            saveZone: (json) => this.saveZone(json)
           })
         }
         this.loading = true
@@ -250,12 +250,8 @@ class ZoneClass extends React.Component {
     const { fetchStartZone } = this.props.dispatch
     fetchStartZone({
       obj: { zid: this.synZid, Host: this.zoneData[this.synZid].zoneHost },
-      startZoneRsp: this.startZoneRsp,
+      startZoneRsp: (json) => this.NotifyRsp(json),
     })
-  }
-
-  startZoneRsp(jsp) {
-    console.log("start zone:", jsp)
   }
 
   stopZone(e) {
@@ -263,11 +259,11 @@ class ZoneClass extends React.Component {
     const { fetchStopZone } = this.props.dispatch
     fetchStopZone({
       obj: { Zid: this.synZid, Host: this.zoneData[this.synZid].zoneHost },
-      stopZoneRsp: this.startZoneRsp,
+      stopZoneRsp: (json) => this.NotifyRsp(json),
     })
   }
-  stopZoneRsp(jsp) {
-    console.log("stop zone:", jsp)
+  NotifyRsp(jsp) {
+    Message.warning(jsp.Result, 5);
   }
 
   deleteZone(e) {
@@ -284,7 +280,7 @@ class ZoneClass extends React.Component {
     console.log(this.zoneData[this.synZid])
     fetchUpdateZonelogdb({
       Zid: this.synZid,
-      Host:this.zoneData[this.synZid].zonelogdbHost,
+      Host: this.zoneData[this.synZid].zonelogdbHost,
     })
   }
 
@@ -339,7 +335,7 @@ class ZoneClass extends React.Component {
     return (
       <div>
         <Row>
-          <Form onSubmit={(k)=>this.handleChange(k)}>
+          <Form onSubmit={(k) => this.handleChange(k)}>
             {content.slice(0, content.length)}
             <Col span={6}>
               <Button type="primary" htmlType="submit" disabled={disabled} loading={this.loading}>{buttonText}</Button>
@@ -378,8 +374,8 @@ class ZoneClass extends React.Component {
               this.initHead ?
                 <ZoneHead channelData={this.channelData}
                   zoneData={this.ZoneHeadData}
-                  showFunc={(zid)=>this.ShowZoneInfo(zid)}
-                  addZoneFunc={()=>this.AddZoneInfo()}
+                  showFunc={(zid) => this.ShowZoneInfo(zid)}
+                  addZoneFunc={() => this.AddZoneInfo()}
                   registerFunc={(e) => this.fresh = e}>
                 </ZoneHead>
                 :

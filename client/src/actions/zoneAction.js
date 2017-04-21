@@ -48,13 +48,13 @@ const fetchSynMachine = (obj) => {
         return fetch("/zone/synMachine?zid=" + obj.zid + "&hostname=" + obj.hostname, {
             method: "GET",
         })
-            .then(response =>response.json())
+            .then(response => response.json())
             .then(json => console.log("synRsp:", json))
     }
 }
-const fetchDelZone = (playload) =>{
+const fetchDelZone = (playload) => {
     console.log("delzone, ", playload)
-        return dispatch => {
+    return dispatch => {
         //dispatch(machineDispatch.reqZones())
         return fetch("/zone/del", {
             method: "POST",
@@ -63,14 +63,14 @@ const fetchDelZone = (playload) =>{
             },
             body: JSON.stringify(playload)
         })
-        .then(response => response.json())
-        .then(json=> console.log("delzone:", json))
+            .then(response => response.json())
+            .then(json => console.log("delzone:", json))
     }
 }
 
-const fetchUpdateZonelogdb = (playload) =>{
+const fetchUpdateZonelogdb = (playload) => {
     console.log("updateZonelogdb, ", playload)
-        return dispatch => {
+    return dispatch => {
         //dispatch(machineDispatch.reqZones())
         return fetch("/zone/updateZonelogdb", {
             method: "POST",
@@ -79,14 +79,14 @@ const fetchUpdateZonelogdb = (playload) =>{
             },
             body: JSON.stringify(playload)
         })
-        .then(response => response.json())
-        .then(json=> console.log("updateZonelogdb:", json))
+            .then(response => response.json())
+            .then(json => console.log("updateZonelogdb:", json))
     }
 }
 
-const  fetchStartZone = (playload) => {
-        return dispatch => {
-            console.log("fetch start:", playload)
+const fetchStartZone = (playload) => {
+    return dispatch => {
+        console.log("fetch start:", playload)
         return fetch("/zone/startZone", {
             method: "POST",
             headers: {
@@ -95,13 +95,16 @@ const  fetchStartZone = (playload) => {
             body: JSON.stringify(playload.obj)
         })
             .then(response => response.json())
-            .then(json => playload.startZoneRsp(json))
+            .then(json => {
+                console.log(json, playload)
+                playload.startZoneRsp(json)}
+                )
     }
 }
 
-const  fetchStopZone = (playload) => {
-        return dispatch => {
-            console.log("fetch stop:", playload)
+const fetchStopZone = (playload) => {
+    return dispatch => {
+        console.log("fetch stop:", playload)
         return fetch("/zone/stopZone", {
             method: "POST",
             headers: {
@@ -110,7 +113,10 @@ const  fetchStopZone = (playload) => {
             body: JSON.stringify(playload.obj)
         })
             .then(response => response.json())
-            .then(json => playload.stopZoneRsp(json))
+            .then(json => {
+                console.log(json, playload)
+                playload.stopZoneRsp(json)}
+                )
     }
 }
 

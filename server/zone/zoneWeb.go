@@ -13,6 +13,7 @@ import (
 
 	"github.com/adamluo159/admin-react/server/machine"
 	"github.com/adamluo159/gameAgent/agentServer"
+	"github.com/adamluo159/gameAgent/protocol"
 	"github.com/adamluo159/gameAgent/utils"
 	"github.com/labstack/echo"
 )
@@ -209,12 +210,12 @@ func SynMachine(c echo.Context) error {
 
 func StartZone(c echo.Context) error {
 	ret := ZoneRsp{
-		Result: "OK",
+		Result: "启服失败",
 	}
 	m := ZoneReq{}
 	err := c.Bind(&m)
 	if err != nil {
-		ret.Result = "Start zone, parse post info fail"
+		ret.Result = "启服失败, parse post info fail"
 		return c.JSON(http.StatusOK, ret)
 	}
 	zone := Zone{}
@@ -224,21 +225,28 @@ func StartZone(c echo.Context) error {
 		log.Printf(ret.Result, "send zid cannt match zonehost, zid:%d zonehost:%s", m.Zid, m.Host)
 		return c.JSON(http.StatusOK, ret)
 	}
-	suc := agentServer.StartZone(m.Host, m.Zid)
-	if suc == false {
-		return c.JSON(http.StatusOK, ret)
+	s := agentServer.StartZone(m.Host, m.Zid)
+	log.Println("start result", s)
+	switch s {
+	case protocol.NotifyDoFail:
+		ret.Result = "启服失败"
+	case protocol.NotifyDoSuc:
+		ret.Result = "启服成功"
+	case protocol.NotifyDoing:
+		ret.Result = "正在启服中，请勿重复启服"
 	}
+	log.Println("start ", ret)
 	return c.JSON(http.StatusOK, ret)
 }
 
 func StopZone(c echo.Context) error {
 	ret := ZoneRsp{
-		Result: "OK",
+		Result: "关服失败",
 	}
 	m := ZoneReq{}
 	err := c.Bind(&m)
 	if err != nil {
-		ret.Result = "Stop zone, parse post info fail"
+		ret.Result = "关服失败, parse post info fail"
 		return c.JSON(http.StatusOK, ret)
 	}
 	zone := Zone{}
@@ -248,9 +256,14 @@ func StopZone(c echo.Context) error {
 		log.Printf(ret.Result, "stopzone send zid cannt match zonehost, zid:%d zonehost:%s", m.Zid, m.Host)
 		return c.JSON(http.StatusOK, ret)
 	}
-	suc := agentServer.StopZone(m.Host, m.Zid)
-	if suc == false {
-		return c.JSON(http.StatusOK, ret)
+	s := agentServer.StopZone(m.Host, m.Zid)
+	switch s {
+	case protocol.NotifyDoFail:
+		ret.Result = "关服失败"
+	case protocol.NotifyDoSuc:
+		ret.Result = "关服成功"
+	case protocol.NotifyDoing:
+		ret.Result = "正在关服中，请勿重复关服"
 	}
 	return c.JSON(http.StatusOK, ret)
 }

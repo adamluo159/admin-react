@@ -49,7 +49,8 @@ const fetchSynMachine = (obj) => {
             method: "GET",
         })
             .then(response => response.json())
-            .then(json => console.log("synRsp:", json))
+            .then(json => obj.cb(json))
+            
     }
 }
 const fetchDelZone = (playload) => {

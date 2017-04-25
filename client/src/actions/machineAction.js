@@ -1,28 +1,12 @@
 import fetch from 'isomorphic-fetch'
 import { actionCreator } from '../utils/utils'
 
-const rspInitMachines = (dispatch, initFunc, rsp) => {
-    if (rsp.Items == null) {
-        return
-    }
-    rsp.Items.forEach(element => {
-        if (element.applications != null) {
-            element.applications = element.applications.toString()
-        }
-    });
-    dispatch(mapMachine.InitMachines({
-        data: rsp.Items,
-        editState: false
-    }))
-    initFunc()
-}
-
 const fetchInitMachines = (initFunc) => {
     return dispatch => {
         //dispatch(machineDispatch.reqMachines())
         return fetch("/machine", )
             .then(response => response.json())
-            .then(json => rspInitMachines(dispatch, initFunc, json))
+            .then(json => initFunc(json))
     }
 }
 
@@ -40,15 +24,11 @@ const rspSaveMachine = (dispatch, playload, rsp) => {
 }
 
 const fetchSaveMachine = (playload) => {
-    if (playload.machine.applications != null) {
-        playload.machine.applications = playload.machine.applications.split(","); //字符分割 
-    }
     return dispatch => {
         let body = JSON.stringify({
             oldhost: playload.oldmachine.hostname,
             Item: playload.machine
         })
-        console.log("aaaaaa:", body)
         return fetch("/machine/save", {
             method: "POST",
             headers: {

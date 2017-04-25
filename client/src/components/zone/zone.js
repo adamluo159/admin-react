@@ -25,7 +25,6 @@ class ZoneClass extends React.Component {
 
   InitZones(json) {
     this.initHead = true
-    console.log(json, this.initHead)
     let { setFieldsValue, getFieldValue } = this.props.form
 
     if (json.Result != "OK") {
@@ -128,7 +127,7 @@ class ZoneClass extends React.Component {
   synMachine(e) {
     e.preventDefault()
     const { fetchSynMachine } = this.props.dispatch
-    fetchSynMachine({ zid: this.synZid, hostname: this.zoneData[this.synZid].zoneHost })
+    fetchSynMachine({ zid: this.synZid, hostname: this.zoneData[this.synZid].zoneHost, cb: (json) => this.NotifyRsp(json)})
   }
 
   addZone(json) {

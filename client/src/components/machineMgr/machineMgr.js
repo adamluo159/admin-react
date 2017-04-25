@@ -6,7 +6,8 @@ import {
   Table,
   Icon,
   Button,
-  Input
+  Input,
+  Tag
 } from 'antd';
 
 import { trim, checkIpFormat } from '../../utils/utils'
@@ -17,7 +18,7 @@ export default class machineMgr extends React.Component {
     super(props);
     //记录当前已经存在的机器名
     this.hosts = {
-      "hosttmp": true
+      "hosttmp": false
     }
     this.columnsRender = {
       "hostname": (text, record, index) => (this.actionClick("hostname", text, record, index)),
@@ -30,13 +31,23 @@ export default class machineMgr extends React.Component {
     this
       .props
       .dispatch
-      .fetchInitMachines(() => this.initProp());
+      .fetchInitMachines((json) => this.initProp(json));
   }
 
-  initProp() {
-    let {data} = this.props.data
-    data.forEach((v, index) => {
-      this.hosts[v.hostname] = true
+  initProp(rsp) {
+    if (rsp.Items == null) {
+      return
+    }
+    rsp.Items.forEach(element => {
+      if (element.applications != null) {
+        element.applications = element.applications.toString()
+      }
+      this.hosts[element.hostname] = element.Online
+      delete element.Online
+    });
+    this.props.dispatch.InitMachines({
+      data: rsp.Items,
+      editState: false
     })
   }
 
@@ -73,7 +84,8 @@ export default class machineMgr extends React.Component {
       Message.error("保存失败，IP不合法，请重新修改")
       return
     }
-    if (this.hosts[this.editInput.hostname]) {
+    if (this.hosts[this.editInput.hostname] != null) {
+      console.log(this.hosts, this.editInput)
       Message.error("主机名重复，请重新修改")
       return
     }
@@ -86,8 +98,10 @@ export default class machineMgr extends React.Component {
         if (oldhost) {
           delete this.hosts[oldhost]
         }
-        this.hosts[newhost] = true
       }
+    }
+    if (playload.machine.applications != null) {
+      playload.machine.applications = playload.machine.applications.split(","); 
     }
 
     if (newItem) {
@@ -141,9 +155,16 @@ export default class machineMgr extends React.Component {
 
   actionHandle(text, record, index) {
     let {current, pageSize} = this.props.data.page
-    let {data} = this.props.data
     if (current > 1) {
       index = pageSize * (current - 1) + index
+    }
+    let onlineColor, onlineText
+    if (this.hosts[record.hostname] == true) {
+      onlineColor = "green"
+      onlineText = "已连接"
+    } else {
+      onlineColor = "pink"
+      onlineText = "未连接"
     }
     return (
       <div>
@@ -154,10 +175,7 @@ export default class machineMgr extends React.Component {
                 this.SaveDo(index, record)
               } }>save</a>
             <span className="ant-divider" />
-            <a
-              onClick={(e) => {
-                this.deleteDo(index, record)
-              } }>delete</a>
+            <Tag color={onlineColor}>{onlineText}</Tag>
           </div>
           : <div>
             <a onClick={(e) => {
@@ -167,6 +185,8 @@ export default class machineMgr extends React.Component {
             <a onClick={(e) => {
               this.deleteDo(index, record)
             } }>delete</a>
+            <span className="ant-divider" />
+            <Tag color={onlineColor}>{onlineText}</Tag>
           </div>
         }
       </div>
@@ -205,7 +225,7 @@ export default class machineMgr extends React.Component {
         ? this.columnsRender[k.key]
         : k.render
     })
-    data.forEach((k)=>{
+    data.forEach((k) => {
       k.key = k.hostname
     })
     return (

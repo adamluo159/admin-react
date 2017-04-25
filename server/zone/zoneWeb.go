@@ -11,8 +11,7 @@ import (
 
 	"fmt"
 
-	"github.com/adamluo159/admin-react/server/machine"
-	"github.com/adamluo159/gameAgent/agentServer"
+	"github.com/adamluo159/admin-react/server/comInterface"
 	"github.com/adamluo159/gameAgent/protocol"
 	"github.com/adamluo159/gameAgent/utils"
 	"github.com/labstack/echo"
@@ -81,13 +80,13 @@ func AddZone(c echo.Context) error {
 	} else {
 		ret.Item = *m
 		//新增的zone用到的机器加入到各自的用途中
-		r := machine.RelationZone{
+		r := comInterface.RelationZone{
 			Zid:           m.Zid,
 			ZoneHost:      m.ZoneHost,
 			ZoneDBHost:    m.ZoneDBHost,
 			ZonelogdbHost: m.ZonelogdbHost,
 		}
-		machine.OpZoneRelation(&r, machine.RelationAdd)
+		zMgr.machineMgr.OpZoneRelation(&r, comInterface.RelationAdd)
 	}
 	return c.JSON(http.StatusOK, ret)
 }
@@ -106,8 +105,7 @@ func SaveZone(c echo.Context) error {
 	}
 	log.Println("get save info:", m)
 
-	oldRelation := GetZoneRelation(m.OldZid)
-
+	oldRelation := zMgr.GetZoneRelation(m.OldZid)
 	query := bson.M{"zid": m.OldZid, "zoneName": m.OldZoneName}
 	err = cl.Update(query, &m.Item)
 	if err != nil {
@@ -115,13 +113,13 @@ func SaveZone(c echo.Context) error {
 		ret.Result = "FALSE"
 	} else {
 		ret.Item = m.Item
-		newRelation := machine.RelationZone{
+		newRelation := &comInterface.RelationZone{
 			Zid:           m.Item.Zid,
 			ZoneDBHost:    m.Item.ZoneDBHost,
 			ZoneHost:      m.Item.ZoneHost,
 			ZonelogdbHost: m.Item.ZonelogdbHost,
 		}
-		machine.UpdateZone(oldRelation, &newRelation)
+		zMgr.machineMgr.UpdateZone(oldRelation, newRelation)
 	}
 
 	return c.JSON(http.StatusOK, ret)
@@ -142,7 +140,7 @@ func DelZone(c echo.Context) error {
 		log.Println("delete zone ok:", dzone, err.Error(), m.Zid)
 		return c.JSON(http.StatusOK, ret)
 	}
-	r := machine.RelationZone{
+	r := comInterface.RelationZone{
 		ZoneDBHost:    dzone.ZoneDBHost,
 		ZoneHost:      dzone.ZoneHost,
 		ZonelogdbHost: dzone.ZonelogdbHost,
@@ -154,7 +152,7 @@ func DelZone(c echo.Context) error {
 		ret.Result = "FALSE"
 		return c.JSON(http.StatusOK, ret)
 	}
-	machine.OpZoneRelation(&r, machine.RelationDel)
+	zMgr.machineMgr.OpZoneRelation(&r, comInterface.RelationDel)
 	err = cl.Remove(query)
 	if err != nil {
 		ret.Result = "FALSE"
@@ -163,20 +161,20 @@ func DelZone(c echo.Context) error {
 }
 
 func UpdateZonelogdb(c echo.Context) error {
-	z := ZoneReq{}
-	err := c.Bind(&z)
+	zReq := ZoneReq{}
+	err := c.Bind(&zReq)
 	ret := ZoneRsp{}
 	if err != nil {
 		log.Println(err.Error())
 		ret.Result = "FALSE"
 		return c.JSON(http.StatusOK, ret)
 	}
-	m := machine.GetMachineByName(z.Host)
+	m := zMgr.machineMgr.GetMachineByName(zReq.Host)
 	if m == nil {
 		ret.Result = "FAlse"
 		return c.JSON(http.StatusOK, ret)
 	}
-	logdb := "zonelog" + strconv.Itoa(z.Zid)
+	logdb := "zonelog" + strconv.Itoa(zReq.Zid)
 	s, _ := utils.ExeShellArgs2("sh", "update_zonelogdb", logdb, m.IP)
 	if logdb != s {
 		ret.Result = fmt.Sprintf("update zonelogdb fail,%s", s)
@@ -188,7 +186,7 @@ func UpdateZonelogdb(c echo.Context) error {
 
 func SynMachine(c echo.Context) error {
 	ret := ZoneRsp{
-		Result: "OK",
+		Result: "更新失败",
 	}
 
 	zid, err := strconv.Atoi(c.QueryParam("zid"))
@@ -204,7 +202,11 @@ func SynMachine(c echo.Context) error {
 	}
 
 	WriteZoneConfigLua(zid, &ret, hostname)
-	agentServer.Update(hostname)
+	ncode := zMgr.aserver.UpdateZone(hostname)
+	if ncode == protocol.NotifyDoSuc {
+		ret.Result = "更新成功"
+	}
+
 	return c.JSON(http.StatusOK, ret)
 }
 
@@ -225,7 +227,7 @@ func StartZone(c echo.Context) error {
 		log.Printf(ret.Result, "send zid cannt match zonehost, zid:%d zonehost:%s", m.Zid, m.Host)
 		return c.JSON(http.StatusOK, ret)
 	}
-	s := agentServer.StartZone(m.Host, m.Zid)
+	s := zMgr.aserver.StartZone(m.Host, m.Zid)
 	log.Println("start result", s)
 	switch s {
 	case protocol.NotifyDoFail:
@@ -256,7 +258,7 @@ func StopZone(c echo.Context) error {
 		log.Printf(ret.Result, "stopzone send zid cannt match zonehost, zid:%d zonehost:%s", m.Zid, m.Host)
 		return c.JSON(http.StatusOK, ret)
 	}
-	s := agentServer.StopZone(m.Host, m.Zid)
+	s := zMgr.aserver.StopZone(m.Host, m.Zid)
 	switch s {
 	case protocol.NotifyDoFail:
 		ret.Result = "关服失败"

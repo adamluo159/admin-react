@@ -4,29 +4,36 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/adamluo159/admin-react/server/comInterface"
 	"github.com/labstack/echo"
 	"gopkg.in/mgo.v2/bson"
 )
 
 type InitMachine struct {
-	Items []Machine
+	Items []comInterface.Machine
 }
 
 type SaveMachineReq struct {
 	Oldhost string
-	Item    Machine
+	Item    comInterface.Machine
 }
 
 //回复信息
 type MachineRsp struct {
 	Result string
-	Item   Machine
+	Item   comInterface.Machine
 }
 
 //获取机器信息
 func GetMachines(c echo.Context) error {
 	rsp := InitMachine{}
 	cl.Find(nil).All(&rsp.Items)
+
+	var host string
+	for index := 0; index < len(rsp.Items); index++ {
+		host = rsp.Items[index].Hostname
+		rsp.Items[index].Online = mhMgr.as.CheckOnlineMachine(host)
+	}
 	return c.JSON(http.StatusOK, rsp)
 }
 
@@ -62,6 +69,10 @@ func SaveMachine(c echo.Context) error {
 	}
 	fmt.Println("get save info:", m)
 	if m.Oldhost != m.Item.Hostname {
+		if mhMgr.as.CheckOnlineMachine(m.Oldhost) {
+			ret.Result = "已连接的机器不能修改主机名"
+			return c.JSON(http.StatusOK, ret)
+		}
 		del := bson.M{"hostname": m.Oldhost}
 		err = cl.Remove(del)
 		if err != nil {
@@ -104,8 +115,8 @@ func DelMachine(c echo.Context) error {
 	return c.JSON(http.StatusOK, ret)
 }
 
-func getM(c *echo.Context) (*Machine, error) {
-	m := Machine{}
+func getM(c *echo.Context) (*comInterface.Machine, error) {
+	m := comInterface.Machine{}
 	err := (*c).Bind(&m)
 	if err != nil {
 		fmt.Println(err.Error())

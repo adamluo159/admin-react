@@ -27,7 +27,7 @@ func DbPing(e *echo.Echo) {
 			rerr := db.ReConnect()
 			if rerr == nil {
 				machine.Register(e)
-				zone.Register(e)
+				//zone.Register(e)
 			}
 		}
 		time.Sleep(time.Second * 10)
@@ -40,11 +40,16 @@ func main() {
 	e.Use(ServerHeader)
 
 	db.Connect()
-	machine.Register(e)
-	zone.Register(e)
-
 	go DbPing(e)
-	go agentServer.New(":3300")
+	s := agentServer.New(":3300")
+	m := machine.Register(e)
+	z := zone.Register(e)
+
+	m.InitMgr(s)
+	z.InitMgr(m, s)
+	s.Init(m)
+
+	go s.Listen()
 
 	e.Static("/", "../client/")
 	e.File("/", "../client/index.html")

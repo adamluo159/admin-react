@@ -9,7 +9,7 @@ import (
 
 	"encoding/json"
 
-	"github.com/adamluo159/admin-react/server/machine"
+	"github.com/adamluo159/admin-react/server/comInterface"
 	"github.com/adamluo159/gameAgent/utils"
 	"github.com/adamluo159/struct2lua"
 	"gopkg.in/mgo.v2/bson"
@@ -35,7 +35,7 @@ func WriteZoneConfigLua(zid int, ret *ZoneRsp, hostName string) {
 		ret.Result = "cannt Find zoneCount--" + zerr.Error()
 		return
 	}
-	zonem := machine.GetMachineByName(zone.ZoneHost)
+	zonem := zMgr.machineMgr.GetMachineByName(zone.ZoneHost)
 	if zonem == nil {
 		ret.Result = "cannt Find zoneMachine--"
 		return
@@ -89,8 +89,8 @@ func DelZoneConfig(zid int, hostname string) error {
 	return nil
 }
 
-func GateLua(zone *Zone, zonem *machine.Machine, zoneCount int, Dir string) error {
-	masterm := machine.GetMachineByName("master")
+func GateLua(zone *Zone, zonem *comInterface.Machine, zoneCount int, Dir string) error {
+	masterm := zMgr.machineMgr.GetMachineByName("master")
 	if masterm == nil {
 		return errors.New(" GateLua cannt find machine")
 	}
@@ -106,9 +106,9 @@ func GateLua(zone *Zone, zonem *machine.Machine, zoneCount int, Dir string) erro
 		ID:             zone.Zid,
 		Zid:            zone.Zid,
 		ServerIP:       zonem.IP,
-		ServerPort:     machine.GatePort + zoneCount,
+		ServerPort:     comInterface.GatePort + zoneCount,
 		ClientIP:       zonem.OutIP,
-		ClientPort:     machine.ClientPort + zoneCount,
+		ClientPort:     comInterface.ClientPort + zoneCount,
 		ChannelIds:     s,
 		Open:           zone.Whitelst,
 		Name:           zone.ZoneName,
@@ -117,27 +117,27 @@ func GateLua(zone *Zone, zonem *machine.Machine, zoneCount int, Dir string) erro
 	gateLua.ConnectServers["CharDB"] = Connect{
 		ID:   zone.Zid,
 		IP:   zonem.IP,
-		Port: machine.CharDBPort + zoneCount,
+		Port: comInterface.CharDBPort + zoneCount,
 	}
 	gateLua.ConnectServers["Master"] = Connect{
 		ID:   1,
 		IP:   masterm.IP,
-		Port: machine.MasterPort + machine.MasterCount,
+		Port: comInterface.MasterPort + comInterface.MasterCount,
 	}
 	gateLua.ConnectServers["Log"] = Connect{
 		ID:   zone.Zid,
 		IP:   zonem.IP,
-		Port: machine.LogPort + zoneCount,
+		Port: comInterface.LogPort + zoneCount,
 	}
 
 	srv := make(map[string]int)
-	srv["nType"] = machine.GateServer
-	head := machine.ServerConfigHead{
+	srv["nType"] = comInterface.GateServer
+	head := comInterface.ServerConfigHead{
 		NET_TIMEOUT_MSEC:  3600000,
-		NET_MAX_CONNETION: machine.NetMaxConnection,
-		StartService:      []machine.SRV{srv},
+		NET_MAX_CONNETION: comInterface.NetMaxConnection,
+		StartService:      []comInterface.SRV{srv},
 		LOG_INDEX:         "gate",
-		LOG_MAXLINE:       machine.LogMaxLine,
+		LOG_MAXLINE:       comInterface.LogMaxLine,
 		OpenGM:            1,
 	}
 
@@ -148,12 +148,12 @@ func GateLua(zone *Zone, zonem *machine.Machine, zoneCount int, Dir string) erro
 	return nil
 }
 
-func CenterLua(zone *Zone, zonem *machine.Machine, zoneCount int, Dir string) error {
+func CenterLua(zone *Zone, zonem *comInterface.Machine, zoneCount int, Dir string) error {
 	centerLua := Center{
 		ID:   zone.Zid,
 		Zid:  zone.Zid,
 		IP:   zonem.IP,
-		Port: machine.CenterPort + zoneCount,
+		Port: comInterface.CenterPort + zoneCount,
 		OnlineNumberCheckTime: 60 * 5,
 		SingleServerLoad:      4000,
 		ConnectServers:        make(map[string]interface{}),
@@ -162,26 +162,26 @@ func CenterLua(zone *Zone, zonem *machine.Machine, zoneCount int, Dir string) er
 	centerLua.ConnectServers["CharDB"] = Connect{
 		ID:   zone.Zid,
 		IP:   zonem.IP,
-		Port: machine.CharDBPort + zoneCount,
+		Port: comInterface.CharDBPort + zoneCount,
 	}
 	centerLua.ConnectServers["Gate"] = Connect{
 		ID:   zone.Zid,
 		IP:   zonem.IP,
-		Port: machine.GatePort + zoneCount,
+		Port: comInterface.GatePort + zoneCount,
 	}
 	centerLua.ConnectServers["Log"] = Connect{
 		ID:   zone.Zid,
 		IP:   zonem.IP,
-		Port: machine.LogPort + zoneCount,
+		Port: comInterface.LogPort + zoneCount,
 	}
 	srv := make(map[string]int)
-	srv["nType"] = machine.CenterServer
-	head := machine.ServerConfigHead{
-		NET_TIMEOUT_MSEC:  machine.NetTimeOut,
-		NET_MAX_CONNETION: machine.NetMaxConnection,
-		StartService:      []machine.SRV{srv},
+	srv["nType"] = comInterface.CenterServer
+	head := comInterface.ServerConfigHead{
+		NET_TIMEOUT_MSEC:  comInterface.NetTimeOut,
+		NET_MAX_CONNETION: comInterface.NetMaxConnection,
+		StartService:      []comInterface.SRV{srv},
 		LOG_INDEX:         "cener",
-		LOG_MAXLINE:       machine.LogMaxLine,
+		LOG_MAXLINE:       comInterface.LogMaxLine,
 		OpenGM:            1,
 	}
 
@@ -192,14 +192,14 @@ func CenterLua(zone *Zone, zonem *machine.Machine, zoneCount int, Dir string) er
 	return nil
 }
 
-func CharDBLua(zone *Zone, zonem *machine.Machine, zoneCount int, Dir string) error {
+func CharDBLua(zone *Zone, zonem *comInterface.Machine, zoneCount int, Dir string) error {
 	//这个后面再加，现在假设所有服都用6379作缓存
 	//zoneDBquery := bson.M{"zoneDBHost": zone.ZoneDBHost}
 	//zoneDBCount, zdberr := cl.Find(zoneDBquery).Count()
 	//if zdberr != nil {
 	//	return zdberr
 	//}
-	zonedbm := machine.GetMachineByName(zone.ZoneDBHost)
+	zonedbm := zMgr.machineMgr.GetMachineByName(zone.ZoneDBHost)
 	if zonedbm == nil {
 		return errors.New("CharDBLua cannt find machine")
 	}
@@ -209,30 +209,30 @@ func CharDBLua(zone *Zone, zonem *machine.Machine, zoneCount int, Dir string) er
 		ID:   zone.Zid,
 		Zid:  zone.Zid,
 		IP:   zonem.IP,
-		Port: machine.CharDBPort + zoneCount,
+		Port: comInterface.CharDBPort + zoneCount,
 		Mysql: MysqlLua{
 			IP:             zonedbm.IP,
-			Port:           machine.MysqlPort,
-			UserName:       machine.UserName,
-			Password:       machine.PassWord,
+			Port:           comInterface.MysqlPort,
+			UserName:       comInterface.UserName,
+			Password:       comInterface.PassWord,
 			FlushFrequency: 300,
 			DataBase:       mysqldbName,
 		},
 		Redis: RedisLua{
 			IP: zonedbm.IP,
-			//Port:     machine.RedisPort + zoneDBCount,
-			Port:     machine.RedisPort,
+			//Port:     comInterface.RedisPort + zoneDBCount,
+			Port:     comInterface.RedisPort,
 			Password: "",
 		},
 	}
 	srv := make(map[string]int)
-	srv["nType"] = machine.DbproxyServer
-	head := machine.ServerConfigHead{
-		NET_TIMEOUT_MSEC:  machine.NetTimeOut,
-		NET_MAX_CONNETION: machine.NetMaxConnection,
-		StartService:      []machine.SRV{srv},
+	srv["nType"] = comInterface.DbproxyServer
+	head := comInterface.ServerConfigHead{
+		NET_TIMEOUT_MSEC:  comInterface.NetTimeOut,
+		NET_MAX_CONNETION: comInterface.NetMaxConnection,
+		StartService:      []comInterface.SRV{srv},
 		LOG_INDEX:         "chardb",
-		LOG_MAXLINE:       machine.LogMaxLine,
+		LOG_MAXLINE:       comInterface.LogMaxLine,
 		OpenGM:            1,
 	}
 
@@ -243,51 +243,51 @@ func CharDBLua(zone *Zone, zonem *machine.Machine, zoneCount int, Dir string) er
 	return nil
 }
 
-func LogicLua(zone *Zone, zonem *machine.Machine, zoneCount int, Dir string) error {
+func LogicLua(zone *Zone, zonem *comInterface.Machine, zoneCount int, Dir string) error {
 	logicLua := Logic{
 		//ID:  1,
 		Zid: zone.Zid,
 		IP:  zonem.IP,
-		//Port:           machine.LogicPort + zoneCount*3 + 1,
+		//Port:           comInterface.LogicPort + zoneCount*3 + 1,
 		ConnectServers: make(map[string]interface{}),
 	}
 	logicLua.ConnectServers["CharDB"] = Connect{
 		ID:   zone.Zid,
 		IP:   zonem.IP,
-		Port: machine.CharDBPort + zoneCount,
+		Port: comInterface.CharDBPort + zoneCount,
 	}
 	logicLua.ConnectServers["Gate"] = Connect{
 		ID:   zone.Zid,
 		IP:   zonem.IP,
-		Port: machine.GatePort + zoneCount,
+		Port: comInterface.GatePort + zoneCount,
 	}
 	logicLua.ConnectServers["Center"] = Connect{
 		ID:   zone.Zid,
 		IP:   zonem.IP,
-		Port: machine.CenterPort + zoneCount,
+		Port: comInterface.CenterPort + zoneCount,
 	}
 	logicLua.ConnectServers["Log"] = Connect{
 		ID:   zone.Zid,
 		IP:   zonem.IP,
-		Port: machine.LogPort + zoneCount,
+		Port: comInterface.LogPort + zoneCount,
 	}
 	srv := make(map[string]int)
-	srv["nType"] = machine.LogicServer
-	head := machine.ServerConfigHead{
-		NET_TIMEOUT_MSEC:  machine.NetTimeOut,
-		NET_MAX_CONNETION: machine.NetMaxConnection,
-		StartService:      []machine.SRV{srv},
+	srv["nType"] = comInterface.LogicServer
+	head := comInterface.ServerConfigHead{
+		NET_TIMEOUT_MSEC:  comInterface.NetTimeOut,
+		NET_MAX_CONNETION: comInterface.NetMaxConnection,
+		StartService:      []comInterface.SRV{srv},
 		OpenGM:            1,
 	}
 
 	for k, v := range LogicMap {
 		logicLua.ID = k
-		logicLua.Port = machine.LogicPort + zoneCount*3 + k
+		logicLua.Port = comInterface.LogicPort + zoneCount*3 + k
 		logicLua.MapIds = v
 
 		s := "logic" + strconv.Itoa(k)
 		head.LOG_INDEX = s
-		head.LOG_MAXLINE = machine.LogMaxLine
+		head.LOG_MAXLINE = comInterface.LogMaxLine
 
 		trans := struct2lua.ToLuaConfig(Dir, "Logic", logicLua, head, k)
 		if trans == false {
@@ -298,33 +298,33 @@ func LogicLua(zone *Zone, zonem *machine.Machine, zoneCount int, Dir string) err
 	return nil
 }
 
-func LogLua(zone *Zone, zonem *machine.Machine, zoneCount int, Dir string) error {
-	logm := machine.GetMachineByName(zone.ZonelogdbHost)
+func LogLua(zone *Zone, zonem *comInterface.Machine, zoneCount int, Dir string) error {
+	logm := zMgr.machineMgr.GetMachineByName(zone.ZonelogdbHost)
 	if logm == nil {
 		return errors.New("LogLua cannt find machine")
 	}
 	logLua := Log{
 		ID:   zone.Zid,
 		IP:   zonem.IP,
-		Port: machine.LogPort + zoneCount,
+		Port: comInterface.LogPort + zoneCount,
 		ZoneLogMysql: MysqlLua{
 			IP:             logm.IP,
-			Port:           machine.MysqlPort,
-			UserName:       machine.UserName,
-			Password:       machine.PassWord,
+			Port:           comInterface.MysqlPort,
+			UserName:       comInterface.UserName,
+			Password:       comInterface.PassWord,
 			FlushFrequency: 300,
 			DataBase:       "zonelog" + strconv.Itoa(zone.Zid),
 		},
 		GlobalLogMysql: GlobalDB,
 	}
 	srv := make(map[string]int)
-	srv["nType"] = machine.LogServer
-	head := machine.ServerConfigHead{
-		NET_TIMEOUT_MSEC:  machine.NetTimeOut,
-		NET_MAX_CONNETION: machine.NetMaxConnection,
-		StartService:      []machine.SRV{srv},
+	srv["nType"] = comInterface.LogServer
+	head := comInterface.ServerConfigHead{
+		NET_TIMEOUT_MSEC:  comInterface.NetTimeOut,
+		NET_MAX_CONNETION: comInterface.NetMaxConnection,
+		StartService:      []comInterface.SRV{srv},
 		LOG_INDEX:         "yylog",
-		LOG_MAXLINE:       machine.LogMaxLine,
+		LOG_MAXLINE:       comInterface.LogMaxLine,
 		OpenGM:            1,
 	}
 	trans := struct2lua.ToLuaConfig(Dir, "Log", logLua, head, 0)

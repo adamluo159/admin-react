@@ -3,15 +3,22 @@ package zone
 import (
 	"log"
 
+	"github.com/adamluo159/admin-react/server/comInterface"
 	"github.com/adamluo159/admin-react/server/db"
-	"github.com/adamluo159/admin-react/server/machine"
 	"github.com/labstack/echo"
 	mgo "gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
 )
 
+type ZoneMgr struct {
+	machineMgr comInterface.MachineMgr
+	aserver    comInterface.Aserver
+}
+
+var zMgr ZoneMgr
+
 //区服模块注册
-func Register(e *echo.Echo) {
+func Register(e *echo.Echo) *ZoneMgr {
 	Str2IntChannels = make(map[string]int)
 	Str2IntChannels["ios"] = 1
 	Str2IntChannels["yyb"] = 2
@@ -89,19 +96,26 @@ func Register(e *echo.Echo) {
 	e.POST("/zone/stopZone", StopZone)
 	e.POST("/zone/del", DelZone)
 	e.POST("/zone/updateZonelogdb", UpdateZonelogdb)
+
+	return &zMgr
 }
 
-func GetZoneRelation(zid int) *machine.RelationZone {
-	z := Zone{}
-	err := cl.Find(bson.M{"zid": zid}).One(&z)
+func (z *ZoneMgr) InitMgr(m comInterface.MachineMgr, as comInterface.Aserver) {
+	z.aserver = as
+	z.machineMgr = m
+}
+
+func (z *ZoneMgr) GetZoneRelation(zid int) *comInterface.RelationZone {
+	dz := Zone{}
+	err := cl.Find(bson.M{"zid": zid}).One(&dz)
 	if err != nil {
 		log.Println("GetZoneRelation err", err.Error())
 		return nil
 	}
-	return &machine.RelationZone{
+	return &comInterface.RelationZone{
 		Zid:           zid,
-		ZoneHost:      z.ZoneHost,
-		ZoneDBHost:    z.ZoneDBHost,
-		ZonelogdbHost: z.ZonelogdbHost,
+		ZoneHost:      dz.ZoneHost,
+		ZoneDBHost:    dz.ZoneDBHost,
+		ZonelogdbHost: dz.ZonelogdbHost,
 	}
 }

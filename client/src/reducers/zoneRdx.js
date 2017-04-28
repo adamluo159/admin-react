@@ -3,13 +3,6 @@ import {zoneActions} from '../actions/zoneAction'
 const zoneInitState = {
 }
 
-const zoneInitData = (oldState, init) =>{
-    return {
-        init
-    }
-}
-
-
 const zoneRdxHandle = {}
 //zoneRdxHandle[zoneActions.INIT_ZONES] = objReduxHandle
 //zoneRdxHandle[zoneActions.ADD_ZONE] = addmachineData

@@ -50,7 +50,7 @@ const fetchSynMachine = (obj) => {
         })
             .then(response => response.json())
             .then(json => obj.cb(json))
-            
+
     }
 }
 const fetchDelZone = (playload) => {
@@ -96,10 +96,7 @@ const fetchStartZone = (playload) => {
             body: JSON.stringify(playload.obj)
         })
             .then(response => response.json())
-            .then(json => {
-                console.log(json, playload)
-                playload.startZoneRsp(json)}
-                )
+            .then(json =>playload.startZoneRsp(json))
     }
 }
 
@@ -114,11 +111,12 @@ const fetchStopZone = (playload) => {
             body: JSON.stringify(playload.obj)
         })
             .then(response => response.json())
-            .then(json => {
-                console.log(json, playload)
-                playload.stopZoneRsp(json)}
-                )
+            .then(json => playload.stopZoneRsp(json))
     }
+}
+
+const  refreshZone = () => {
+    return dispatch => {}
 }
 
 
@@ -133,5 +131,6 @@ const mapZone = {
     "fetchStopZone": fetchStopZone,
     "fetchDelZone": fetchDelZone,
     "fetchUpdateZonelogdb": fetchUpdateZonelogdb,
+    "refreshZone" : refreshZone,
 }
 export default mapZone

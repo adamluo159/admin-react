@@ -16,11 +16,22 @@ class ZoneClass extends React.Component {
     this.zoneData = {}
     this.zoneNameToZid = {}
     this.synZid = 0
+    this.startLoading = false
+    this.stopLoading = false
   }
 
   componentWillMount() {
     let { dispatch } = this.props
     dispatch.fetchInitZones((json) => this.InitZones(json))
+  }
+
+  refreshZone() {
+    let { setFieldsValue, getFieldValue } = this.props.form
+    let e = getFieldValue("edit")
+    setFieldsValue({
+      edit: e
+    })
+    console.log("refreshZone:")
   }
 
   InitZones(json) {
@@ -79,7 +90,6 @@ class ZoneClass extends React.Component {
   }
 
   AddZoneInfo() {
-    console.log(this.adding)
     if (this.adding == true) {
       return
     }
@@ -127,7 +137,7 @@ class ZoneClass extends React.Component {
   synMachine(e) {
     e.preventDefault()
     const { fetchSynMachine } = this.props.dispatch
-    fetchSynMachine({ zid: this.synZid, hostname: this.zoneData[this.synZid].zoneHost, cb: (json) => this.NotifyRsp(json)})
+    fetchSynMachine({ zid: this.synZid, hostname: this.zoneData[this.synZid].zoneHost, cb: (json) => this.NotifyRsp(json) })
   }
 
   addZone(json) {
@@ -247,18 +257,31 @@ class ZoneClass extends React.Component {
   startZone(e) {
     e.preventDefault()
     const { fetchStartZone } = this.props.dispatch
+    this.startLoading = true
+
+    this.refreshZone()
     fetchStartZone({
       obj: { zid: this.synZid, Host: this.zoneData[this.synZid].zoneHost },
-      startZoneRsp: (json) => this.NotifyRsp(json),
+      startZoneRsp: (json) => {
+        this.startLoading = false
+        this.refreshZone()
+        this.NotifyRsp(json)
+      },
     })
   }
 
   stopZone(e) {
     e.preventDefault()
     const { fetchStopZone } = this.props.dispatch
+    this.stopLoading = true
+    this.refreshZone()
     fetchStopZone({
       obj: { Zid: this.synZid, Host: this.zoneData[this.synZid].zoneHost },
-      stopZoneRsp: (json) => this.NotifyRsp(json),
+      stopZoneRsp: (json) => {
+        this.stopLoading = false
+        this.refreshZone()
+        this.NotifyRsp(json)
+      },
     })
   }
   NotifyRsp(jsp) {
@@ -343,10 +366,10 @@ class ZoneClass extends React.Component {
               <Button type="primary" disabled={!disabled} onClick={(e) => this.synMachine(e)} >同步机器</Button>
             </Col>
             <Col span={6}>
-              <Button type="primary" disabled={!disabled} onClick={(e) => this.startZone(e)} >启服</Button>
+              <Button type="primary" disabled={!disabled} loading={this.startLoading} onClick={(e) => this.startZone(e)} >启服</Button>
             </Col>
             <Col span={6}>
-              <Button type="primary" disabled={!disabled} onClick={(e) => this.stopZone(e)} >关服</Button>
+              <Button type="primary" disabled={!disabled} loading={this.stopLoading} onClick={(e) => this.stopZone(e)} >关服</Button>
             </Col>
           </Form>
         </Row>

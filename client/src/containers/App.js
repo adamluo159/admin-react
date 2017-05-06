@@ -12,7 +12,7 @@ import actionDispatchFunc from '../actions'
 
 const mainLays = {
   "machineMgr": (e) => <MachineMgr data={e.machines} dispatch={e.machineD}></MachineMgr>,
-  "zone": (e) => <Zone dispatch={e.zoneD}> </Zone>
+  "zone": (e) => <Zone data={e.zone} dispatch={e.zoneD}> </Zone>
 }
 
 class App extends React.Component {
@@ -56,8 +56,8 @@ App.propTypes = {
 }
 
 const mapStateToProps = state => {
-  const {layout, machines} = state;
-  return {layout, machines}
+  const {layout, machines, zone} = state;
+  return {layout, machines, zone}
 }
 
 const mapDispatchToProps = dispatch => (actionDispatchFunc(dispatch))

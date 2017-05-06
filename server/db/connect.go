@@ -29,7 +29,8 @@ func Connect() {
 		panic(err.Error())
 	}
 
-	s.SetSafe(&mgo.Safe{})
+	//s.SetSafe(&mgo.Safe{})
+	s.SetMode(mgo.Monotonic, true)
 	fmt.Println("Connected to", MongoDBUrl)
 	Session = s
 	Mongo = mongo
@@ -42,8 +43,8 @@ func ReConnect() error {
 		fmt.Printf("Can't Reconnect to mongo, go error %v\n", err)
 		return err
 	}
-
-	s.SetSafe(&mgo.Safe{})
+	//s.SetSafe(&mgo.Safe{})
+	s.SetMode(mgo.Monotonic, true)
 	fmt.Println("ReConnected to", MongoDBUrl)
 
 	Session.Close()

@@ -54,7 +54,6 @@ func UpdateMachineApplications(host string, apps []string) {
 		log.Println("UpdateMachineApplications update err, ", err.Error())
 		return
 	}
-
 }
 
 func SliceString(A *[]string, name string, op int) {
@@ -88,6 +87,16 @@ func (m *MachineMgr) GetMachineByName(name string) *comInterface.Machine {
 		return nil
 	}
 	return &d
+}
+
+func (m *MachineMgr) GetAllMachines() []comInterface.Machine {
+	var ms []comInterface.Machine
+	err := cl.Find(nil).All(&ms)
+	if err != nil {
+		log.Println(" GetAllMachines", err.Error())
+		return nil
+	}
+	return ms
 }
 
 func (m *MachineMgr) UpdateZone(old *comInterface.RelationZone, new *comInterface.RelationZone) {

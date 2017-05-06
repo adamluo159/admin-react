@@ -2,6 +2,10 @@ import React, { Component } from 'react'
 import { Select, Message, Button, Input, Row, Col, Form, Switch } from 'antd'
 import './zone.css'
 import ZoneHead from './zoneHead'
+import ZoneForm from './zoneForm'
+import ZoneFooter from './zoneFooter'
+import ZoneShowTable from './zoneShowTable'
+
 import { zoneConfig, zoneOptions, formItemLayout } from '../../constant'
 
 const Option = Select.Option
@@ -9,15 +13,8 @@ const FormItem = Form.Item
 class ZoneClass extends React.Component {
   constructor(props) {
     super(props);
-    this.initShow = false
-    this.initHead = false
-    this.channelData = []
-    this.ZoneHeadData = {}
     this.zoneData = {}
-    this.zoneNameToZid = {}
-    this.synZid = 0
-    this.startLoading = false
-    this.stopLoading = false
+    this.opZid = 0
   }
 
   componentWillMount() {
@@ -25,63 +22,29 @@ class ZoneClass extends React.Component {
     dispatch.fetchInitZones((json) => this.InitZones(json))
   }
 
-  refreshZone() {
-    let { setFieldsValue, getFieldValue } = this.props.form
-    let e = getFieldValue("edit")
-    setFieldsValue({
-      edit: e
-    })
-    console.log("refreshZone:")
-  }
-
   InitZones(json) {
-    this.initHead = true
-    let { setFieldsValue, getFieldValue } = this.props.form
-
     if (json.Result != "OK") {
-      //setFieldsValue({
-      //  edit: false
-      //})
       return
     }
-
-    let zData = json.Items
-    for (let i = 0; i < zData.length; i++) {
-      let zone = zData[i]
-      let headInfo = {
-        zid: zone.zid,
-        zoneName: zone.zoneName
-      }
-
-      this.zoneData[zone.zid] = zone
-      this.zoneNameToZid[zone.zoneName] = zone.zid
-      for (let c = 0; c < zone.channels.length; c++) {
-        let channel = zone.channels[c]
-        if (channel === undefined) {
-          continue
-        }
-        if (this.ZoneHeadData[channel]) {
-          this.ZoneHeadData[channel].push(headInfo)
-        } else {
-          this.ZoneHeadData[channel] = []
-          this.ZoneHeadData[channel].push(headInfo)
-          this.channelData.push(channel)
-        }
-      }
+    if (json.Items.length <= 0) {
+      let {DisableEdit} = this.props.dispatch
+      DisableEdit({ zoneEdit: false })
+    } else {
+      json.Items.forEach(v => {
+        this.zoneData[v.zid] = v
+      })
+      this.opZid = this.refs.zHead.Init(this.zoneData)
+      let {setFieldsValue} = this.refs.zForm
+      setFieldsValue(this.zoneData[this.opZid])
     }
-    this.renderTabs(false)
-    setFieldsValue({
-      edit: false
-    })
+    console.log("init....", json)
+    this.refs.zShowTable.setState({ show: json.Zstates })
   }
 
-  ShowZoneInfo(zid) {
-    zid = Number(zid)
-    this.synZid = zid
-    this.initShow = true
-    this.adding = false
+  ShowZone(zid) {
+    this.opZid = Number(zid)
     let zone = this.zoneData[zid]
-    let { setFieldsValue } = this.props.form
+    let { setFieldsValue } = this.refs.zForm
     let showzone = {
       ...zone,
       edit: false
@@ -90,181 +53,100 @@ class ZoneClass extends React.Component {
   }
 
   AddZoneInfo() {
-    if (this.adding == true) {
+    if (this.addingZone == true) {
       return
     }
 
-    this.initShow = true
-    this.adding = true
-    let { resetFields, setFieldsValue, getFieldsValue } = this.props.form
+    let {DisableEdit} = this.props.dispatch
+    DisableEdit({ zoneEdit: true })
+    let { resetFields, setFieldsValue} = this.refs.zForm
     resetFields()
     setFieldsValue({
       "edit": true
     })
+
+    this.refs.zFooter.setState({ addZone: true, edit: true })
   }
 
-  handleChange(value) {
+  saveOrAddZone(value) {
     value.preventDefault()
-    const { form, dispatch } = this.props
-    form.validateFields((err, values) => {
-      if (!err) {
-        values.zid = Number(values.zid)
-        if (this.adding) {
-          dispatch.fetchAddZone({
-            obj: values,
-            addZone: (json) => this.addZone(json)
-          })
-        } else {
-          let oldzone = this.zoneData[values.zid]
-          if (oldzone == undefined) {
-            let oldzid = this.zoneNameToZid[values.zoneName]
-            oldzone = this.zoneData[oldzid]
-          }
-          if (oldzone == undefined) {
-            return
-          }
-          dispatch.fetchSaveZone({
-            obj: values,
-            oldZoneName: oldzone.zoneName,
-            oldZid: oldzone.zid,
-            saveZone: (json) => this.saveZone(json)
-          })
-        }
-        this.loading = true
-      }
-    })
+    const { fetchAddZone, fetchSaveZone } = this.props.dispatch
+    const {getFieldsValue, setFieldsValue} = this.refs.zForm
+    let zone = getFieldsValue()
+    zone.zid = Number(zone.zid)
+    let {addZone} = this.refs.zFooter.state
+    if (addZone) {
+      fetchAddZone({
+        obj: zone,
+        cb: (json) => this.addZoneRsp(json)
+      })
+    } else {
+      let oldzone = this.zoneData[this.opZid]
+      fetchSaveZone({
+        obj: zone,
+        oldZoneName: oldzone.zoneName,
+        oldZid: oldzone.zid,
+        cb: (json) => this.saveZoneRsp(json)
+      })
+    }
+    setFieldsValue({ edit: false })
+    this.refs.zFooter.setState({ edit: false, addZoneLoading: true })
   }
+
   synMachine(e) {
     e.preventDefault()
     const { fetchSynMachine } = this.props.dispatch
-    fetchSynMachine({ zid: this.synZid, hostname: this.zoneData[this.synZid].zoneHost, cb: (json) => this.NotifyRsp(json) })
+    const { getFieldValue} = this.refs.zForm
+    let zid = Number(getFieldValue("zid"))
+    fetchSynMachine({ zid: zid, hostname: this.zoneData[zid].zoneHost, cb: (json) => this.NotifyRsp(json) })
   }
 
-  addZone(json) {
-    this.loading = false
-    let { resetFields, setFieldsValue } = this.props.form
+  addZoneRsp(json) {
+    let { setFieldsValue } = this.refs.zForm
     let zone = json.Item
     if (json.Result != "OK") {
-      let a = {
-        edit: false,
-      }
-      setFieldsValue(a)
+      setFieldsValue(this.zoneData[this.opZid])
       return
     }
-    let a = {
+    this.zoneData[zone.zid] = zone
+    this.opZid = zone.zid
+    let addContent = {
       ...zone,
       edit: false,
     }
-    this.adding = false
-    this.zoneData[zone.zid] = zone
-    this.zoneNameToZid[zone.zoneName] = zone.zid
-    let headInfo = {
-      zid: zone.zid,
-      zoneName: zone.zoneName
-    }
-    for (let c = 0; c < zone.channels.length; c++) {
-      let channel = zone.channels[c]
-      if (channel === undefined) {
-        continue
-      }
-      if (this.ZoneHeadData[channel]) {
-        this.ZoneHeadData[channel].push(headInfo)
-      } else {
-        this.ZoneHeadData[channel] = []
-        this.ZoneHeadData[channel].push(headInfo)
-        this.channelData.push(channel)
-      }
-    }
-
-    setFieldsValue(a)
+    setFieldsValue(addContent)
+    this.refs.zFooter.setState({ addZoneLoading: false, addZone: false, edit: false })
+    this.refs.zHead.Init(this.zoneData, this.opZid)
   }
 
-  saveZone(rsp) {
-    this.loading = false
-    let { resetFields, setFieldsValue } = this.props.form
-
+  saveZoneRsp(rsp) {
+    let {setFieldsValue } = this.refs.zForm
     let newZone = rsp.json.Item
-    let newChannels = newZone.channels
-
     let oldzid = rsp.oldzid
-    let oldchannels = this.zoneData[oldzid].channels
     if (rsp.json.Result != "OK") {
-      let a = {
-        edit: true,
-      }
-      setFieldsValue(a)
+      setFieldsValue(this.zoneData(oldzid))
       return
     }
-    let delFunc = (obj) => obj.zid != oldzid
-    //this.nameToZid[zone.name] = zone.zid
-    for (let i = 0; i < oldchannels.length; i++) {
-      let delC = oldchannels[i]
-      let zonelst = this.ZoneHeadData[delC]
-      let newlst = zonelst.filter(delFunc)
-      if (newlst.length == 0) {
-        delete this.ZoneHeadData[delC]
-      } else {
-        this.ZoneHeadData[delC] = newlst
-      }
-    }
-    let headInfo = {
-      zid: newZone.zid,
-      zoneName: newZone.zoneName
-    }
-    for (let c = 0; c < newZone.channels.length; c++) {
-      let channel = newZone.channels[c]
-      let zonelst = this.ZoneHeadData[channel]
-      if (zonelst) {
-        let index = zonelst.indexOf(headInfo)
-        if (index === -1) {
-          zonelst.push(headInfo)
-        } else {
-          zonelst[index] = headInfo
-        }
-      } else {
-        zonelst = []
-        zonelst.push(headInfo)
-        if (this.channelData.indexOf(channel) === -1) {
-          this.channelData.push(channel)
-        }
-      }
-      this.ZoneHeadData[channel] = zonelst
-    }
-    let newChannelData = []
-    this.channelData.forEach(k => {
-      if (this.ZoneHeadData[k]) {
-        newChannelData.push(k)
-      }
-    })
-    this.channelData = newChannelData
-    let a = {
-      ...newZone,
-      edit: false,
-    }
-    setFieldsValue(a)
-
-    let oldZoneName = this.zoneData[oldzid].zoneName
-    if (newZone.zoneName != oldZoneName) {
-      delete this.zoneNameToZid[oldZoneName]
-    }
-    if (newZone.zid != oldzid) {
+    if (oldzid == newZone.zid) {
+      this.zoneData[oldzid] = newZone
+    } else {
       delete this.zoneData[oldzid]
+      this.zoneData[newZone] = newZone
     }
-    this.zoneData[newZone.zid] = newZone
-    this.zoneNameToZid[newZone.zoneName] = newZone.zid
+    this.refs.zHead.Init(this.zoneData, newZone.zid)
+    this.refs.zFooter.setState({ edit: false, addZoneLoading: false })
   }
 
   startZone(e) {
     e.preventDefault()
     const { fetchStartZone } = this.props.dispatch
-    this.startLoading = true
-
-    this.refreshZone()
+    const {getFieldValue} = this.refs.zForm
+    this.refs.zFooter.setState({ startZoneLoading: true })
     fetchStartZone({
-      obj: { zid: this.synZid, Host: this.zoneData[this.synZid].zoneHost },
+      obj: { zid: this.opZid, Host: this.zoneData[this.opZid].zoneHost },
       startZoneRsp: (json) => {
-        this.startLoading = false
-        this.refreshZone()
+        this.refs.zFooter.setState({ startZoneLoading: false })
+        this.refs.zShowTable.setState({ show: json.Zstates })
         this.NotifyRsp(json)
       },
     })
@@ -273,13 +155,14 @@ class ZoneClass extends React.Component {
   stopZone(e) {
     e.preventDefault()
     const { fetchStopZone } = this.props.dispatch
-    this.stopLoading = true
-    this.refreshZone()
+    const {getFieldValue} = this.refs.zForm
+    let zid = Number(getFieldValue("zid"))
+    this.refs.zFooter.setState({ stopZoneLoading: true })
     fetchStopZone({
-      obj: { Zid: this.synZid, Host: this.zoneData[this.synZid].zoneHost },
+      obj: { Zid: zid, Host: this.zoneData[zid].zoneHost },
       stopZoneRsp: (json) => {
-        this.stopLoading = false
-        this.refreshZone()
+        this.refs.zFooter.setState({ stopZoneLoading: false })
+        this.refs.zShowTable.setState({ show: json.Zstates })
         this.NotifyRsp(json)
       },
     })
@@ -291,135 +174,106 @@ class ZoneClass extends React.Component {
   deleteZone(e) {
     e.preventDefault()
     const {fetchDelZone} = this.props.dispatch
+    this.refs.zFooter.setState({ delZoneLoading: true })
+    let obj = {
+      Zid: this.opZid,
+      Host: this.zoneData[this.opZid].zoneHost
+    }
     fetchDelZone({
-      Zid: this.synZid,
-      Host: this.zoneData[this.synZid].zoneHost
+      obj: obj,
+      cb: (json) => this.deleteZoneRsp(json)
     })
   }
+  deleteZoneRsp(json) {
+    this.refs.zFooter.setState({ delZoneLoading: false })
+    if (json.Result != "OK") {
+      return
+    }
+    let zid = json.Item.zid
+    let {setFieldsValue} = this.refs.zForm
+
+    delete this.zoneData[zid]
+    this.opZid = this.refs.zHead.Init(this.zoneData)
+
+    setFieldsValue(this.zoneData[this.opZid])
+  }
+
   updatelogZoneDB(e) {
     e.preventDefault()
     const {fetchUpdateZonelogdb} = this.props.dispatch
-    console.log(this.zoneData[this.synZid])
+    const {getFieldValue} = this.refs.zForm
+    let zid = Number(getFieldValue("zid"))
+
     fetchUpdateZonelogdb({
-      Zid: this.synZid,
-      Host: this.zoneData[this.synZid].zonelogdbHost,
+      Zid: zid,
+      Host: this.zoneData[zid].zonelogdbHost,
     })
   }
-
-  dCreator(item, tag) {
-    const { getFieldDecorator, getFieldsValue } = this.props.form
-    let layout = item.layout ? { ...item.layout } : { ...formItemLayout }
-    let options = item.options ? { ...item.options } : { ...zoneOptions }
-    return (
-      <Col span={24} key={item.label}>
-        <FormItem {...layout} label={item.label}>
-          {getFieldDecorator(item.Id, options)(tag)}
-        </FormItem>
-      </Col>
-    )
+  editZone(e) {
+    const { setFieldsValue } = this.refs.zForm
+    let edit = { edit: e }
+    setFieldsValue(edit)
+    this.refs.zFooter.setState(edit)
   }
 
-  renderTabs(disabled) {
-    const btnWapper = {
-      span: 16,
-      offset: 8
-    }
-    const { channels, zoneInput, whitelst } = zoneConfig
-    let loading = false
-    let renderItems = []
-    let switchEdit = {
-      Id: 'edit',
-      label: '',
-      layout: {
-        wrapperCol: {
-          span: 12
-        }
-      },
-      options: {}
-    }
-
-    renderItems.push(this.dCreator(switchEdit, <Switch disabled={this.adding} checkedChildren={'编辑'} unCheckedChildren={'查看'} />))
-    for (let i = 0; i < zoneInput.length; i++) {
-      renderItems.push(this.dCreator(zoneInput[i], <Input disabled={disabled} />))
-    }
-    let ckinds = channels.kinds.map(k => <Option key={k}>{k}</Option>)
-    renderItems.push(this.dCreator(channels, <Select mode={'multiple'} disabled={disabled}>{ckinds}</Select>))
-    renderItems.push(this.dCreator(whitelst, <Switch disabled={disabled} checkedChildren={'开'} unCheckedChildren={'关'} />))
-
-    return renderItems
+  startAllZone() {
+    this.refs.zFooter.setState({ startAllZoneLoading: true })
+    const {fetchStartAllZone} = this.props.dispatch
+    fetchStartAllZone((json) => this.startAllZoneRsp(json))
   }
 
-  zoneContent() {
-    const { getFieldValue } = this.props.form
-    let disabled = getFieldValue("edit") ? false : true
-    let content = this.renderTabs(disabled)
-    let buttonText = this.adding ? "新增" : "保存"
-    return (
-      <div>
-        <Row>
-          <Form onSubmit={(k) => this.handleChange(k)}>
-            {content.slice(0, content.length)}
-            <Col span={6}>
-              <Button type="primary" htmlType="submit" disabled={disabled} loading={this.loading}>{buttonText}</Button>
-            </Col>
-            <Col span={6}>
-              <Button type="primary" disabled={!disabled} onClick={(e) => this.synMachine(e)} >同步机器</Button>
-            </Col>
-            <Col span={6}>
-              <Button type="primary" disabled={!disabled} loading={this.startLoading} onClick={(e) => this.startZone(e)} >启服</Button>
-            </Col>
-            <Col span={6}>
-              <Button type="primary" disabled={!disabled} loading={this.stopLoading} onClick={(e) => this.stopZone(e)} >关服</Button>
-            </Col>
-          </Form>
-        </Row>
-        <Row>
-          <div id="buttonp">
-            <Col span={6}>
-              <Button type="danger" disabled={!disabled} onClick={(e) => this.deleteZone(e)} >删除</Button>
-            </Col>
-            <Col span={6}>
-              <Button type="primary" disabled={!disabled} onClick={(e) => this.updatelogZoneDB(e)} >更新logdb</Button>
-            </Col>
-          </div>
-        </Row>
-      </div>
-    )
+  startAllZoneRsp(json) {
+    console.log("startAllZoneRsp:", json)
+    this.NotifyRsp(json)
+    this.refs.zFooter.setState({ startAllZoneLoading: false })
+    this.refs.zShowTable.setState({ show: json.Zstates })
+  }
+
+  stopAllZone() {
+    this.refs.zFooter.setState({ stopAllZoneLoading: true })
+    const {fetchStopAllZone} = this.props.dispatch
+    fetchStopAllZone((json) => this.stopAllZoneRsp(json))
+  }
+
+  stopAllZoneRsp(json) {
+    console.log("stopAllZoneRsp:", json)
+    this.NotifyRsp(json)
+    this.refs.zFooter.setState({ stopAllZoneLoading: false })
+    this.refs.zShowTable.setState({ show: json.Zstates })
   }
 
   render() {
+    let {zoneEdit} = this.props.data
     return (
       <div>
+        <ZoneHead
+          ref="zHead"
+          addZoneFunc={() => this.AddZoneInfo()}
+          showFunc={(zid) => this.ShowZone(zid)}>
+        </ZoneHead>
         <Row>
-          <div id="zoneHead">
-            {
-              this.initHead ?
-                <ZoneHead channelData={this.channelData}
-                  zoneData={this.ZoneHeadData}
-                  showFunc={(zid) => this.ShowZoneInfo(zid)}
-                  addZoneFunc={() => this.AddZoneInfo()}
-                  registerFunc={(e) => this.fresh = e}>
-                </ZoneHead>
-                :
-                <p>Loading</p>
-            }
-          </div>
+          <Col span={8}>
+            <div id="buttonp">
+              <Switch checkedChildren={'编辑'} unCheckedChildren={'查看'} disabled={!zoneEdit} onChange={(e) => this.editZone(e)} />
+              <ZoneForm ref="zForm"></ZoneForm>
+            </div>
+          </Col>
+          <Col span={8} offset={4}>
+            <ZoneShowTable ref="zShowTable"></ZoneShowTable>
+          </Col>
         </Row>
-        <Row>
-          <div id="zoneContent">
-            <Col span={8}>
-              {
-                this.initShow ?
-                  this.zoneContent()
-                  :
-                  <p> 无信息</p>
-              }
-            </Col>
-          </div>
-        </Row>
+        <ZoneFooter ref="zFooter"
+          synMachine={(e) => this.synMachine(e)}
+          startZone={(e) => this.startZone(e)}
+          stopZone={(e) => this.stopZone(e)}
+          deleteZone={(e) => this.deleteZone(e)}
+          updatelogZone={(e) => this.updatelogZoneDB(e)}
+          saveOrAddZone={(e) => this.saveOrAddZone(e)}
+          stopAllZone={(e) => this.stopAllZone(e)}
+          startAllZone={(e) => this.startAllZone(e)}>
+        </ZoneFooter>
       </div>
     )
   }
 }
-const newZone = Form.create()(ZoneClass);
-export default newZone
+export default ZoneClass

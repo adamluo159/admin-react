@@ -41,9 +41,10 @@ type SaveZoneReq struct {
 
 //回复信息
 type ZoneRsp struct {
-	Result string
-	Item   Zone
-	Items  []Zone
+	Result  string
+	Item    Zone
+	Items   []Zone
+	Zstates []comInterface.ZoneStates
 }
 
 var (
@@ -52,6 +53,16 @@ var (
 	Str2IntChannels map[string]int
 	LogicMap        map[int][]int
 )
+
+func getM(c *echo.Context) (*Zone, error) {
+	m := Zone{}
+	err := (*c).Bind(&m)
+	if err != nil {
+		log.Println(err.Error())
+		return nil, err
+	}
+	return &m, err
+}
 
 //获取区服信息
 func GetZones(c echo.Context) error {
@@ -62,6 +73,7 @@ func GetZones(c echo.Context) error {
 	} else {
 		rsp.Result = "NOT ITEM"
 	}
+	rsp.Zstates = zMgr.aserver.OnlineZones()
 	return c.JSON(http.StatusOK, rsp)
 }
 
@@ -87,6 +99,7 @@ func AddZone(c echo.Context) error {
 			ZonelogdbHost: m.ZonelogdbHost,
 		}
 		zMgr.machineMgr.OpZoneRelation(&r, comInterface.RelationAdd)
+		zMgr.aserver.AddNewZone(m.ZoneHost, m.ZoneName, m.Zid)
 	}
 	return c.JSON(http.StatusOK, ret)
 }
@@ -157,6 +170,7 @@ func DelZone(c echo.Context) error {
 	if err != nil {
 		ret.Result = "FALSE"
 	}
+	ret.Item = dzone
 	return c.JSON(http.StatusOK, ret)
 }
 
@@ -238,6 +252,7 @@ func StartZone(c echo.Context) error {
 		ret.Result = "正在启服中，请勿重复启服"
 	}
 	log.Println("start ", ret)
+	ret.Zstates = zMgr.aserver.OnlineZones()
 	return c.JSON(http.StatusOK, ret)
 }
 
@@ -267,15 +282,38 @@ func StopZone(c echo.Context) error {
 	case protocol.NotifyDoing:
 		ret.Result = "正在关服中，请勿重复关服"
 	}
+	ret.Zstates = zMgr.aserver.OnlineZones()
 	return c.JSON(http.StatusOK, ret)
 }
 
-func getM(c *echo.Context) (*Zone, error) {
-	m := Zone{}
-	err := (*c).Bind(&m)
-	if err != nil {
-		log.Println(err.Error())
-		return nil, err
+func StartAllZone(c echo.Context) error {
+	ret := ZoneRsp{}
+	s := zMgr.aserver.StartAllZone()
+	switch s {
+	case protocol.NotifyDoFail:
+		ret.Result = "全服启动失败"
+	case protocol.NotifyDoSuc:
+		ret.Result = "全服启动成功"
+	case protocol.NotifyDoing:
+		ret.Result = "正在启服中，请勿重复启服"
 	}
-	return &m, err
+	ret.Zstates = zMgr.aserver.OnlineZones()
+	log.Println("startaaaaa:", ret)
+	return c.JSON(http.StatusOK, ret)
+}
+
+func StopAllZone(c echo.Context) error {
+	ret := ZoneRsp{}
+	s := zMgr.aserver.StopAllZone()
+	switch s {
+	case protocol.NotifyDoFail:
+		ret.Result = "全服关闭失败"
+	case protocol.NotifyDoSuc:
+		ret.Result = "全服关闭成功"
+	case protocol.NotifyDoing:
+		ret.Result = "正在关服中，请勿重复关服"
+	}
+	ret.Zstates = zMgr.aserver.OnlineZones()
+	log.Println("stopaaaaa:", ret)
+	return c.JSON(http.StatusOK, ret)
 }

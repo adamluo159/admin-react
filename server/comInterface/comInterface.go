@@ -43,6 +43,12 @@ const (
 	LogMaxLine  int = 10000
 )
 
+type ZoneStates struct {
+	Host     string `json:"host"`
+	ZoneName string `json:"zoneName"`
+	Online   bool   `json:"online"`
+}
+
 type RelationZone struct {
 	Zid           int
 	ZoneHost      string
@@ -64,10 +70,15 @@ type Aserver interface {
 	StopZone(host string, zid int) int
 	CheckOnlineMachine(mName string) bool
 	UpdateZone(host string) int
+	StartAllZone() int
+	StopAllZone() int
+	OnlineZones() []ZoneStates
+	AddNewZone(host string, zone string, zid int)
 }
 
 type MachineMgr interface {
 	UpdateZone(old *RelationZone, new *RelationZone)
 	GetMachineByName(name string) *Machine
 	OpZoneRelation(r *RelationZone, op int)
+	GetAllMachines() []Machine
 }

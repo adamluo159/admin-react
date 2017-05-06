@@ -21,7 +21,7 @@ const fetchAddZone = (playload) => {
             body: JSON.stringify(playload.obj)
         })
             .then(response => response.json())
-            .then(json => playload.addZone(json))
+            .then(json => playload.cb(json))
     }
 }
 const fetchSaveZone = (playload) => {
@@ -40,7 +40,7 @@ const fetchSaveZone = (playload) => {
             body
         })
             .then(response => response.json())
-            .then(json => playload.saveZone({ oldzid: playload.oldZid, json: json }))
+            .then(json => playload.cb({ oldzid: playload.oldZid, json: json }))
     }
 }
 const fetchSynMachine = (obj) => {
@@ -54,18 +54,16 @@ const fetchSynMachine = (obj) => {
     }
 }
 const fetchDelZone = (playload) => {
-    console.log("delzone, ", playload)
     return dispatch => {
-        //dispatch(machineDispatch.reqZones())
         return fetch("/zone/del", {
             method: "POST",
             headers: {
                 "Content-Type": "application/json"
             },
-            body: JSON.stringify(playload)
+            body: JSON.stringify(playload.obj)
         })
             .then(response => response.json())
-            .then(json => console.log("delzone:", json))
+            .then(json => playload.cb(json))
     }
 }
 
@@ -96,7 +94,7 @@ const fetchStartZone = (playload) => {
             body: JSON.stringify(playload.obj)
         })
             .then(response => response.json())
-            .then(json =>playload.startZoneRsp(json))
+            .then(json => playload.startZoneRsp(json))
     }
 }
 
@@ -115,8 +113,29 @@ const fetchStopZone = (playload) => {
     }
 }
 
-const  refreshZone = () => {
-    return dispatch => {}
+const fetchStartAllZone = (cb) => {
+    return dispatch => {
+        return fetch("/zone/startAllZone", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+        })
+            .then(response => response.json())
+            .then(json => cb(json))
+    }
+}
+const fetchStopAllZone = (cb) => {
+    return dispatch => {
+        return fetch("/zone/stopAllZone", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+        })
+            .then(response => response.json())
+            .then(json => cb(json))
+    }
 }
 
 
@@ -131,6 +150,8 @@ const mapZone = {
     "fetchStopZone": fetchStopZone,
     "fetchDelZone": fetchDelZone,
     "fetchUpdateZonelogdb": fetchUpdateZonelogdb,
-    "refreshZone" : refreshZone,
+    "fetchStartAllZone": fetchStartAllZone,
+    "fetchStopAllZone": fetchStopAllZone,
+    "DisableEdit": actionCreator(zoneActions, 'DISABLE_ZONE_EDIT'),
 }
 export default mapZone

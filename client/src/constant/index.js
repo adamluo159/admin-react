@@ -21,29 +21,29 @@ export const machineColumns = [{
   key: 'hostname',
   width: '10%'
 },
-  {
-    title: '内网IP',
-    dataIndex: 'IP',
-    key: 'IP',
-    width: '10%'
-  },
-  {
-    title: '外网IP',
-    dataIndex: 'outIP',
-    key: 'outIP',
-    width: '10%'
-  },
-  {
-    title: '机器用途',
-    dataIndex: 'applications',
-    key: 'applications',
-    width: '50%'
-  },
-  {
-    title: 'Action',
-    key: 'action',
-    width: '20%'
-  }]
+{
+  title: '内网IP',
+  dataIndex: 'IP',
+  key: 'IP',
+  width: '10%'
+},
+{
+  title: '外网IP',
+  dataIndex: 'outIP',
+  key: 'outIP',
+  width: '10%'
+},
+{
+  title: '机器用途',
+  dataIndex: 'applications',
+  key: 'applications',
+  width: '50%'
+},
+{
+  title: 'Action',
+  key: 'action',
+  width: '20%'
+}]
 
 export const zoneConfig = {
   zoneInput: [
@@ -72,7 +72,19 @@ export const zoneConfig = {
     Id: 'channels',
     label: '渠道',
     kinds: ['ios', 'yyb', 'xiaomi']
+  },
+  switchEdit: {
+    Id: 'edit',
+    label: '',
+    layout: {
+      wrapperCol: {
+        span: 12
+      }
+    },
+    options: {}
   }
+
+
 }
 export const zoneOptions = {
   rules: [
@@ -84,9 +96,9 @@ export const zoneOptions = {
 }
 export const formItemLayout = {
   labelCol: {
-    span: 8,
+    span: 4,
   },
   wrapperCol: {
-    span: 16,
+    span: 10,
   }
 }

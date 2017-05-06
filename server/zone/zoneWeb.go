@@ -28,6 +28,16 @@ type Zone struct {
 	Whitelst      bool     `json:"whitelst" bson:"whitelst"`
 }
 
+type ZoneYunYing struct {
+	Zid         int      `bson:"zid" json:"zid"`
+	ZoneName    string   `json:"zoneName" bson:"zoneName"`
+	ZonelogdbIP string   `json:"zonelogdbIP" bson:"zonelogdbIP"`
+	Channels    []string `json:"channels" bson:"channels"`
+}
+type ZoneYunYingLst struct {
+	Zlist []ZoneYunYing
+}
+
 type ZoneReq struct {
 	Zid  int
 	Host string
@@ -222,6 +232,29 @@ func SynMachine(c echo.Context) error {
 	}
 
 	return c.JSON(http.StatusOK, ret)
+}
+
+func Zonelist(c echo.Context) error {
+	var zones []Zone
+	zlst := ZoneYunYingLst{}
+	err := cl.Find(nil).All(&zones)
+	if err != nil {
+	}
+	for k := range zones {
+		z := ZoneYunYing{
+			Zid:      zones[k].Zid,
+			ZoneName: zones[k].ZoneName,
+			Channels: zones[k].Channels,
+		}
+		m := zMgr.machineMgr.GetMachineByName(zones[k].ZonelogdbHost)
+		if m == nil {
+			log.Println("zonelist cannt find machine info machineName:", zones[k].ZonelogdbHost)
+			continue
+		}
+		z.ZonelogdbIP = m.IP
+		zlst.Zlist = append(zlst.Zlist, z)
+	}
+	return c.JSON(http.StatusOK, zlst)
 }
 
 func StartZone(c echo.Context) error {

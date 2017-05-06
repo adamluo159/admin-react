@@ -98,6 +98,7 @@ func Register(e *echo.Echo) *ZoneMgr {
 	e.POST("/zone/updateZonelogdb", UpdateZonelogdb)
 	e.POST("/zone/startAllZone", StartAllZone)
 	e.POST("/zone/stopAllZone", StopAllZone)
+	e.GET("/zone/zonelist", Zonelist)
 
 	return &zMgr
 }

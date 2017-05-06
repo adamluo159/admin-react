@@ -1,5 +1,7 @@
 import React, { Component } from 'react'
 import { Row, Col, Button } from 'antd'
+import './zone.css'
+
 class ZoneFooter extends React.Component {
   constructor(props) {
     super(props);
@@ -20,26 +22,32 @@ class ZoneFooter extends React.Component {
     let buttonText = addZone ? "新增" : "保存"
     return (
       <div>
-        <Row type="flex" justify="space-between">
+        <Row>
           <Col span={8}>
-            <Button type="primary" disabled={!edit} loading={addZoneLoading} onClick={(e) => saveOrAddZon(e)}>{buttonText}</Button>
-            <Button type="primary" disabled={edit} onClick={(e) => synMachine(e)} >同步机器</Button>
-            <Button type="primary" disabled={edit} loading={startZoneLoading} onClick={(e) => startZone(e)} >启服</Button>
-            <Button type="primary" disabled={edit} loading={stopZoneLoading} onClick={(e) => stopZone(e)} >关服</Button>
+            <Row type="flex" justify="space-between">
+              <Button type="primary" disabled={!edit} loading={addZoneLoading} onClick={(e) => saveOrAddZon(e)}>{buttonText}</Button>
+              <Button type="primary" disabled={edit} onClick={(e) => synMachine(e)} >同步机器</Button>
+              <Button type="primary" disabled={edit} loading={startZoneLoading} onClick={(e) => startZone(e)} >启服</Button>
+              <Button type="primary" disabled={edit} loading={stopZoneLoading} onClick={(e) => stopZone(e)} >关服</Button>
+              <Button type="primary" disabled={edit} onClick={(e) => updatelogZoneDB(e)} >更新logdb</Button>
+              <Button type="danger" disabled={edit} onClick={(e) => deleteZone(e)} >删除</Button>
+            </Row>
           </Col>
           <Col span={8} offset={4}>
-            <Button type="primary" loading={startAllZoneLoading} onClick={(e) => startAllZone(e)} >全服启动</Button>
-            <Button type="primary" loading={stopAllZoneLoading} onClick={(e) => stopAllZone(e)} >全服关闭</Button>
+            <Row type="flex" justify="space-around">
+              <Button type="primary" loading={startAllZoneLoading} onClick={(e) => startAllZone(e)} >全服启动</Button>
+              <Button type="primary" loading={stopAllZoneLoading} onClick={(e) => stopAllZone(e)} >全服关闭</Button>
+            </Row>
           </Col>
         </Row>
-        <Row type="flex" justify="space-between">
+        <div id="zoneSplit"></div>
+        <Row>
           <Col span={8}>
-            <Button type="danger" disabled={edit} onClick={(e) => deleteZone(e)} >删除</Button>
-            <Button type="primary" disabled={edit} onClick={(e) => updatelogZoneDB(e)} >更新logdb</Button>
+            <Row type="flex" justify="space-between">
+            </Row>
           </Col>
         </Row>
-
-      </div>
+      </div >
     )
   }
 }

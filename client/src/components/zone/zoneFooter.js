@@ -18,14 +18,14 @@ class ZoneFooter extends React.Component {
   }
   render() {
     const {stopZoneLoading, edit, startZoneLoading, startAllZoneLoading, stopAllZoneLoading, addZone, addZoneLoading, delZoneLoading} = this.state
-    const {saveOrAddZon, synMachine, startZone, stopZone, startAllZone, stopAllZone, deleteZone, updatelogZoneDB} = this.props
+    const {saveOrAddZone, synMachine, startZone, stopZone, startAllZone, stopAllZone, deleteZone, updatelogZoneDB} = this.props
     let buttonText = addZone ? "新增" : "保存"
     return (
       <div>
         <Row>
           <Col span={8}>
             <Row type="flex" justify="space-between">
-              <Button type="primary" disabled={!edit} loading={addZoneLoading} onClick={(e) => saveOrAddZon(e)}>{buttonText}</Button>
+              <Button type="primary" disabled={!edit} loading={addZoneLoading} onClick={(e) => saveOrAddZone(e)}>{buttonText}</Button>
               <Button type="primary" disabled={edit} onClick={(e) => synMachine(e)} >同步机器</Button>
               <Button type="primary" disabled={edit} loading={startZoneLoading} onClick={(e) => startZone(e)} >启服</Button>
               <Button type="primary" disabled={edit} loading={stopZoneLoading} onClick={(e) => stopZone(e)} >关服</Button>

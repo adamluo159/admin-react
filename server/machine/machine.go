@@ -23,7 +23,7 @@ type MachineMgr struct {
 
 //机器模块注册
 func Register(e *echo.Echo) *MachineMgr {
-	cl = db.Session.DB("machine").C("machine")
+	cl = db.Session.DB("gameAdmin").C("machine")
 	if cl == nil {
 		fmt.Printf("cannt find Collection about machine")
 		panic(0)

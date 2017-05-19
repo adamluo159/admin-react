@@ -24,7 +24,7 @@ func Register(e *echo.Echo) *ZoneMgr {
 	Str2IntChannels["yyb"] = 2
 	Str2IntChannels["xiaomi"] = 3
 
-	cl = db.Session.DB("zone").C("zone")
+	cl = db.Session.DB("gameAdmin").C("zone")
 	if cl == nil {
 		log.Printf("cannt find Collection about zone")
 		panic(0)

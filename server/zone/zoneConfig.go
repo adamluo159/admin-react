@@ -321,6 +321,7 @@ func LogLua(zone *Zone, zonem *comInterface.Machine, zoneCount int, Dir string) 
 			DataBase:       "zonelog" + strconv.Itoa(zone.Zid),
 		},
 		GlobalLogMysql: GlobalDB,
+		ConnectServers: make(map[string]interface{}),
 	}
 	logLua.ConnectServers["Collect"] = Connect{
 		ID:   1,

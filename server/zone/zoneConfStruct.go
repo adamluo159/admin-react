@@ -68,6 +68,7 @@ type Log struct {
 	Port           int
 	ZoneLogMysql   MysqlLua
 	GlobalLogMysql MysqlLua
+	ConnectServers map[string]interface{}
 }
 
 type LogDBConf struct {

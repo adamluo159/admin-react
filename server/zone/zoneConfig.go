@@ -303,6 +303,11 @@ func LogLua(zone *Zone, zonem *comInterface.Machine, zoneCount int, Dir string) 
 	if logm == nil {
 		return errors.New("LogLua cannt find machine")
 	}
+
+	masterm := zMgr.machineMgr.GetMachineByName("master")
+	if masterm == nil {
+		return errors.New("LogLua cannt find machine")
+	}
 	logLua := Log{
 		ID:   zone.Zid,
 		IP:   zonem.IP,
@@ -317,6 +322,12 @@ func LogLua(zone *Zone, zonem *comInterface.Machine, zoneCount int, Dir string) 
 		},
 		GlobalLogMysql: GlobalDB,
 	}
+	logLua.ConnectServers["Collect"] = Connect{
+		ID:   1,
+		IP:   masterm.IP,
+		Port: 1237,
+	}
+
 	srv := make(map[string]int)
 	srv["nType"] = comInterface.LogServer
 	head := comInterface.ServerConfigHead{

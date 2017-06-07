@@ -224,7 +224,15 @@ func CharDBLua(zone *Zone, zonem *comInterface.Machine, zoneCount int, Dir strin
 			Port:     comInterface.RedisPort,
 			Password: "",
 		},
+		ConnectServers: make(map[string]interface{}),
 	}
+
+	charDBLua.ConnectServers["Log"] = Connect{
+		ID:   zone.Zid,
+		IP:   zonem.IP,
+		Port: comInterface.LogPort + zoneCount,
+	}
+
 	srv := make(map[string]int)
 	srv["nType"] = comInterface.DbproxyServer
 	head := comInterface.ServerConfigHead{

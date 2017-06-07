@@ -45,12 +45,13 @@ type Center struct {
 }
 
 type CharDB struct {
-	ID    int
-	Zid   int
-	IP    string
-	Port  int
-	Mysql MysqlLua
-	Redis RedisLua
+	ID             int
+	Zid            int
+	IP             string
+	Port           int
+	Mysql          MysqlLua
+	Redis          RedisLua
+	ConnectServers map[string]interface{}
 }
 
 type Logic struct {

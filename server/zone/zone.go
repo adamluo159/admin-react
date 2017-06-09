@@ -38,6 +38,32 @@ func Register(e *echo.Echo) *ZoneMgr {
 		log.Printf("mongodb ensureindex err:%s", err.Error())
 		panic(0)
 	}
+
+	clPort = db.Session.DB("gameAdmin").C("portCount")
+	if cl == nil {
+		log.Printf("cannt find Collection about portCount")
+		panic(0)
+	}
+	w := mgo.Index{
+		Key:    []string{"host"},
+		Unique: true,
+	}
+	werr := clPort.EnsureIndex(w)
+	if err != nil {
+		log.Printf("mongodb ensureindex err:%s", werr.Error())
+		panic(0)
+	}
+
+	iName := mgo.Index{
+		Key:    []string{"zoneName"},
+		Unique: true,
+	}
+	err = cl.EnsureIndex(iName)
+	if err != nil {
+		log.Printf("mongodb ensureindex err:%s", err.Error())
+		panic(0)
+	}
+
 	LogicMap = make(map[int][]int)
 	LogicMap[1] = []int{
 		210106002,
@@ -77,16 +103,6 @@ func Register(e *echo.Echo) *ZoneMgr {
 		210107001,
 		210107002,
 		210189001,
-	}
-
-	iName := mgo.Index{
-		Key:    []string{"zoneName"},
-		Unique: true,
-	}
-	err = cl.EnsureIndex(iName)
-	if err != nil {
-		log.Printf("mongodb ensureindex err:%s", err.Error())
-		panic(0)
 	}
 	e.GET("/zone", GetZones)
 	e.POST("/zone/add", AddZone)

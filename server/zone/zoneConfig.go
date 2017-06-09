@@ -29,12 +29,14 @@ func WriteZoneConfigLua(zid int, ret *ZoneRsp, hostName string) {
 		return
 	}
 
-	zonequery := bson.M{"zoneHost": zone.ZoneHost}
-	zoneCount, zerr := cl.Find(zonequery).Count()
-	if zerr != nil {
-		ret.Result = "cannt Find zoneCount--" + zerr.Error()
-		return
-	}
+	//zonequery := bson.M{"zoneHost": zone.ZoneHost}
+	//zoneCount, zerr := cl.Find(zonequery).Count()
+	//if zerr != nil {
+	//	ret.Result = "cannt Find zoneCount--" + zerr.Error()
+	//	return
+	//}
+
+	//每台机器只允许开
 	zonem := zMgr.machineMgr.GetMachineByName(zone.ZoneHost)
 	if zonem == nil {
 		ret.Result = "cannt Find zoneMachine--"
@@ -46,27 +48,27 @@ func WriteZoneConfigLua(zid int, ret *ZoneRsp, hostName string) {
 	dir := hostdir + "/zone" + strconv.Itoa(zone.Zid)
 	os.Mkdir(dir, os.ModePerm)
 	curDir := dir + "/"
-	gerr := GateLua(&zone, zonem, zoneCount, curDir)
+	gerr := GateLua(&zone, zonem, curDir)
 	if gerr != nil {
 		ret.Result = "gate " + gerr.Error()
 		return
 	}
-	cerr := CenterLua(&zone, zonem, zoneCount, curDir)
+	cerr := CenterLua(&zone, zonem, curDir)
 	if cerr != nil {
 		ret.Result = "center" + cerr.Error()
 		return
 	}
-	lerr := LogLua(&zone, zonem, zoneCount, curDir)
+	lerr := LogLua(&zone, zonem, curDir)
 	if lerr != nil {
 		ret.Result = "log" + lerr.Error()
 		return
 	}
-	logicerr := LogicLua(&zone, zonem, zoneCount, curDir)
+	logicerr := LogicLua(&zone, zonem, curDir)
 	if logicerr != nil {
 		ret.Result = "logic" + logicerr.Error()
 		return
 	}
-	charErr := CharDBLua(&zone, zonem, zoneCount, curDir)
+	charErr := CharDBLua(&zone, zonem, curDir)
 	if charErr != nil {
 		ret.Result = "chardb" + charErr.Error()
 		return
@@ -89,7 +91,7 @@ func DelZoneConfig(zid int, hostname string) error {
 	return nil
 }
 
-func GateLua(zone *Zone, zonem *comInterface.Machine, zoneCount int, Dir string) error {
+func GateLua(zone *Zone, zonem *comInterface.Machine, Dir string) error {
 	masterm := zMgr.machineMgr.GetMachineByName("master")
 	if masterm == nil {
 		return errors.New(" GateLua cannt find machine")
@@ -106,9 +108,9 @@ func GateLua(zone *Zone, zonem *comInterface.Machine, zoneCount int, Dir string)
 		ID:             zone.Zid,
 		Zid:            zone.Zid,
 		ServerIP:       zonem.IP,
-		ServerPort:     comInterface.GatePort + zoneCount,
+		ServerPort:     comInterface.GatePort + zone.PortNumber,
 		ClientIP:       zonem.OutIP,
-		ClientPort:     comInterface.ClientPort + zoneCount,
+		ClientPort:     comInterface.ClientPort + zone.PortNumber,
 		ChannelIds:     s,
 		Open:           zone.Whitelst,
 		Name:           zone.ZoneName,
@@ -117,7 +119,7 @@ func GateLua(zone *Zone, zonem *comInterface.Machine, zoneCount int, Dir string)
 	gateLua.ConnectServers["CharDB"] = Connect{
 		ID:   zone.Zid,
 		IP:   zonem.IP,
-		Port: comInterface.CharDBPort + zoneCount,
+		Port: comInterface.CharDBPort + zone.PortNumber,
 	}
 	gateLua.ConnectServers["Master"] = Connect{
 		ID:   1,
@@ -127,7 +129,7 @@ func GateLua(zone *Zone, zonem *comInterface.Machine, zoneCount int, Dir string)
 	gateLua.ConnectServers["Log"] = Connect{
 		ID:   zone.Zid,
 		IP:   zonem.IP,
-		Port: comInterface.LogPort + zoneCount,
+		Port: comInterface.LogPort + zone.PortNumber,
 	}
 
 	srv := make(map[string]int)
@@ -148,12 +150,12 @@ func GateLua(zone *Zone, zonem *comInterface.Machine, zoneCount int, Dir string)
 	return nil
 }
 
-func CenterLua(zone *Zone, zonem *comInterface.Machine, zoneCount int, Dir string) error {
+func CenterLua(zone *Zone, zonem *comInterface.Machine, Dir string) error {
 	centerLua := Center{
 		ID:   zone.Zid,
 		Zid:  zone.Zid,
 		IP:   zonem.IP,
-		Port: comInterface.CenterPort + zoneCount,
+		Port: comInterface.CenterPort + zone.PortNumber,
 		OnlineNumberCheckTime: 60 * 5,
 		SingleServerLoad:      4000,
 		ConnectServers:        make(map[string]interface{}),
@@ -162,17 +164,17 @@ func CenterLua(zone *Zone, zonem *comInterface.Machine, zoneCount int, Dir strin
 	centerLua.ConnectServers["CharDB"] = Connect{
 		ID:   zone.Zid,
 		IP:   zonem.IP,
-		Port: comInterface.CharDBPort + zoneCount,
+		Port: comInterface.CharDBPort + zone.PortNumber,
 	}
 	centerLua.ConnectServers["Gate"] = Connect{
 		ID:   zone.Zid,
 		IP:   zonem.IP,
-		Port: comInterface.GatePort + zoneCount,
+		Port: comInterface.GatePort + zone.PortNumber,
 	}
 	centerLua.ConnectServers["Log"] = Connect{
 		ID:   zone.Zid,
 		IP:   zonem.IP,
-		Port: comInterface.LogPort + zoneCount,
+		Port: comInterface.LogPort + zone.PortNumber,
 	}
 	srv := make(map[string]int)
 	srv["nType"] = comInterface.CenterServer
@@ -192,7 +194,7 @@ func CenterLua(zone *Zone, zonem *comInterface.Machine, zoneCount int, Dir strin
 	return nil
 }
 
-func CharDBLua(zone *Zone, zonem *comInterface.Machine, zoneCount int, Dir string) error {
+func CharDBLua(zone *Zone, zonem *comInterface.Machine, Dir string) error {
 	//这个后面再加，现在假设所有服都用6379作缓存
 	//zoneDBquery := bson.M{"zoneDBHost": zone.ZoneDBHost}
 	//zoneDBCount, zdberr := cl.Find(zoneDBquery).Count()
@@ -209,7 +211,7 @@ func CharDBLua(zone *Zone, zonem *comInterface.Machine, zoneCount int, Dir strin
 		ID:   zone.Zid,
 		Zid:  zone.Zid,
 		IP:   zonem.IP,
-		Port: comInterface.CharDBPort + zoneCount,
+		Port: comInterface.CharDBPort + zone.PortNumber,
 		Mysql: MysqlLua{
 			IP:             zonedbm.IP,
 			Port:           comInterface.MysqlPort,
@@ -230,7 +232,7 @@ func CharDBLua(zone *Zone, zonem *comInterface.Machine, zoneCount int, Dir strin
 	charDBLua.ConnectServers["Log"] = Connect{
 		ID:   zone.Zid,
 		IP:   zonem.IP,
-		Port: comInterface.LogPort + zoneCount,
+		Port: comInterface.LogPort + zone.PortNumber,
 	}
 
 	srv := make(map[string]int)
@@ -251,7 +253,7 @@ func CharDBLua(zone *Zone, zonem *comInterface.Machine, zoneCount int, Dir strin
 	return nil
 }
 
-func LogicLua(zone *Zone, zonem *comInterface.Machine, zoneCount int, Dir string) error {
+func LogicLua(zone *Zone, zonem *comInterface.Machine, Dir string) error {
 	logicLua := Logic{
 		//ID:  1,
 		Zid: zone.Zid,
@@ -262,22 +264,22 @@ func LogicLua(zone *Zone, zonem *comInterface.Machine, zoneCount int, Dir string
 	logicLua.ConnectServers["CharDB"] = Connect{
 		ID:   zone.Zid,
 		IP:   zonem.IP,
-		Port: comInterface.CharDBPort + zoneCount,
+		Port: comInterface.CharDBPort + zone.PortNumber,
 	}
 	logicLua.ConnectServers["Gate"] = Connect{
 		ID:   zone.Zid,
 		IP:   zonem.IP,
-		Port: comInterface.GatePort + zoneCount,
+		Port: comInterface.GatePort + zone.PortNumber,
 	}
 	logicLua.ConnectServers["Center"] = Connect{
 		ID:   zone.Zid,
 		IP:   zonem.IP,
-		Port: comInterface.CenterPort + zoneCount,
+		Port: comInterface.CenterPort + zone.PortNumber,
 	}
 	logicLua.ConnectServers["Log"] = Connect{
 		ID:   zone.Zid,
 		IP:   zonem.IP,
-		Port: comInterface.LogPort + zoneCount,
+		Port: comInterface.LogPort + zone.PortNumber,
 	}
 	srv := make(map[string]int)
 	srv["nType"] = comInterface.LogicServer
@@ -290,7 +292,7 @@ func LogicLua(zone *Zone, zonem *comInterface.Machine, zoneCount int, Dir string
 
 	for k, v := range LogicMap {
 		logicLua.ID = k
-		logicLua.Port = comInterface.LogicPort + zoneCount*3 + k
+		logicLua.Port = comInterface.LogicPort + (k-1)*100 + zone.PortNumber
 		logicLua.MapIds = v
 
 		s := "logic" + strconv.Itoa(k)
@@ -306,7 +308,7 @@ func LogicLua(zone *Zone, zonem *comInterface.Machine, zoneCount int, Dir string
 	return nil
 }
 
-func LogLua(zone *Zone, zonem *comInterface.Machine, zoneCount int, Dir string) error {
+func LogLua(zone *Zone, zonem *comInterface.Machine, Dir string) error {
 	logm := zMgr.machineMgr.GetMachineByName(zone.ZonelogdbHost)
 	if logm == nil {
 		return errors.New("LogLua cannt find machine")
@@ -319,7 +321,7 @@ func LogLua(zone *Zone, zonem *comInterface.Machine, zoneCount int, Dir string) 
 	logLua := Log{
 		ID:   zone.Zid,
 		IP:   zonem.IP,
-		Port: comInterface.LogPort + zoneCount,
+		Port: comInterface.LogPort + zone.PortNumber,
 		ZoneLogMysql: MysqlLua{
 			IP:             logm.IP,
 			Port:           comInterface.MysqlPort,

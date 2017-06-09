@@ -18,8 +18,8 @@ const (
 	CharDBPort    int    = 7000
 	GatePort      int    = 7100
 	CenterPort    int    = 7200
-	LogicPort     int    = 7300
-	ClientPort    int    = 7400
+	LogicPort     int    = 7300 //logic1 7300起 logic2 7400起
+	ClientPort    int    = 7800
 	MasterPort    int    = 9500
 	LoginPort     int    = 7550
 	LogPort       int    = 7600

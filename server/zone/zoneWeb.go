@@ -26,6 +26,12 @@ type Zone struct {
 	ZonelogdbHost string   `json:"zonelogdbHost" bson:"zonelogdbHost"`
 	Channels      []string `json:"channels" bson:"channels"`
 	Whitelst      bool     `json:"whitelst" bson:"whitelst"`
+	PortNumber    int      `json:"portNumber" bson:"PortNumber"`
+}
+
+type PortCount struct {
+	Host  string `bson:"host" json:"host"`
+	Count int    `bson:count json:count`
 }
 
 type ZoneYunYing struct {
@@ -59,6 +65,7 @@ type ZoneRsp struct {
 
 var (
 	cl              *mgo.Collection
+	clPort          *mgo.Collection
 	GlobalDB        MysqlLua
 	Str2IntChannels map[string]int
 	LogicMap        map[int][]int
@@ -96,7 +103,14 @@ func AddZone(c echo.Context) error {
 	ret := ZoneRsp{
 		Result: "OK",
 	}
+
+	n, rerr := ReqPortCount(m.ZoneHost, m.Zid)
+	if rerr != nil {
+		log.Println("SaveZone, ReqPortCount", rerr.Error())
+	}
+	m.PortNumber = n
 	err = cl.Insert(m)
+
 	if err != nil {
 		ret.Result = "FALSE"
 	} else {
@@ -128,8 +142,23 @@ func SaveZone(c echo.Context) error {
 	}
 	log.Println("get save info:", m)
 
-	oldRelation := zMgr.GetZoneRelation(m.OldZid)
 	query := bson.M{"zid": m.OldZid, "zoneName": m.OldZoneName}
+	oldM := Zone{}
+	err = cl.Find(query).One(&oldM)
+	if err != nil {
+		log.Println(err.Error())
+		ret.Result = "FALSE"
+		return c.JSON(http.StatusOK, ret)
+	}
+	m.Item.PortNumber = oldM.PortNumber
+	if m.Item.ZoneHost != oldM.ZoneHost || m.Item.PortNumber <= 0 {
+		n, rerr := ReqPortCount(m.Item.ZoneHost, m.Item.Zid)
+		if rerr != nil {
+			log.Println("SaveZone, ReqPortCount", rerr.Error(), m.Item.ZoneHost, m.Item.Zid)
+		}
+		m.Item.PortNumber = n
+	}
+
 	err = cl.Update(query, &m.Item)
 	if err != nil {
 		log.Println("SaveZone, update:", err.Error())
@@ -142,7 +171,10 @@ func SaveZone(c echo.Context) error {
 			ZoneHost:      m.Item.ZoneHost,
 			ZonelogdbHost: m.Item.ZonelogdbHost,
 		}
+
+		oldRelation := zMgr.GetZoneRelation(m.OldZid)
 		zMgr.machineMgr.UpdateZone(oldRelation, newRelation)
+
 	}
 
 	return c.JSON(http.StatusOK, ret)
@@ -349,4 +381,25 @@ func StopAllZone(c echo.Context) error {
 	ret.Zstates = zMgr.aserver.OnlineZones()
 	log.Println("stopaaaaa:", ret)
 	return c.JSON(http.StatusOK, ret)
+}
+
+func ReqPortCount(host string, zid int) (int, error) {
+	c := bson.M{"host": host}
+	item := PortCount{}
+
+	err := clPort.Find(c).One(&item)
+	if err != nil {
+		item.Host = host
+		item.Count = 1
+		err = clPort.Insert(item)
+	} else {
+		item.Count++
+		err = clPort.Update(c, &item)
+	}
+	if err != nil {
+		log.Println(" ReqPortCount bbbb, ", err.Error(), host, zid)
+		return 0, err
+	}
+	log.Println(" ReqPortCount wwwww, ", err, host, zid, item.Count, item.Host)
+	return item.Count, err
 }

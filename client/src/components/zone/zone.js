@@ -37,7 +37,6 @@ class ZoneClass extends React.Component {
       let {setFieldsValue} = this.refs.zForm
       setFieldsValue(this.zoneData[this.opZid])
     }
-    console.log("init....", json)
     this.refs.zShowTable.setState({ show: json.Zstates })
   }
 

@@ -5,10 +5,6 @@ export const adminMenu = {
       text: '机器管理  '
     },
     {
-      key: 'gM',
-      text: 'GM命令'
-    },
-    {
       key: 'zone',
       text: '游戏区服配置'
     }

@@ -2,8 +2,6 @@ import React, { Component } from 'react'
 import { Table, Tag } from 'antd'
 import './zone.css'
 
-
-
 class ZoneShowTable extends React.Component {
     constructor(props) {
         super(props);
@@ -37,7 +35,6 @@ class ZoneShowTable extends React.Component {
     }
     render() {
         let {show} = this.state
-        console.log(show)
         show.forEach(v => {
             v.key = v.zoneName
         })

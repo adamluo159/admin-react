@@ -15,11 +15,19 @@ export const adminMenu = {
   ]
 }
 
+export const Commonhost = {
+  "master": true,
+  "loginWeb": true,
+  "login1": true,
+  "errLog": true,
+  "accountDB": true,
+}
+
 export const machineColumns = [{
   title: 'HostName',
   dataIndex: 'hostname',
   key: 'hostname',
-  width: '10%'
+  width: '10%',
 },
 {
   title: '内网IP',
@@ -37,7 +45,13 @@ export const machineColumns = [{
   title: '机器用途',
   dataIndex: 'applications',
   key: 'applications',
-  width: '50%'
+  width: '50%',
+  filters: [
+    { text: 'empty', value: 0 },
+    { text: 'zone', value: 1 },
+    { text: 'zonelogdb', value: 3 },
+    { text: 'zonedb', value: 2 },
+  ],
 },
 {
   title: 'Action',

@@ -10,19 +10,6 @@ const fetchInitMachines = (initFunc) => {
     }
 }
 
-const rspSaveMachine = (dispatch, playload, rsp) => {
-    if (rsp.Result === "OK") {
-        playload.cb(rsp.Item.hostname, rsp.oldhost)
-        dispatch(mapMachine.saveMachine({ index: playload.index, rsp }))
-    } else {
-        let rsp = {
-            Item: playload.oldmachine
-        }
-        rsp.Item.edit = false
-        dispatch(mapMachine.saveMachine({ index: playload.index, rsp }))
-    }
-}
-
 const fetchSaveMachine = (playload) => {
     return dispatch => {
         let body = JSON.stringify({
@@ -37,16 +24,7 @@ const fetchSaveMachine = (playload) => {
             body,
         })
             .then(response => response.json())
-            .then(json => rspSaveMachine(dispatch, playload, json))
-    }
-}
-
-const rspAddMachine = (dispatch, playload, rsp) => {
-    if (rsp.Result === "OK") {
-        playload.cb(rsp.Item.hostname)
-        dispatch(mapMachine.saveMachine({ index: playload.index, rsp }))
-    } else {
-        dispatch(mapMachine.delMachine(playload.index))
+            .then(json => playload.cb(json))
     }
 }
 
@@ -65,13 +43,6 @@ const fetchAddMachine = (playload) => {
     }
 }
 
-const rspDelMachine = (dispatch, playload, rsp) => {
-    if (rsp.Result === "OK") {
-        playload.delCB()
-        dispatch(mapMachine.delMachine(playload.index))
-    }
-}
-
 const fetchDelMachine = (playload) => {
     return dispatch => {
         return fetch("/machine/del", {
@@ -82,20 +53,18 @@ const fetchDelMachine = (playload) => {
             body: JSON.stringify(playload.fetchDel)
         })
             .then(response => response.json())
-            .then(json => rspDelMachine(dispatch, playload, json))
+            .then(json => playload.delCB(json))
     }
 }
 
 export const machineActions = {}
 const mapMachine = {
     //界面表现的action
-    "reqMachines": actionCreator(machineActions, 'REQ_MACHINES'),
     "InitMachines": actionCreator(machineActions, 'INIT_MACHINES'),
     "addMachine": actionCreator(machineActions, 'ADD_MACHINE'),
     "editMachine": actionCreator(machineActions, 'EDIT_MACHINE'),
-    "saveMachine": actionCreator(machineActions, 'SAVE_MACHINE'),
-    "delMachine": actionCreator(machineActions, 'DEL_MACHINE'),
     "pageMachine": actionCreator(machineActions, 'PAGE_MACHINE'),
+    "filterMachine": actionCreator(machineActions, 'FILTER_MACHINES'),
 
     //网络请求的action
     "fetchInitMachines": fetchInitMachines,

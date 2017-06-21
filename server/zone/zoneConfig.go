@@ -224,7 +224,7 @@ func CharDBLua(zone *Zone, zonem *comInterface.Machine, Dir string) error {
 	srv["nType"] = comInterface.DbproxyServer
 	srvHead.StartService = []comInterface.SRV{srv}
 	srvHead.LOG_INDEX = "charDB" + strconv.Itoa(zone.Zid)
-	trans := struct2lua.ToLuaConfig(Dir, "comInterface.CharDB", charDBLua, srvHead, 0)
+	trans := struct2lua.ToLuaConfig(Dir, "CharDB", charDBLua, srvHead, 0)
 	if trans == false {
 		log.Println("chardb cannt wirte lua file")
 	}

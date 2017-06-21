@@ -93,8 +93,6 @@ export const zoneConfig = {
     },
     options: {}
   }
-
-
 }
 export const zoneOptions = {
   rules: [

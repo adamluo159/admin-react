@@ -57,6 +57,14 @@ const fetchDelMachine = (playload) => {
     }
 }
 
+const fetchCommonConfig = (f) => {
+    return dispatch => {
+        return fetch("/machine/common", )
+            .then(response => response.json())
+            .then(json => f(json))
+    }
+}
+
 export const machineActions = {}
 const mapMachine = {
     //界面表现的action
@@ -71,7 +79,9 @@ const mapMachine = {
     "fetchSaveMachine": fetchSaveMachine,
     "fetchAddMachine": fetchAddMachine,
     "fetchDelMachine": fetchDelMachine,
+    "fetchCommonConfig": fetchCommonConfig,
 }
+
 
 export default mapMachine;
 

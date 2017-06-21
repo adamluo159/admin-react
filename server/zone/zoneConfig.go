@@ -15,9 +15,14 @@ import (
 	"gopkg.in/mgo.v2/bson"
 )
 
-const (
-	confDir string = "/gConf/"
-)
+var srvHead = comInterface.ServerConfigHead{
+	NET_TIMEOUT_MSEC:  30000,
+	NET_MAX_CONNETION: comInterface.NetMaxConnection,
+	//StartService:      []comInterface.SRV{srv},
+	//LOG_INDEX:         "gate",
+	LOG_MAXLINE: comInterface.LogMaxLine,
+	OpenGM:      1,
+}
 
 func WriteZoneConfigLua(zid int, ret *ZoneRsp, hostName string) {
 	zone := Zone{}
@@ -29,20 +34,13 @@ func WriteZoneConfigLua(zid int, ret *ZoneRsp, hostName string) {
 		return
 	}
 
-	//zonequery := bson.M{"zoneHost": zone.ZoneHost}
-	//zoneCount, zerr := cl.Find(zonequery).Count()
-	//if zerr != nil {
-	//	ret.Result = "cannt Find zoneCount--" + zerr.Error()
-	//	return
-	//}
-
 	//每台机器只允许开
 	zonem := zMgr.machineMgr.GetMachineByName(zone.ZoneHost)
 	if zonem == nil {
 		ret.Result = "cannt Find zoneMachine--"
 		return
 	}
-	hostdir := os.Getenv("HOME") + confDir + zonem.Hostname
+	hostdir := os.Getenv("HOME") + comInterface.ConfDir + zonem.Hostname
 	os.Mkdir(hostdir, os.ModePerm)
 
 	dir := hostdir + "/zone" + strconv.Itoa(zone.Zid)
@@ -74,7 +72,7 @@ func WriteZoneConfigLua(zid int, ret *ZoneRsp, hostName string) {
 		return
 	}
 
-	commitstr := os.Getenv("HOME") + confDir + "gitCommit"
+	commitstr := os.Getenv("HOME") + comInterface.ConfDir + "gitCommit"
 	_, exeErr := utils.ExeShell("sh", commitstr, "add or update zone"+strconv.Itoa(zone.Zid))
 	if exeErr != nil {
 		ret.Result = exeErr.Error()
@@ -82,7 +80,7 @@ func WriteZoneConfigLua(zid int, ret *ZoneRsp, hostName string) {
 	}
 }
 func DelZoneConfig(zid int, hostname string) error {
-	commitstr := os.Getenv("HOME") + confDir + "gitDelete"
+	commitstr := os.Getenv("HOME") + comInterface.ConfDir + "gitDelete"
 	dir := hostname + "/" + "zone" + strconv.Itoa(zid)
 	_, exeErr := utils.ExeShell("sh", commitstr, dir)
 	if exeErr != nil {
@@ -104,7 +102,7 @@ func GateLua(zone *Zone, zonem *comInterface.Machine, Dir string) error {
 		n++
 	}
 
-	gateLua := Gate{
+	gateLua := comInterface.Gate{
 		ID:             zone.Zid,
 		Zid:            zone.Zid,
 		ServerIP:       zonem.IP,
@@ -116,17 +114,17 @@ func GateLua(zone *Zone, zonem *comInterface.Machine, Dir string) error {
 		Name:           zone.ZoneName,
 		ConnectServers: make(map[string]interface{}),
 	}
-	gateLua.ConnectServers["CharDB"] = Connect{
+	gateLua.ConnectServers["comInterface.CharDB"] = comInterface.Connect{
 		ID:   zone.Zid,
 		IP:   zonem.IP,
 		Port: comInterface.CharDBPort + zone.PortNumber,
 	}
-	gateLua.ConnectServers["Master"] = Connect{
+	gateLua.ConnectServers["Master"] = comInterface.Connect{
 		ID:   1,
 		IP:   masterm.IP,
 		Port: comInterface.MasterPort + comInterface.MasterCount,
 	}
-	gateLua.ConnectServers["Log"] = Connect{
+	gateLua.ConnectServers["Log"] = comInterface.Connect{
 		ID:   zone.Zid,
 		IP:   zonem.IP,
 		Port: comInterface.LogPort + zone.PortNumber,
@@ -134,16 +132,10 @@ func GateLua(zone *Zone, zonem *comInterface.Machine, Dir string) error {
 
 	srv := make(map[string]int)
 	srv["nType"] = comInterface.GateServer
-	head := comInterface.ServerConfigHead{
-		NET_TIMEOUT_MSEC:  3600000,
-		NET_MAX_CONNETION: comInterface.NetMaxConnection,
-		StartService:      []comInterface.SRV{srv},
-		LOG_INDEX:         "gate",
-		LOG_MAXLINE:       comInterface.LogMaxLine,
-		OpenGM:            1,
-	}
+	srvHead.StartService = []comInterface.SRV{srv}
+	srvHead.LOG_INDEX = "gate"
 
-	trans := struct2lua.ToLuaConfig(Dir, "Gate", gateLua, head, 0)
+	trans := struct2lua.ToLuaConfig(Dir, "Gate", gateLua, srvHead, 0)
 	if trans == false {
 		log.Println("gate cannt wirte lua file")
 	}
@@ -151,7 +143,7 @@ func GateLua(zone *Zone, zonem *comInterface.Machine, Dir string) error {
 }
 
 func CenterLua(zone *Zone, zonem *comInterface.Machine, Dir string) error {
-	centerLua := Center{
+	centerLua := comInterface.Center{
 		ID:   zone.Zid,
 		Zid:  zone.Zid,
 		IP:   zonem.IP,
@@ -161,33 +153,27 @@ func CenterLua(zone *Zone, zonem *comInterface.Machine, Dir string) error {
 		ConnectServers:        make(map[string]interface{}),
 	}
 
-	centerLua.ConnectServers["CharDB"] = Connect{
+	centerLua.ConnectServers["comInterface.CharDB"] = comInterface.Connect{
 		ID:   zone.Zid,
 		IP:   zonem.IP,
 		Port: comInterface.CharDBPort + zone.PortNumber,
 	}
-	centerLua.ConnectServers["Gate"] = Connect{
+	centerLua.ConnectServers["Gate"] = comInterface.Connect{
 		ID:   zone.Zid,
 		IP:   zonem.IP,
 		Port: comInterface.GatePort + zone.PortNumber,
 	}
-	centerLua.ConnectServers["Log"] = Connect{
+	centerLua.ConnectServers["Log"] = comInterface.Connect{
 		ID:   zone.Zid,
 		IP:   zonem.IP,
 		Port: comInterface.LogPort + zone.PortNumber,
 	}
 	srv := make(map[string]int)
 	srv["nType"] = comInterface.CenterServer
-	head := comInterface.ServerConfigHead{
-		NET_TIMEOUT_MSEC:  comInterface.NetTimeOut,
-		NET_MAX_CONNETION: comInterface.NetMaxConnection,
-		StartService:      []comInterface.SRV{srv},
-		LOG_INDEX:         "cener",
-		LOG_MAXLINE:       comInterface.LogMaxLine,
-		OpenGM:            1,
-	}
+	srvHead.StartService = []comInterface.SRV{srv}
+	srvHead.LOG_INDEX = "center" + strconv.Itoa(zone.Zid)
 
-	trans := struct2lua.ToLuaConfig(Dir, "Center", centerLua, head, 0)
+	trans := struct2lua.ToLuaConfig(Dir, "Center", centerLua, srvHead, 0)
 	if trans == false {
 		log.Println("center cannt wirte lua file")
 	}
@@ -203,16 +189,16 @@ func CharDBLua(zone *Zone, zonem *comInterface.Machine, Dir string) error {
 	//}
 	zonedbm := zMgr.machineMgr.GetMachineByName(zone.ZoneDBHost)
 	if zonedbm == nil {
-		return errors.New("CharDBLua cannt find machine")
+		return errors.New("comInterface.CharDBLua cannt find machine")
 	}
 
 	mysqldbName := "cgzone" + strconv.Itoa(zone.Zid)
-	charDBLua := CharDB{
+	charDBLua := comInterface.CharDB{
 		ID:   zone.Zid,
 		Zid:  zone.Zid,
 		IP:   zonem.IP,
 		Port: comInterface.CharDBPort + zone.PortNumber,
-		Mysql: MysqlLua{
+		Mysql: comInterface.MysqlLua{
 			IP:             zonedbm.IP,
 			Port:           comInterface.MysqlPort,
 			UserName:       comInterface.UserName,
@@ -220,16 +206,15 @@ func CharDBLua(zone *Zone, zonem *comInterface.Machine, Dir string) error {
 			FlushFrequency: 300,
 			DataBase:       mysqldbName,
 		},
-		Redis: RedisLua{
-			IP: zonedbm.IP,
-			//Port:     comInterface.RedisPort + zoneDBCount,
+		Redis: comInterface.RedisLua{
+			IP:       zonedbm.IP,
 			Port:     comInterface.RedisPort,
-			Password: "",
+			Password: comInterface.RedisPassWord,
 		},
 		ConnectServers: make(map[string]interface{}),
 	}
 
-	charDBLua.ConnectServers["Log"] = Connect{
+	charDBLua.ConnectServers["Log"] = comInterface.Connect{
 		ID:   zone.Zid,
 		IP:   zonem.IP,
 		Port: comInterface.LogPort + zone.PortNumber,
@@ -237,16 +222,9 @@ func CharDBLua(zone *Zone, zonem *comInterface.Machine, Dir string) error {
 
 	srv := make(map[string]int)
 	srv["nType"] = comInterface.DbproxyServer
-	head := comInterface.ServerConfigHead{
-		NET_TIMEOUT_MSEC:  comInterface.NetTimeOut,
-		NET_MAX_CONNETION: comInterface.NetMaxConnection,
-		StartService:      []comInterface.SRV{srv},
-		LOG_INDEX:         "chardb",
-		LOG_MAXLINE:       comInterface.LogMaxLine,
-		OpenGM:            1,
-	}
-
-	trans := struct2lua.ToLuaConfig(Dir, "CharDB", charDBLua, head, 0)
+	srvHead.StartService = []comInterface.SRV{srv}
+	srvHead.LOG_INDEX = "charDB" + strconv.Itoa(zone.Zid)
+	trans := struct2lua.ToLuaConfig(Dir, "comInterface.CharDB", charDBLua, srvHead, 0)
 	if trans == false {
 		log.Println("chardb cannt wirte lua file")
 	}
@@ -254,41 +232,36 @@ func CharDBLua(zone *Zone, zonem *comInterface.Machine, Dir string) error {
 }
 
 func LogicLua(zone *Zone, zonem *comInterface.Machine, Dir string) error {
-	logicLua := Logic{
+	logicLua := comInterface.Logic{
 		//ID:  1,
 		Zid: zone.Zid,
 		IP:  zonem.IP,
 		//Port:           comInterface.LogicPort + zoneCount*3 + 1,
 		ConnectServers: make(map[string]interface{}),
 	}
-	logicLua.ConnectServers["CharDB"] = Connect{
+	logicLua.ConnectServers["comInterface.CharDB"] = comInterface.Connect{
 		ID:   zone.Zid,
 		IP:   zonem.IP,
 		Port: comInterface.CharDBPort + zone.PortNumber,
 	}
-	logicLua.ConnectServers["Gate"] = Connect{
+	logicLua.ConnectServers["Gate"] = comInterface.Connect{
 		ID:   zone.Zid,
 		IP:   zonem.IP,
 		Port: comInterface.GatePort + zone.PortNumber,
 	}
-	logicLua.ConnectServers["Center"] = Connect{
+	logicLua.ConnectServers["Center"] = comInterface.Connect{
 		ID:   zone.Zid,
 		IP:   zonem.IP,
 		Port: comInterface.CenterPort + zone.PortNumber,
 	}
-	logicLua.ConnectServers["Log"] = Connect{
+	logicLua.ConnectServers["Log"] = comInterface.Connect{
 		ID:   zone.Zid,
 		IP:   zonem.IP,
 		Port: comInterface.LogPort + zone.PortNumber,
 	}
 	srv := make(map[string]int)
 	srv["nType"] = comInterface.LogicServer
-	head := comInterface.ServerConfigHead{
-		NET_TIMEOUT_MSEC:  comInterface.NetTimeOut,
-		NET_MAX_CONNETION: comInterface.NetMaxConnection,
-		StartService:      []comInterface.SRV{srv},
-		OpenGM:            1,
-	}
+	srvHead.StartService = []comInterface.SRV{srv}
 
 	for k, v := range LogicMap {
 		logicLua.ID = k
@@ -296,10 +269,10 @@ func LogicLua(zone *Zone, zonem *comInterface.Machine, Dir string) error {
 		logicLua.MapIds = v
 
 		s := "logic" + strconv.Itoa(k)
-		head.LOG_INDEX = s
-		head.LOG_MAXLINE = comInterface.LogMaxLine
+		srvHead.LOG_INDEX = s
+		srvHead.LOG_MAXLINE = comInterface.LogMaxLine
 
-		trans := struct2lua.ToLuaConfig(Dir, "Logic", logicLua, head, k)
+		trans := struct2lua.ToLuaConfig(Dir, "Logic", logicLua, srvHead, k)
 		if trans == false {
 			log.Println("logic cannt wirte lua file")
 		}
@@ -313,48 +286,34 @@ func LogLua(zone *Zone, zonem *comInterface.Machine, Dir string) error {
 	if logm == nil {
 		return errors.New("LogLua cannt find machine")
 	}
-
-	masterm := zMgr.machineMgr.GetMachineByName("master")
-	if masterm == nil {
-		return errors.New("LogLua cannt find machine")
+	errCollect := zMgr.machineMgr.GetMachineByName("errLog")
+	if errCollect == nil {
+		return errors.New("LogLua cannt find errCollect")
 	}
-	logLua := Log{
-		ID:   zone.Zid,
-		IP:   zonem.IP,
-		Port: comInterface.LogPort + zone.PortNumber,
-		ZoneLogMysql: MysqlLua{
-			IP:             logm.IP,
-			Port:           comInterface.MysqlPort,
-			UserName:       comInterface.UserName,
-			Password:       comInterface.PassWord,
-			FlushFrequency: 300,
-			DataBase:       "zonelog" + strconv.Itoa(zone.Zid),
-		},
-		GlobalLogMysql: GlobalDB,
+
+	logLua := comInterface.Log{
+		ID:             zone.Zid,
+		IP:             zonem.IP,
+		Port:           comInterface.LogPort + zone.PortNumber,
 		ConnectServers: make(map[string]interface{}),
 	}
-	logLua.ConnectServers["Collect"] = Connect{
-		ID:   1,
-		IP:   masterm.IP,
-		Port: 1237,
+	logLua.ConnectServers["Collect"] = comInterface.Connect{
+		ID:   0,
+		IP:   errCollect.IP,
+		Port: comInterface.ErrLogPort,
 	}
 
 	srv := make(map[string]int)
 	srv["nType"] = comInterface.LogServer
-	head := comInterface.ServerConfigHead{
-		NET_TIMEOUT_MSEC:  comInterface.NetTimeOut,
-		NET_MAX_CONNETION: comInterface.NetMaxConnection,
-		StartService:      []comInterface.SRV{srv},
-		LOG_INDEX:         "yylog",
-		LOG_MAXLINE:       comInterface.LogMaxLine,
-		OpenGM:            1,
-	}
-	trans := struct2lua.ToLuaConfig(Dir, "Log", logLua, head, 0)
+	srvHead.StartService = []comInterface.SRV{srv}
+	srvHead.LOG_INDEX = "logserver"
+
+	trans := struct2lua.ToLuaConfig(Dir, "Log", logLua, srvHead, 0)
 	if trans == false {
 		log.Println("log cannt wirte lua file")
 	}
 
-	l := LogDBConf{
+	l := comInterface.LogDBConf{
 		DirName: "zonelog" + strconv.Itoa(zone.Zid),
 		IP:      logm.IP,
 	}

@@ -1,18 +1,17 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
 import {
-  Select,
   Message,
   Table,
-  Icon,
   Button,
   Input,
-  Tag
+  Tag,
+  Row,
+  Col,
 } from 'antd';
 
 import { trim, checkIpFormat, checkHostName, checkAppliactionType } from '../../utils/utils'
 import { typeOption, machineColumns, Commonhost } from '../../constant'
-const Option = Select.Option;
 export default class machineMgr extends React.Component {
   constructor(props) {
     super(props);
@@ -82,7 +81,7 @@ export default class machineMgr extends React.Component {
       if (this.editInput.hasOwnProperty(key)) {
         var element = this.editInput[key];
         if (typeof (element) === "string") {
-          this.editInput[key] = trim(element) 
+          this.editInput[key] = trim(element)
         }
       }
     }
@@ -272,34 +271,51 @@ export default class machineMgr extends React.Component {
     dispatch.filterMachine(filteredData)
   }
 
-  render() {
-    const { data, page } = this.props.data
-    machineColumns.forEach((k) => {
-      k.render = this.columnsRender[k.key]
-        ? this.columnsRender[k.key]
-        : k.render
-    })
-    data.forEach((k) => {
-      k.key = k.hostname
-    })
+  commonConfig() {
+    for (var key in Commonhost) {
+      if (!this.hosts[key]) {
+        Message.error("cannt write common config, lack " + key + " machine Info", 10)
+        return
+      }
+    }
+
     const { dispatch } = this.props
-    return (
-      <div>
-        <Button type="primary" onClick={(e) => (this.addClick(e))}>Add</Button>
-        <Table
-          dataSource={data}
-          columns={machineColumns}
-          pagination={page}
-          onChange={(pagination, filters, sorter) => {
-            dispatch.pageMachine({
-              page: {
-                current: pagination.current,
-                pageSize: pagination.pageSize
-              }
-            })
-            this.filtersFunc(filters.applications)
-          }} />
-      </div>
-    )
+    dispatch.fetchCommonConfig((json) => {
+      Message.error(json.Result, 5)
+    })
   }
-}
+
+    render() {
+      const { data, page } = this.props.data
+      machineColumns.forEach((k) => {
+        k.render = this.columnsRender[k.key]
+          ? this.columnsRender[k.key]
+          : k.render
+      })
+      data.forEach((k) => {
+        k.key = k.hostname
+      })
+      const { dispatch } = this.props
+      return (
+        <div>
+          <Row type="flex" justify="space-between">
+            <Button type="primary" onClick={(e) => (this.addClick(e))}>Add</Button>
+            <Button type="primary" onClick={(e) => (this.commonConfig(e))}>生成通用服配置</Button>
+          </Row>
+          <Table
+            dataSource={data}
+            columns={machineColumns}
+            pagination={page}
+            onChange={(pagination, filters, sorter) => {
+              dispatch.pageMachine({
+                page: {
+                  current: pagination.current,
+                  pageSize: pagination.pageSize
+                }
+              })
+              this.filtersFunc(filters.applications)
+            }} />
+        </div>
+      )
+    }
+  }

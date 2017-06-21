@@ -1,4 +1,4 @@
-package zone
+package comInterface
 
 type Connect struct {
 	ID   int
@@ -67,12 +67,33 @@ type Log struct {
 	ID             int
 	IP             string
 	Port           int
-	ZoneLogMysql   MysqlLua
-	GlobalLogMysql MysqlLua
 	ConnectServers map[string]interface{}
 }
 
 type LogDBConf struct {
 	DirName string
 	IP      string
+}
+
+type Login struct {
+	ID             int
+	IP             string
+	Port           int
+	ConnectServers map[string]interface{}
+}
+
+type Master struct {
+	ID             int
+	IP             string
+	Port           int
+	ConnectServers map[string]interface{}
+}
+type AccountDB struct {
+	ID             int
+	Zid            int
+	IP             string
+	Port           int
+	Mysql          MysqlLua
+	Redis          RedisLua
+	ConnectServers map[string]interface{}
 }

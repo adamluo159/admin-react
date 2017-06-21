@@ -41,6 +41,7 @@ func Register(e *echo.Echo) *MachineMgr {
 	e.POST("/machine/add", AddMachine)
 	e.POST("/machine/save", SaveMachine)
 	e.POST("/machine/del", DelMachine)
+	e.GET("machine/common", CommonConfig)
 	return &mhMgr
 }
 

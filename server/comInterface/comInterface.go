@@ -15,19 +15,20 @@ const (
 	RelationAdd int = 2
 )
 const (
-	CharDBPort    int    = 7000
-	GatePort      int    = 7100
-	CenterPort    int    = 7200
-	LogicPort     int    = 7300 //logic1 7300起 logic2 7400起
-	ClientPort    int    = 7800
-	MasterPort    int    = 9500
-	LoginPort     int    = 7550
-	LogPort       int    = 7600
-	AccountDBPort int    = 6500
-	UserName      string = "root"
-	PassWord      string = "cg2016"
-	RedisPort     int    = 6379
-	MysqlPort     int    = 3306
+	CharDBPort       int = 7000
+	GatePort         int = 7100
+	CenterPort       int = 7200
+	LogicPort        int = 7300 //logic1 7300起 logic2 7400起
+	ClientPort       int = 7800
+	MasterPort       int = 9500
+	LoginPort        int = 7550
+	LogPort          int = 7600
+	AccountDBPort    int = 6500
+	RedisPort        int = 6379
+	MysqlPort        int = 3306
+	LoginWebPort     int = 1236
+	ErrLogPort       int = 1237
+	RedisAccountPort int = 6380
 
 	NetTimeOut       int = 1000 * 30
 	NetMaxConnection int = 5000
@@ -41,6 +42,11 @@ const (
 
 	MasterCount int = 1
 	LogMaxLine  int = 10000
+
+	UserName      string = "root"
+	PassWord      string = "cg2016"
+	ConfDir       string = "/gConf/"
+	RedisPassWord string = ""
 )
 
 type ZoneStates struct {

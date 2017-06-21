@@ -66,7 +66,6 @@ type ZoneRsp struct {
 var (
 	cl              *mgo.Collection
 	clPort          *mgo.Collection
-	GlobalDB        MysqlLua
 	Str2IntChannels map[string]int
 	LogicMap        map[int][]int
 )

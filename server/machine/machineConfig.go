@@ -142,11 +142,11 @@ func MasterLogLua(dir string, masterIP string, errLogIP string) error {
 	}
 
 	srv := make(map[string]int)
-	srv["nType"] = comInterface.DbproxyServer
+	srv["nType"] = comInterface.LogServer
 	srvHead.StartService = []comInterface.SRV{srv}
 	srvHead.LOG_INDEX = "masterlog"
 
-	trans := struct2lua.ToLuaConfig(dir, "MasterLog", loglua, srvHead, 0)
+	trans := struct2lua.ToLuaConfig(dir, "Log", loglua, srvHead, 0)
 	if trans == false {
 		return errors.New("masterLog cannt wirte lua file")
 	}

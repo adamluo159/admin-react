@@ -114,7 +114,7 @@ func GateLua(zone *Zone, zonem *comInterface.Machine, Dir string) error {
 		Name:           zone.ZoneName,
 		ConnectServers: make(map[string]interface{}),
 	}
-	gateLua.ConnectServers["comInterface.CharDB"] = comInterface.Connect{
+	gateLua.ConnectServers["CharDB"] = comInterface.Connect{
 		ID:   zone.Zid,
 		IP:   zonem.IP,
 		Port: comInterface.CharDBPort + zone.PortNumber,
@@ -153,7 +153,7 @@ func CenterLua(zone *Zone, zonem *comInterface.Machine, Dir string) error {
 		ConnectServers:        make(map[string]interface{}),
 	}
 
-	centerLua.ConnectServers["comInterface.CharDB"] = comInterface.Connect{
+	centerLua.ConnectServers["CharDB"] = comInterface.Connect{
 		ID:   zone.Zid,
 		IP:   zonem.IP,
 		Port: comInterface.CharDBPort + zone.PortNumber,
@@ -239,7 +239,7 @@ func LogicLua(zone *Zone, zonem *comInterface.Machine, Dir string) error {
 		//Port:           comInterface.LogicPort + zoneCount*3 + 1,
 		ConnectServers: make(map[string]interface{}),
 	}
-	logicLua.ConnectServers["comInterface.CharDB"] = comInterface.Connect{
+	logicLua.ConnectServers["CharDB"] = comInterface.Connect{
 		ID:   zone.Zid,
 		IP:   zonem.IP,
 		Port: comInterface.CharDBPort + zone.PortNumber,

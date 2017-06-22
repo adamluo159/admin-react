@@ -86,6 +86,7 @@ type Master struct {
 	ID             int
 	IP             string
 	Port           int
+	AllZoneOpen    bool
 	ConnectServers map[string]interface{}
 }
 type AccountDB struct {

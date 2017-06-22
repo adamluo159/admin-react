@@ -43,6 +43,11 @@ func LoginLua(loginId int, dir string, loginWebIP string, masterIP string, accou
 		IP:   accountdbIP,
 		Port: comInterface.AccountDBPort,
 	}
+	loginLua.ConnectServers["Master"] = comInterface.Connect{
+		ID:   0,
+		IP:   masterIP,
+		Port: comInterface.MasterPort,
+	}
 	srv := make(map[string]int)
 	srv["nType"] = comInterface.LoginServer
 	srvHead.StartService = []comInterface.SRV{srv}
@@ -60,6 +65,7 @@ func MasterLua(dir string, masterIP string) error {
 		ID:             0,
 		IP:             masterIP,
 		Port:           comInterface.MasterPort,
+		AllZoneOpen:    true,
 		ConnectServers: make(map[string]interface{}),
 	}
 
@@ -98,7 +104,7 @@ func AccountDBLua(dir string, accountIP string, logIP string) error {
 		Redis: comInterface.RedisLua{
 			IP:       accountIP,
 			Port:     comInterface.RedisAccountPort,
-			Password: comInterface.RedisPassWord,
+			Password: comInterface.RedisAccountPassWord,
 		},
 		ConnectServers: make(map[string]interface{}),
 	}

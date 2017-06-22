@@ -43,10 +43,11 @@ const (
 	MasterCount int = 1
 	LogMaxLine  int = 10000
 
-	UserName      string = "root"
-	PassWord      string = "cg2016"
-	ConfDir       string = "/gConf/"
-	RedisPassWord string = ""
+	UserName             string = "root"
+	PassWord             string = "cg2016"
+	ConfDir              string = "/gConf/"
+	RedisPassWord        string = ""
+	RedisAccountPassWord string = "cg2016"
 )
 
 type ZoneStates struct {

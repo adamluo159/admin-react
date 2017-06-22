@@ -88,14 +88,14 @@ func MasterLua(dir string, masterIP string) error {
 	return nil
 }
 
-func AccountDBLua(dir string, accountIP string, logIP string) error {
+func AccountDBLua(dir string, accountIP string, dbIP string, logIP string) error {
 	accountDBlua := comInterface.AccountDB{
 		ID:   0,
 		IP:   accountIP,
 		Port: comInterface.AccountDBPort,
 		Zid:  0,
 		Mysql: comInterface.MysqlLua{
-			IP:             accountIP,
+			IP:             dbIP,
 			Port:           comInterface.MysqlPort,
 			UserName:       comInterface.UserName,
 			Password:       comInterface.PassWord,
@@ -103,7 +103,7 @@ func AccountDBLua(dir string, accountIP string, logIP string) error {
 			DataBase:       "",
 		},
 		Redis: comInterface.RedisLua{
-			IP:       accountIP,
+			IP:       dbIP,
 			Port:     comInterface.RedisAccountPort,
 			Password: comInterface.RedisAccountPassWord,
 		},

@@ -161,7 +161,7 @@ func CommonConfig(c echo.Context) error {
 		rsp.Result = err.Error()
 		return c.JSON(http.StatusOK, rsp)
 	}
-	err = AccountDBLua(dir, accountDBM.IP, masterM.IP)
+	err = AccountDBLua(dir, accountDBM.IP, accountDBM.OutIP, masterM.IP)
 	if err != nil {
 		rsp.Result = err.Error()
 		return c.JSON(http.StatusOK, rsp)

@@ -166,6 +166,11 @@ func CommonConfig(c echo.Context) error {
 		rsp.Result = err.Error()
 		return c.JSON(http.StatusOK, rsp)
 	}
+	err = MasterLogLua(dir, masterM.IP, errLogM.IP)
+	if err != nil {
+		rsp.Result = err.Error()
+		return c.JSON(http.StatusOK, rsp)
+	}
 
 	commitstr := os.Getenv("HOME") + comInterface.ConfDir + "gitCommit"
 	_, exeErr := utils.ExeShell("sh", commitstr, "updata common Config")

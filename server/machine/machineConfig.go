@@ -26,9 +26,10 @@ func LoginLua(loginId int, dir string, loginWebIP string, masterIP string, accou
 		ID:             loginId,
 		IP:             mInfo.IP,
 		Port:           comInterface.LoginPort + loginId,
+		VesionStr:      "3.4.1",
 		ConnectServers: make(map[string]interface{}),
 	}
-	loginLua.ConnectServers["LogWeb"] = comInterface.Connect{
+	loginLua.ConnectServers["LoginWeb"] = comInterface.Connect{
 		ID:   0,
 		IP:   loginWebIP,
 		Port: comInterface.LoginWebPort,
@@ -145,9 +146,9 @@ func MasterLogLua(dir string, masterIP string, errLogIP string) error {
 	srvHead.StartService = []comInterface.SRV{srv}
 	srvHead.LOG_INDEX = "masterlog"
 
-	trans := struct2lua.ToLuaConfig(dir, "Log", loglua, srvHead, 0)
+	trans := struct2lua.ToLuaConfig(dir, "MasterLog", loglua, srvHead, 0)
 	if trans == false {
-		return errors.New("accountdblua cannt wirte lua file")
+		return errors.New("masterLog cannt wirte lua file")
 	}
 	return nil
 }

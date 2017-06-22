@@ -79,6 +79,7 @@ type Login struct {
 	ID             int
 	IP             string
 	Port           int
+	VesionStr      string
 	ConnectServers map[string]interface{}
 }
 

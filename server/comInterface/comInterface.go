@@ -21,7 +21,7 @@ const (
 	LogicPort        int = 7300 //logic1 7300起 logic2 7400起
 	ClientPort       int = 7800
 	MasterPort       int = 9500
-	LoginPort        int = 7550
+	LoginPort        int = 9550
 	LogPort          int = 7600
 	AccountDBPort    int = 6500
 	RedisPort        int = 6379

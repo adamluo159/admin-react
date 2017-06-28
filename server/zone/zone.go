@@ -1,10 +1,14 @@
 package zone
 
 import (
+	"fmt"
 	"log"
+
+	"errors"
 
 	"github.com/adamluo159/admin-react/server/comInterface"
 	"github.com/adamluo159/admin-react/server/db"
+	"github.com/adamluo159/gameAgent/utils"
 	"github.com/labstack/echo"
 	mgo "gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
@@ -19,11 +23,6 @@ var zMgr ZoneMgr
 
 //区服模块注册
 func Register(e *echo.Echo) *ZoneMgr {
-	Str2IntChannels = make(map[string]int)
-	Str2IntChannels["ios"] = 1
-	Str2IntChannels["yyb"] = 2
-	Str2IntChannels["xiaomi"] = 3
-
 	cl = db.Session.DB("gameAdmin").C("zone")
 	if cl == nil {
 		log.Printf("cannt find Collection about zone")
@@ -60,50 +59,14 @@ func Register(e *echo.Echo) *ZoneMgr {
 	}
 	err = cl.EnsureIndex(iName)
 	if err != nil {
-		log.Printf("mongodb ensureindex err:%s", err.Error())
-		panic(0)
+		panic(fmt.Sprintf("mongodb ensureindex err:%s", err.Error()))
 	}
 
-	LogicMap = make(map[int][]int)
-	LogicMap[1] = []int{
-		210106002,
-		210109001,
-		210109002,
-		210109003,
-		210109004,
-		210109005,
-		210109006,
-		210109007,
-		210109008,
-		210109009,
-		210109999,
-		210181001,
-		210181002,
-		210181003,
-		210181004,
-		210182001,
-		210182002,
-		210182003,
-		210182004,
+	err = LoadZoneConfig()
+	if err != nil {
+		panic(err.Error())
 	}
-	LogicMap[2] = []int{
-		210106001,
-		210102101,
-		210102102,
-		210102201,
-		210102202,
-		210104001,
-		210104002,
-		210104005,
-		210104099,
-		210104006,
-		210105001,
-		210105002,
-		210106003,
-		210107001,
-		210107002,
-		210189001,
-	}
+
 	e.GET("/zone", GetZones)
 	e.POST("/zone/add", AddZone)
 	e.POST("/zone/save", SaveZone)
@@ -137,4 +100,28 @@ func (z *ZoneMgr) GetZoneRelation(zid int) *comInterface.RelationZone {
 		ZoneDBHost:    dz.ZoneDBHost,
 		ZonelogdbHost: dz.ZonelogdbHost,
 	}
+}
+
+func LoadZoneConfig() error {
+	utils.LoadConfigJson()
+
+	Str2IntChannels = make(map[string]int)
+	jsonerr := utils.GetConfigMap("channels", &Str2IntChannels)
+	if jsonerr != nil {
+		return errors.New(fmt.Sprintf("zone register load channels json file fail %v\n", jsonerr))
+	}
+	LogicMap = make(map[int][]int)
+	logic1 := []int{}
+	logic2 := []int{}
+	jsonerr = utils.GetConfigArray("logic1_maps", &logic1)
+	if jsonerr != nil {
+		return errors.New(fmt.Sprintf("zone register load logic1 maps json file fail %v\n", jsonerr))
+	}
+	jsonerr = utils.GetConfigArray("logic1_maps", &logic2)
+	if jsonerr != nil {
+		return errors.New(fmt.Sprintf("zone register load logic2 maps json file fail %v\n", jsonerr))
+	}
+	LogicMap[1] = logic1
+	LogicMap[2] = logic2
+	return nil
 }

@@ -2,6 +2,9 @@ package db
 
 import (
 	"fmt"
+	"log"
+
+	"github.com/adamluo159/gameAgent/utils"
 
 	mgo "gopkg.in/mgo.v2"
 )
@@ -12,40 +15,36 @@ var (
 
 	// Mongo stores the mongodb connection string information
 	Mongo *mgo.DialInfo
-)
 
-const (
-	// MongoDBUrl is the default mongodb url that will be used to connect to the
-	// database.
-	MongoDBUrl = "mongodb://192.168.1.252:27017/"
+	MongoDBUrl string
 )
 
 // Connect connects to mongodb
 func Connect() {
-	mongo, err := mgo.ParseURL(MongoDBUrl)
+	err := utils.GetConfigValue("mongoIP", &MongoDBUrl)
+	if err != nil {
+		panic(fmt.Sprintf("read json file get mongodb ip fail %v\n", err))
+	}
+	log.Println(MongoDBUrl)
 	s, err := mgo.Dial(MongoDBUrl)
 	if err != nil {
-		fmt.Printf("Can't connect to mongo, go error %v\n", err)
-		panic(err.Error())
+		panic(fmt.Sprintf("Can't connect to mongoip:%s, go error %v\n", MongoDBUrl, err))
 	}
 
-	//s.SetSafe(&mgo.Safe{})
 	s.SetMode(mgo.Monotonic, true)
 	fmt.Println("Connected to", MongoDBUrl)
 	Session = s
-	Mongo = mongo
 }
 
 func ReConnect() error {
 	mongo, err := mgo.ParseURL(MongoDBUrl)
 	s, err := mgo.Dial(MongoDBUrl)
 	if err != nil {
-		fmt.Printf("Can't Reconnect to mongo, go error %v\n", err)
+		fmt.Printf("Can't Reconnect to mongo, go error %v\n", err.Error())
 		return err
 	}
-	//s.SetSafe(&mgo.Safe{})
 	s.SetMode(mgo.Monotonic, true)
-	fmt.Println("ReConnected to", MongoDBUrl)
+	log.Println("ReConnected to", MongoDBUrl)
 
 	Session.Close()
 	Session = s

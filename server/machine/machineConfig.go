@@ -30,24 +30,24 @@ func LoginLua(loginId int, dir string, loginWebIP string, masterIP string, accou
 		ConnectServers: make(map[string]interface{}),
 	}
 	loginLua.ConnectServers["LoginWeb"] = comInterface.Connect{
-		ID:   0,
+		ID:   1,
 		IP:   loginWebIP,
 		Port: comInterface.LoginWebPort,
 	}
 	loginLua.ConnectServers["Log"] = comInterface.Connect{
-		ID:   0,
+		ID:   1,
 		IP:   masterIP,
 		Port: comInterface.LogPort,
 	}
 	loginLua.ConnectServers["AccountDB"] = comInterface.Connect{
-		ID:   0,
+		ID:   1,
 		IP:   accountdbIP,
 		Port: comInterface.AccountDBPort,
 	}
 	loginLua.ConnectServers["Master"] = comInterface.Connect{
-		ID:   0,
+		ID:   1,
 		IP:   masterIP,
-		Port: comInterface.MasterPort,
+		Port: comInterface.MasterPort + 1,
 	}
 	srv := make(map[string]int)
 	srv["nType"] = comInterface.LoginServer
@@ -63,7 +63,7 @@ func LoginLua(loginId int, dir string, loginWebIP string, masterIP string, accou
 
 func MasterLua(dir string, masterIP string) error {
 	masterlua := comInterface.Master{
-		ID:             0,
+		ID:             1,
 		IP:             masterIP,
 		Port:           comInterface.MasterPort,
 		AllZoneOpen:    true,
@@ -71,7 +71,7 @@ func MasterLua(dir string, masterIP string) error {
 	}
 
 	masterlua.ConnectServers["Log"] = comInterface.Connect{
-		ID:   0,
+		ID:   1,
 		IP:   masterIP,
 		Port: comInterface.LogPort,
 	}

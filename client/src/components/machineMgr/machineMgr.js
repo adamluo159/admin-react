@@ -38,12 +38,34 @@ export default class machineMgr extends React.Component {
       return
     }
     this.hosts = {}
+    this.specialHosts = {}
     rsp.Items.forEach((element, index) => {
       if (element.applications != null) {
         element.applications = element.applications.toString()
       }
+
+    if (Commonhost[element.hostname]) {
+        this.specialHosts[element.hostname] = element.IP
+      }
       this.hosts[element.hostname] = index
     });
+
+    rsp.Items.forEach((element,index) => {
+      if (checkHostName(element.hostname)){
+        for (var sk in this.specialHosts) {
+          if (this.specialHosts.hasOwnProperty(sk)) {
+            var IP = this.specialHosts[sk];
+            if(IP == element.IP){
+              if(element.applications == ""){
+                element.applications = sk
+              }else{
+                element.applications = element.applications + "," + sk
+              }
+            }
+          }
+        }
+      }
+    })
     rsp.Items.sort(this.sortTable)
     this.props.dispatch.InitMachines({
       data: rsp.Items,

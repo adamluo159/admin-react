@@ -97,7 +97,15 @@ class ZoneClass extends React.Component {
     const { fetchSynMachine } = this.props.dispatch
     const { getFieldValue } = this.refs.zForm
     let zid = Number(getFieldValue("zid"))
-    fetchSynMachine({ zid: zid, hostname: this.zoneData[zid].zoneHost, cb: (json) => this.NotifyRsp(json) })
+    fetchSynMachine({
+      zid: zid,
+      hostname: this.zoneData[zid].zoneHost,
+      cb: (json) => {
+        this.refs.zFooter.setState({ edit: false, synMachineLoading: false })
+        this.NotifyRsp(json)
+      }
+    })
+    this.refs.zFooter.setState({ edit: false, synMachineLoading: true })
   }
 
   addZoneRsp(json) {
@@ -180,8 +188,12 @@ class ZoneClass extends React.Component {
     }
     fetchDelZone({
       obj: obj,
-      cb: (json) => this.deleteZoneRsp(json)
+      cb: (json) => {
+        this.refs.zFooter.setState({ deleteZoneLoading: false })
+        this.deleteZoneRsp(json)
+      }
     })
+    this.refs.zFooter.setState({ deleteZoneLoading: true })
   }
   deleteZoneRsp(json) {
     this.refs.zFooter.setState({ delZoneLoading: false })

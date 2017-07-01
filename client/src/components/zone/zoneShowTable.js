@@ -35,8 +35,12 @@ class ZoneShowTable extends React.Component {
     }
     render() {
         let {show} = this.state
+        const {getZoneName} = this.props
         show.forEach(v => {
+            let k = v.zoneName.replace(/[^0-9]/ig,"")
+            let name = getZoneName(k)
             v.key = v.zoneName
+            v.zoneName = name
         })
         return (
             <Table columns={this.columns} dataSource={show} size="small" />

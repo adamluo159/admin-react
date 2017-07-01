@@ -27,14 +27,14 @@ class ZoneClass extends React.Component {
       return
     }
     if (json.Items.length <= 0) {
-      let {DisableEdit} = this.props.dispatch
+      let { DisableEdit } = this.props.dispatch
       DisableEdit({ zoneEdit: false })
     } else {
       json.Items.forEach(v => {
         this.zoneData[v.zid] = v
       })
       this.opZid = this.refs.zHead.Init(this.zoneData)
-      let {setFieldsValue} = this.refs.zForm
+      let { setFieldsValue } = this.refs.zForm
       setFieldsValue(this.zoneData[this.opZid])
     }
     this.refs.zShowTable.setState({ show: json.Zstates })
@@ -56,9 +56,9 @@ class ZoneClass extends React.Component {
       return
     }
 
-    let {DisableEdit} = this.props.dispatch
+    let { DisableEdit } = this.props.dispatch
     DisableEdit({ zoneEdit: true })
-    let { resetFields, setFieldsValue} = this.refs.zForm
+    let { resetFields, setFieldsValue } = this.refs.zForm
     resetFields()
     setFieldsValue({
       "edit": true
@@ -70,10 +70,10 @@ class ZoneClass extends React.Component {
   saveOrAddZone(value) {
     value.preventDefault()
     const { fetchAddZone, fetchSaveZone } = this.props.dispatch
-    const {getFieldsValue, setFieldsValue} = this.refs.zForm
+    const { getFieldsValue, setFieldsValue } = this.refs.zForm
     let zone = getFieldsValue()
     zone.zid = Number(zone.zid)
-    let {addZone} = this.refs.zFooter.state
+    let { addZone } = this.refs.zFooter.state
     if (addZone) {
       fetchAddZone({
         obj: zone,
@@ -95,7 +95,7 @@ class ZoneClass extends React.Component {
   synMachine(e) {
     e.preventDefault()
     const { fetchSynMachine } = this.props.dispatch
-    const { getFieldValue} = this.refs.zForm
+    const { getFieldValue } = this.refs.zForm
     let zid = Number(getFieldValue("zid"))
     fetchSynMachine({ zid: zid, hostname: this.zoneData[zid].zoneHost, cb: (json) => this.NotifyRsp(json) })
   }
@@ -119,7 +119,7 @@ class ZoneClass extends React.Component {
   }
 
   saveZoneRsp(rsp) {
-    let {setFieldsValue } = this.refs.zForm
+    let { setFieldsValue } = this.refs.zForm
     let newZone = rsp.json.Item
     let oldzid = rsp.oldzid
     if (rsp.json.Result != "OK") {
@@ -139,7 +139,7 @@ class ZoneClass extends React.Component {
   startZone(e) {
     e.preventDefault()
     const { fetchStartZone } = this.props.dispatch
-    const {getFieldValue} = this.refs.zForm
+    const { getFieldValue } = this.refs.zForm
     this.refs.zFooter.setState({ startZoneLoading: true })
     fetchStartZone({
       obj: { zid: this.opZid, Host: this.zoneData[this.opZid].zoneHost },
@@ -154,7 +154,7 @@ class ZoneClass extends React.Component {
   stopZone(e) {
     e.preventDefault()
     const { fetchStopZone } = this.props.dispatch
-    const {getFieldValue} = this.refs.zForm
+    const { getFieldValue } = this.refs.zForm
     let zid = Number(getFieldValue("zid"))
     this.refs.zFooter.setState({ stopZoneLoading: true })
     fetchStopZone({
@@ -172,7 +172,7 @@ class ZoneClass extends React.Component {
 
   deleteZone(e) {
     e.preventDefault()
-    const {fetchDelZone} = this.props.dispatch
+    const { fetchDelZone } = this.props.dispatch
     this.refs.zFooter.setState({ delZoneLoading: true })
     let obj = {
       Zid: this.opZid,
@@ -189,7 +189,7 @@ class ZoneClass extends React.Component {
       return
     }
     let zid = json.Item.zid
-    let {setFieldsValue} = this.refs.zForm
+    let { setFieldsValue } = this.refs.zForm
 
     delete this.zoneData[zid]
     this.opZid = this.refs.zHead.Init(this.zoneData)
@@ -199,8 +199,8 @@ class ZoneClass extends React.Component {
 
   updatelogZoneDB(e) {
     e.preventDefault()
-    const {fetchUpdateZonelogdb} = this.props.dispatch
-    const {getFieldValue} = this.refs.zForm
+    const { fetchUpdateZonelogdb } = this.props.dispatch
+    const { getFieldValue } = this.refs.zForm
     let zid = Number(getFieldValue("zid"))
 
     fetchUpdateZonelogdb({
@@ -217,7 +217,7 @@ class ZoneClass extends React.Component {
 
   startAllZone() {
     this.refs.zFooter.setState({ startAllZoneLoading: true })
-    const {fetchStartAllZone} = this.props.dispatch
+    const { fetchStartAllZone } = this.props.dispatch
     fetchStartAllZone((json) => this.startAllZoneRsp(json))
   }
 
@@ -230,7 +230,7 @@ class ZoneClass extends React.Component {
 
   stopAllZone() {
     this.refs.zFooter.setState({ stopAllZoneLoading: true })
-    const {fetchStopAllZone} = this.props.dispatch
+    const { fetchStopAllZone } = this.props.dispatch
     fetchStopAllZone((json) => this.stopAllZoneRsp(json))
   }
 
@@ -241,8 +241,16 @@ class ZoneClass extends React.Component {
     this.refs.zShowTable.setState({ show: json.Zstates })
   }
 
+  getZoneName(zid) {
+    let data = this.zoneData[zid]
+    if (data == null) {
+      return 0
+    }
+    return data.zoneName
+  }
+
   render() {
-    let {zoneEdit} = this.props.data
+    let { zoneEdit } = this.props.data
     return (
       <div>
         <ZoneHead
@@ -258,7 +266,7 @@ class ZoneClass extends React.Component {
             </div>
           </Col>
           <Col span={8} offset={4}>
-            <ZoneShowTable ref="zShowTable"></ZoneShowTable>
+            <ZoneShowTable ref="zShowTable" getZoneName={(zid) => this.getZoneName(zid)}></ZoneShowTable>
           </Col>
         </Row>
         <ZoneFooter ref="zFooter"

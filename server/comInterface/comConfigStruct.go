@@ -61,6 +61,7 @@ type Logic struct {
 	Port           int
 	ConnectServers map[string]interface{}
 	MapIds         []int
+	LoadAllMapIds  bool
 }
 
 type Log struct {

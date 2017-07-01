@@ -238,6 +238,7 @@ func LogicLua(zone *Zone, zonem *comInterface.Machine, Dir string) error {
 		IP:  zonem.IP,
 		//Port:           comInterface.LogicPort + zoneCount*3 + 1,
 		ConnectServers: make(map[string]interface{}),
+		LoadAllMapIds:  false,
 	}
 	logicLua.ConnectServers["CharDB"] = comInterface.Connect{
 		ID:   zone.Zid,

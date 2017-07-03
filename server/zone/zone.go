@@ -117,7 +117,7 @@ func LoadZoneConfig() error {
 	if jsonerr != nil {
 		return errors.New(fmt.Sprintf("zone register load logic1 maps json file fail %v\n", jsonerr))
 	}
-	jsonerr = utils.GetConfigArray("logic1_maps", &logic2)
+	jsonerr = utils.GetConfigArray("logic2_maps", &logic2)
 	if jsonerr != nil {
 		return errors.New(fmt.Sprintf("zone register load logic2 maps json file fail %v\n", jsonerr))
 	}

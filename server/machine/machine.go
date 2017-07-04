@@ -42,6 +42,8 @@ func Register(e *echo.Echo) *MachineMgr {
 	e.POST("/machine/save", SaveMachine)
 	e.POST("/machine/del", DelMachine)
 	e.GET("machine/common", CommonConfig)
+	e.POST("machine/svnUpdate", SvnUpdate)
+	e.GET("machine/svnUpdateAll", SvnUpdateAll)
 	return &mhMgr
 }
 

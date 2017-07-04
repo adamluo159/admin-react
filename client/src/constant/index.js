@@ -26,6 +26,12 @@ export const machineColumns = [{
   width: '10%',
 },
 {
+  title: "CodeVersion",
+  dataIndex: 'codeVersion',
+  key: 'codeVersion',
+  width: '10%',
+},
+{
   title: '内网IP',
   dataIndex: 'IP',
   key: 'IP',
@@ -41,7 +47,7 @@ export const machineColumns = [{
   title: '机器用途',
   dataIndex: 'applications',
   key: 'applications',
-  width: '50%',
+  width: '40%',
   filters: [
     { text: 'empty', value: 0 },
     { text: 'zone', value: 1 },
@@ -81,7 +87,7 @@ export const zoneConfig = {
   channels: {
     Id: 'channels',
     label: '渠道',
-    kinds: ['ios', 'yyb', 'xiaomi']
+    kinds: ['ios', 'yyb', 'xiaomi', "cg"]
   },
   switchEdit: {
     Id: 'edit',

@@ -26,20 +26,30 @@ type MachineRsp struct {
 	Item   comInterface.Machine
 }
 
-func MachineRspFunc(rsp *InitMachine) {
-	cl.Find(nil).All(&(*rsp).Items)
+//
+type MachineAllRsp struct {
+	Result string
+	Items  []comInterface.Machine
+}
+
+type SvnUpdateReq struct {
+	HostName string
+}
+
+func MachineRspFunc(Items *[]comInterface.Machine) {
+	cl.Find(nil).All(Items)
 
 	var host string
-	for index := 0; index < len(rsp.Items); index++ {
-		host = (*rsp).Items[index].Hostname
-		(*rsp).Items[index].Online = mhMgr.as.CheckOnlineMachine(host)
+	for index := 0; index < len(*Items); index++ {
+		host = (*Items)[index].Hostname
+		(*Items)[index].Online, (*Items)[index].CodeVersion = mhMgr.as.CheckOnlineMachine(host)
 	}
 }
 
 //获取机器信息
 func GetMachines(c echo.Context) error {
 	rsp := InitMachine{}
-	MachineRspFunc(&rsp)
+	MachineRspFunc(&rsp.Items)
 	return c.JSON(http.StatusOK, rsp)
 }
 
@@ -65,7 +75,7 @@ func AddMachine(c echo.Context) error {
 func SaveMachine(c echo.Context) error {
 	m := SaveMachineReq{}
 	ret := InitMachine{}
-	MachineRspFunc(&ret)
+	MachineRspFunc(&ret.Items)
 
 	err := c.Bind(&m)
 	if err != nil {
@@ -74,7 +84,8 @@ func SaveMachine(c echo.Context) error {
 	}
 	log.Println("get save info:", m)
 	if m.Oldhost != m.Item.Hostname {
-		if mhMgr.as.CheckOnlineMachine(m.Oldhost) {
+		online, _ := mhMgr.as.CheckOnlineMachine(m.Oldhost)
+		if !online {
 			log.Println("已连接的机器不能修改主机名")
 			return c.JSON(http.StatusOK, ret)
 		}
@@ -95,7 +106,7 @@ func SaveMachine(c echo.Context) error {
 		}
 	}
 
-	MachineRspFunc(&ret)
+	MachineRspFunc(&ret.Items)
 	return c.JSON(http.StatusOK, ret)
 }
 
@@ -109,7 +120,7 @@ func DelMachine(c echo.Context) error {
 	cl.Remove(query)
 
 	ret := InitMachine{}
-	MachineRspFunc(&ret)
+	MachineRspFunc(&ret.Items)
 
 	return c.JSON(http.StatusOK, ret)
 }
@@ -178,5 +189,31 @@ func CommonConfig(c echo.Context) error {
 		rsp.Result = exeErr.Error()
 	}
 
+	return c.JSON(http.StatusOK, rsp)
+}
+
+func SvnUpdate(c echo.Context) error {
+	req := SvnUpdateReq{}
+	err := c.Bind(&req)
+	if err != nil {
+		log.Println(err.Error())
+		return err
+	}
+	rsp := MachineAllRsp{Result: "OK"}
+	suc := mhMgr.as.UpdateSvn(req.HostName)
+	if !suc {
+		rsp.Result = "Fail"
+	}
+	MachineRspFunc(&rsp.Items)
+	return c.JSON(http.StatusOK, rsp)
+}
+
+func SvnUpdateAll(c echo.Context) error {
+	rsp := MachineAllRsp{Result: "OK"}
+	suc := mhMgr.as.UpdateSvnAll()
+	if !suc {
+		rsp.Result = "Fail"
+	}
+	MachineRspFunc(&rsp.Items)
 	return c.JSON(http.StatusOK, rsp)
 }

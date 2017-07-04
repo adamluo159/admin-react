@@ -70,17 +70,20 @@ type Machine struct {
 	OutIP        string   `json:"outIP" bson:"outIP"`
 	Applications []string `json:"applications" bson:"applications"`
 	Online       bool
+	CodeVersion  string `json:"codeVersion" bson:"codeVersion"`
 }
 
 type Aserver interface {
 	StartZone(host string, zid int) int
 	StopZone(host string, zid int) int
-	CheckOnlineMachine(mName string) bool
+	CheckOnlineMachine(mName string) (bool, string)
 	UpdateZone(host string) int
 	StartAllZone() int
 	StopAllZone() int
 	OnlineZones() []ZoneStates
 	AddNewZone(host string, zone string, zid int)
+	UpdateSvn(host string) bool
+	UpdateSvnAll() bool
 }
 
 type MachineMgr interface {

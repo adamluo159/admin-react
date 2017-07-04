@@ -44,21 +44,21 @@ export default class machineMgr extends React.Component {
         element.applications = element.applications.toString()
       }
 
-    if (Commonhost[element.hostname]) {
+      if (Commonhost[element.hostname]) {
         this.specialHosts[element.hostname] = element.IP
       }
       this.hosts[element.hostname] = index
     });
 
-    rsp.Items.forEach((element,index) => {
-      if (checkHostName(element.hostname)){
+    rsp.Items.forEach((element, index) => {
+      if (checkHostName(element.hostname)) {
         for (var sk in this.specialHosts) {
           if (this.specialHosts.hasOwnProperty(sk)) {
             var IP = this.specialHosts[sk];
-            if(IP == element.IP){
-              if(element.applications == ""){
+            if (IP == element.IP) {
+              if (element.applications == "") {
                 element.applications = sk
-              }else{
+              } else {
                 element.applications = element.applications + "," + sk
               }
             }
@@ -66,11 +66,12 @@ export default class machineMgr extends React.Component {
         }
       }
     })
+    this.editState = false
+    this.svnUpdateState = false
     rsp.Items.sort(this.sortTable)
     this.props.dispatch.InitMachines({
       data: rsp.Items,
     })
-    this.editState = false
     this.Items = rsp.Items
   }
 
@@ -88,13 +89,56 @@ export default class machineMgr extends React.Component {
       key: "tmp"
     }
 
-    this
-      .props
-      .dispatch
-      .addMachine({
-        ...this.editInput,
-        edit: true
-      });
+    this.props.dispatch.addMachine({ ...this.editInput, edit: true });
+  }
+
+  MachineAllRsp(json, all) {
+    if (json.Result != "OK") {
+      if (all) {
+        this.initProp(json)
+        Message.warning("svn全机器更新失败", 5);
+      }
+      else {
+        this.svnUpdateState = false
+        this.props.dispatch.InitMachines({ data: this.Items })
+        Message.warning("svn更新失败", 5);
+      }
+      return
+    }
+
+    if (all) {
+      Message.warning("svn全机器更新成功", 5);
+    }
+    else {
+      Message.warning("svn更新成功", 5);
+    }
+    this.initProp(json)
+  }
+
+  svnUpdate(e) {
+    if (this.svnUpdateState) {
+      Message.error("正在更新svn中，请稍后再更新!")
+      return
+    }
+    const { fetchSvnUpdate } = this.props.dispatch
+    this.svnUpdateState = true
+    let playload = {
+      obj: { HostName: e.hostname },
+      cb: (json) => this.MachineAllRsp(json, false)
+    }
+    fetchSvnUpdate(playload)
+  }
+  svnUpdateAll(e) {
+    if (this.svnUpdateState) {
+      Message.error("正在更新svn中，请稍后再更新!")
+      return
+    }
+
+    const { fetchAllMachineSvnUpdate, InitMachines } = this.props.dispatch
+
+    this.svnUpdateState = true
+    InitMachines({data: this.Items})
+    fetchAllMachineSvnUpdate((json) => this.MachineAllRsp(json, true))
   }
 
   SaveDo(index, record) {
@@ -137,16 +181,10 @@ export default class machineMgr extends React.Component {
     }
 
     if (newItem) {
-      this
-        .props
-        .dispatch
-        .fetchAddMachine(playload)
+      this.props.dispatch.fetchAddMachine(playload)
     } else {
       playload.oldmachine = record
-      this
-        .props
-        .dispatch
-        .fetchSaveMachine(playload)
+      this.props.dispatch.fetchSaveMachine(playload)
     }
   }
 
@@ -160,10 +198,7 @@ export default class machineMgr extends React.Component {
     this.editInput = {
       ...data[index]
     }
-    this
-      .props
-      .dispatch
-      .editMachine(index)
+    this.props.dispatch.editMachine(index)
     delete this.hosts[record.hostname]
   }
 
@@ -173,15 +208,12 @@ export default class machineMgr extends React.Component {
       return
     }
     this.editState = true
-    this
-      .props
-      .dispatch
-      .fetchDelMachine({
-        fetchDel: {
-          hostname: record.hostname
-        },
-        delCB: (json) => this.initProp(json)
-      })
+    this.props.dispatch.fetchDelMachine({
+      fetchDel: {
+        hostname: record.hostname
+      },
+      delCB: (json) => this.initProp(json)
+    })
   }
 
   actionHandle(text, record, index) {
@@ -207,6 +239,7 @@ export default class machineMgr extends React.Component {
               }}>save</a>
             <span className="ant-divider" />
             <Tag color={onlineColor}>{onlineText}</Tag>
+            <span className="ant-divider" />
           </div>
           : <div>
             <a onClick={(e) => {
@@ -218,6 +251,8 @@ export default class machineMgr extends React.Component {
             }}>delete</a>
             <span className="ant-divider" />
             <Tag color={onlineColor}>{onlineText}</Tag>
+            <span className="ant-divider" />
+            <Button type="primary" loading={this.svnUpdateState} onClick={() => (this.svnUpdate(record))}>updateSvn</Button>
           </div>
         }
       </div>
@@ -307,37 +342,38 @@ export default class machineMgr extends React.Component {
     })
   }
 
-    render() {
-      const { data, page } = this.props.data
-      machineColumns.forEach((k) => {
-        k.render = this.columnsRender[k.key]
-          ? this.columnsRender[k.key]
-          : k.render
-      })
-      data.forEach((k) => {
-        k.key = k.hostname
-      })
-      const { dispatch } = this.props
-      return (
-        <div>
-          <Row type="flex" justify="space-between">
-            <Button type="primary" onClick={(e) => (this.addClick(e))}>Add</Button>
-            <Button type="primary" onClick={(e) => (this.commonConfig(e))}>生成通用服配置</Button>
-          </Row>
-          <Table
-            dataSource={data}
-            columns={machineColumns}
-            pagination={page}
-            onChange={(pagination, filters, sorter) => {
-              dispatch.pageMachine({
-                page: {
-                  current: pagination.current,
-                  pageSize: pagination.pageSize
-                }
-              })
-              this.filtersFunc(filters.applications)
-            }} />
-        </div>
-      )
-    }
+  render() {
+    const { data, page } = this.props.data
+    machineColumns.forEach((k) => {
+      k.render = this.columnsRender[k.key]
+        ? this.columnsRender[k.key]
+        : k.render
+    })
+    data.forEach((k) => {
+      k.key = k.hostname
+    })
+    const { dispatch } = this.props
+    return (
+      <div>
+        <Row type="flex" justify="space-between">
+          <Button type="primary" onClick={(e) => (this.addClick(e))}>Add</Button>
+          <Button type="primary" onClick={(e) => (this.commonConfig(e))}>生成通用服配置</Button>
+          <Button type="primary" onClick={(e) => (this.svnUpdateAll())}>svn全机器更新</Button>
+        </Row>
+        <Table
+          dataSource={data}
+          columns={machineColumns}
+          pagination={page}
+          onChange={(pagination, filters, sorter) => {
+            dispatch.pageMachine({
+              page: {
+                current: pagination.current,
+                pageSize: pagination.pageSize
+              }
+            })
+            this.filtersFunc(filters.applications)
+          }} />
+      </div>
+    )
   }
+}

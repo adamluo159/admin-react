@@ -65,6 +65,29 @@ const fetchCommonConfig = (f) => {
     }
 }
 
+const fetchSvnUpdate = (playload) => {
+    return dispatch => {
+        return fetch("/machine/svnUpdate", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify(playload.obj)
+        })
+            .then(response => response.json())
+            .then(json => playload.cb(json))
+    }
+}
+
+const fetchAllMachineSvnUpdate = (f) => {
+    return dispatch => {
+        return fetch("/machine/svnUpdateAll", )
+            .then(response => response.json())
+            .then(json => f(json))
+    }
+}
+
+
 export const machineActions = {}
 const mapMachine = {
     //界面表现的action
@@ -80,6 +103,8 @@ const mapMachine = {
     "fetchAddMachine": fetchAddMachine,
     "fetchDelMachine": fetchDelMachine,
     "fetchCommonConfig": fetchCommonConfig,
+    "fetchSvnUpdate": fetchSvnUpdate,
+    "fetchAllMachineSvnUpdate": fetchAllMachineSvnUpdate,
 }
 
 

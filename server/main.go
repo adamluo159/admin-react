@@ -2,6 +2,8 @@ package main
 
 import (
 	"fmt"
+	"log"
+	"net/http"
 
 	"time"
 
@@ -10,6 +12,11 @@ import (
 	"github.com/adamluo159/admin-react/server/zone"
 	"github.com/adamluo159/gameAgent/agentServer"
 	"github.com/labstack/echo"
+	permissions "github.com/xyproto/permissions2"
+)
+
+var (
+	perm *permissions.Permissions
 )
 
 func ServerHeader(next echo.HandlerFunc) echo.HandlerFunc {
@@ -34,13 +41,58 @@ func DbPing(e *echo.Echo) {
 	}
 }
 
+func RegisterPerm(redisHost string, redisPwd string, e *echo.Echo) {
+	userstate, err := permissions.NewUserStateWithPassword2(redisHost, redisPwd)
+	if err != nil {
+		log.Fatal(err)
+	}
+	perm = permissions.NewPermissions(userstate)
+	perm.AddUserPath("/machine")
+	f := func(next echo.HandlerFunc) echo.HandlerFunc {
+		return func(c echo.Context) error {
+			if perm.Rejected(c.Response(), c.Request()) {
+				// Deny the request
+				//return echo.NewHTTPError(http.StatusForbidden, denyMessage)
+				return c.String(http.StatusOK, "verify")
+			}
+			// Continue the chain of middleware
+			return next(c)
+		}
+	}
+	e.Use(f)
+}
+
 func main() {
 
 	e := echo.New()
 	e.Use(ServerHeader)
+	RegisterPerm("192.168.1.252", "", e)
+	Login := func(c echo.Context) error {
+		perm.UserState().AddUser("bob", "hunter1", "bob@zombo.com")
+		perm.UserState().AddUser("adamluo", "adamluo0011", "bo@zombo.com")
+		user := c.FormValue("user")
+		passwd := c.FormValue("password")
+
+		log.Println("user:", user, "passwd:", passwd, "res=")
+		if perm.UserState().CorrectPassword(user, passwd) {
+			err := perm.UserState().Login(c.Response().Writer, user)
+			if err != nil {
+				c.String(http.StatusOK, err.Error())
+			} else {
+				c.String(http.StatusOK, "admin")
+			}
+		} else {
+			c.String(http.StatusInternalServerError, "Login fail")
+		}
+		log.Println("wwwwwwww-", perm.UserState().CookieSecret())
+		return nil
+	}
 
 	db.Connect()
 	go DbPing(e)
+
+	e.POST("/login", Login)
+
 	s := agentServer.New(":3300")
 	m := machine.Register(e)
 	z := zone.Register(e)
@@ -51,8 +103,8 @@ func main() {
 
 	go s.Listen()
 
-	e.Static("/", "../client/")
-	e.File("/", "../client/index.html")
+	e.Static("/", "../client/dist/")
+	e.File("/", "../client/dist/index.html")
 	e.Logger.Fatal(e.Start(":1323"))
 
 }

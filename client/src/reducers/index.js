@@ -1,7 +1,12 @@
-import {combineReducers} from 'redux'
-import layout from './layoutRdx'
-import machines from './machineRdx'
-import zone from './zoneRdx'
+import { combineReducers } from 'redux';
+import auth from './auth';
+import menu from './menu';
+import machine from './machine';
 
-const rootReducer = combineReducers({layout, machines, zone})
-export default rootReducer
+const rootReducer = combineReducers({
+  auth,
+  menu,
+  machine
+});
+
+export default rootReducer;

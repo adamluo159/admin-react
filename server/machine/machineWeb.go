@@ -1,6 +1,7 @@
 package machine
 
 import (
+	"encoding/json"
 	"log"
 	"net/http"
 	"os"
@@ -32,10 +33,6 @@ type MachineAllRsp struct {
 	Items  []comInterface.Machine
 }
 
-type SvnUpdateReq struct {
-	HostName string
-}
-
 func MachineRspFunc(Items *[]comInterface.Machine) {
 	cl.Find(nil).All(Items)
 
@@ -55,59 +52,59 @@ func GetMachines(c echo.Context) error {
 
 //添加机器信息
 func AddMachine(c echo.Context) error {
-	m, err := getM(&c)
-	if err != nil {
-		return err
+	m := comInterface.Machine{
+		IP:       c.FormValue("IP"),
+		Hostname: c.FormValue("hostname"),
+		OutIP:    c.FormValue("outIP"),
 	}
-	ret := MachineRsp{
-		Result: "OK",
-	}
-	err = cl.Insert(m)
+	ret := MachineAllRsp{Result: "OK"}
+	err := cl.Insert(m)
 	if err != nil {
-		ret.Result = "FALSE"
+		ret.Result = err.Error()
 	} else {
-		ret.Item = *m
+		MachineRspFunc(&ret.Items)
 	}
 	return c.JSON(http.StatusOK, ret)
 }
 
 //保存
 func SaveMachine(c echo.Context) error {
-	m := SaveMachineReq{}
-	ret := InitMachine{}
-	MachineRspFunc(&ret.Items)
+	m := comInterface.Machine{}
+	rsp := MachineAllRsp{Result: "OK"}
 
-	err := c.Bind(&m)
+	jdata := c.FormValue("Item")
+	err := json.Unmarshal([]byte(jdata), &m)
 	if err != nil {
-		log.Println("save machine:", err.Error())
-		return c.JSON(http.StatusOK, ret)
+		rsp.Result = err.Error()
+		return c.JSON(http.StatusOK, rsp)
 	}
-	log.Println("get save info:", m)
-	if m.Oldhost != m.Item.Hostname {
-		online, _ := mhMgr.as.CheckOnlineMachine(m.Oldhost)
-		if !online {
-			log.Println("已连接的机器不能修改主机名")
-			return c.JSON(http.StatusOK, ret)
+
+	oldhost := c.FormValue("Oldhost")
+	if oldhost != m.Hostname {
+		online, _ := mhMgr.as.CheckOnlineMachine(oldhost)
+		if online {
+			rsp.Result = "已连接的机器不能修改主机名"
+			return c.JSON(http.StatusOK, rsp)
 		}
-		del := bson.M{"hostname": m.Oldhost}
+		del := bson.M{"hostname": oldhost}
 		err = cl.Remove(del)
 		if err != nil {
 			log.Println(err.Error())
 		}
-		err = cl.Insert(m.Item)
+		err = cl.Insert(m)
 		if err != nil {
 			log.Println(err.Error())
 		}
 	} else {
-		query := bson.M{"hostname": m.Item.Hostname}
-		err = cl.Update(query, &m.Item)
+		query := bson.M{"hostname": m.Hostname}
+		err = cl.Update(query, &m)
 		if err != nil {
 			log.Println("SaveMachine, update:", err.Error())
 		}
 	}
 
-	MachineRspFunc(&ret.Items)
-	return c.JSON(http.StatusOK, ret)
+	MachineRspFunc(&rsp.Items)
+	return c.JSON(http.StatusOK, rsp)
 }
 
 //删除
@@ -137,7 +134,7 @@ func getM(c *echo.Context) (*comInterface.Machine, error) {
 
 //生成登陆服、master/masterLog等上层服务器配置
 func CommonConfig(c echo.Context) error {
-	rsp := MachineRsp{}
+	rsp := MachineRsp{Result: "OK"}
 
 	dir := os.Getenv("HOME") + comInterface.ConfDir + "/commonConfig/"
 	os.Mkdir(dir, os.ModePerm)
@@ -193,14 +190,9 @@ func CommonConfig(c echo.Context) error {
 }
 
 func SvnUpdate(c echo.Context) error {
-	req := SvnUpdateReq{}
-	err := c.Bind(&req)
-	if err != nil {
-		log.Println(err.Error())
-		return err
-	}
+	hostName := c.FormValue("HostName")
 	rsp := MachineAllRsp{Result: "OK"}
-	suc := mhMgr.as.UpdateSvn(req.HostName)
+	suc := mhMgr.as.UpdateSvn(hostName)
 	if !suc {
 		rsp.Result = "Fail"
 	}

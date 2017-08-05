@@ -48,6 +48,7 @@ func RegisterPerm(redisHost string, redisPwd string, e *echo.Echo) {
 	}
 	perm = permissions.NewPermissions(userstate)
 	perm.AddUserPath("/machine")
+	perm.AddUserPath("/zone")
 	f := func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(c echo.Context) error {
 			if perm.Rejected(c.Response(), c.Request()) {

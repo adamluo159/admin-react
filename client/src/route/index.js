@@ -15,6 +15,7 @@ import Cards from '@/views/Cards';
 import Mailbox from '@/views/Mailbox';
 import Page2 from '@/views/Page2';
 import Machine from '@/views/MachineTable';
+import Zone from '@/views/Zone';
 
 export const childRoutes = [
   {
@@ -57,8 +58,11 @@ export const childRoutes = [
   {
     'path': '/machine',
     'component': Machine
+  },
+  {
+    'path': '/zone',
+    'component': Zone
   }
-
 ];
 
 const routes = (

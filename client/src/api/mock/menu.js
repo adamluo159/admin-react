@@ -40,6 +40,11 @@ module.exports = {
             name: 'Machine',
             key: 107,
             url: '/machine'
+          },
+          {
+            name: 'Zone',
+            key: 108,
+            url: '/zone'
           }
        ]
       },

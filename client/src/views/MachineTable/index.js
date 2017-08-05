@@ -1,5 +1,4 @@
 import React from 'react';
-import ReactDOM from 'react-dom';
 import { bindActionCreators } from 'redux'
 import { connect } from 'react-redux'
 import { withRouter } from 'react-router-dom';
@@ -48,6 +47,7 @@ class MachineTable extends React.Component {
     }
   }
   componentDidMount() {
+    console.log("aaaaaaaaaaaaaa")
     api.get('/machine').then((res) => this.ResponseAllMachine(res))
   }
 

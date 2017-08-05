@@ -4,14 +4,7 @@ import { connect } from 'react-redux'
 import { withRouter } from 'react-router-dom';
 import api from '../../api'
 var qs = require('qs');
-import {
-  fetchSaveMachine,
-  fetchAddMachine,
-  fetchDelMachine,
-  fetchCommonConfig,
-  fetchSvnUpdate,
-  fetchAllMachineSvnUpdate,
-} from '../../actions/machine'
+import './index.less';
 
 import {
   Message,
@@ -378,11 +371,15 @@ class MachineTable extends React.Component {
     return (
       <div>
         <Row type="flex" justify="space-between">
-          <Button type="primary" onClick={(e) => (this.addClick(e))}>Add</Button>
+          <Col offset={1}>
+            <Button type="primary" onClick={(e) => (this.addClick(e))}>Add</Button>
+          </Col>
           <Button type="primary" loading={this.state.commonlding} onClick={(e) => (this.commonConfig(e))}>生成通用服配置</Button>
           <Button type="primary" loading={this.state.svnUpdate} onClick={(e) => (this.svnUpdateAll())}>svn全机器更新</Button>
         </Row>
+        <Row className ="row-machine-dis"/>
         <Table
+          size="small"
           dataSource={data}
           columns={machineColumns}
           pagination={this.state.pagination}

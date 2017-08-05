@@ -7,7 +7,6 @@ import { Route, Redirect } from 'react-router-dom';
 
 import { childRoutes } from '@/route'
 
-import NavPath from '@/components/NavPath'
 import Header from '@/components/Header'
 import Sidebar from '@/components/Sidebar'
 import Footer from '@/components/Footer'
@@ -33,10 +32,8 @@ class App extends React.Component {
       <Layout className="ant-layout-has-sider">
         <Sidebar />
         <Layout>
-          <Header profile={auth} logout={actions.logout} />
-          <Content style={{ margin: '0 16px' }}>
-            <NavPath data={navpath} />
-            <div style={{ minHeight: 360 }}>
+          <Content>
+            <div>
               {childRoutes.map((route, index) => (
                 <Route key={index} path={route.path} component={route.component} exactly={route.exactly} />
               ))}

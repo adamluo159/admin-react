@@ -2,13 +2,15 @@ import React, { Component } from 'react'
 import { withRouter } from 'react-router-dom';
 import api from '../../api'
 var qs = require('qs');
-import { Select, Message, Button, Input, Row, Col, Form, Switch } from 'antd'
+import { Select, Message, Button, Input, Row, Col, Form, Switch, Layout } from 'antd'
 import ZoneHead from './ZoneHead'
 import ZoneForm from './ZoneForm'
 import ZoneFooter from './ZoneFooter'
+import './index.less';
 import ZoneShowTable from './ZoneShowTable'
 
 import { zoneConfig, zoneOptions, formItemLayout } from '../../utils/constant'
+const { Header, Footer, Sider, Content } = Layout;
 
 const Option = Select.Option
 const FormItem = Form.Item
@@ -249,34 +251,43 @@ class ZoneClass extends React.Component {
 
   render() {
     return (
-      <div>
-        <ZoneHead
-          ref="zHead"
-          addZoneFunc={() => this.AddZoneInfo()}
-          showFunc={(zid) => this.ShowZone(zid)}>
-        </ZoneHead>
-        <Row>
-          <Col span={8}>
-            <div id="buttonp">
-              <Switch checkedChildren={'编辑'} unCheckedChildren={'查看'} disabled={false} onChange={(e) => this.editZone(e)} />
+      <Layout>
+        <Header className="layout-head">
+          <ZoneHead
+            ref="zHead"
+            addZoneFunc={() => this.AddZoneInfo()}
+            showFunc={(zid) => this.ShowZone(zid)}>
+          </ZoneHead>
+        </Header>
+        <Layout>
+          <Content>
+            <Row className="row-dis" />
+            <Row>
+              <Col offset={1}>
+                <Switch checkedChildren={'编辑'} unCheckedChildren={'查看'} disabled={false} onChange={(e) => this.editZone(e)} />
+              </Col>
+            </Row>
+            <Row type="flex" justify="center" align="top">
               <ZoneForm ref="zForm"></ZoneForm>
-            </div>
-          </Col>
-          <Col span={8} offset={4}>
+            </Row>
+          </Content>
+          <Sider className="layout-head">
             <ZoneShowTable ref="zShowTable" getZoneName={(zid) => this.getZoneName(zid)}></ZoneShowTable>
-          </Col>
-        </Row>
-        <ZoneFooter ref="zFooter"
-          synMachine={(e) => this.synMachine(e)}
-          startZone={(e) => this.startZone(e)}
-          stopZone={(e) => this.stopZone(e)}
-          deleteZone={(e) => this.deleteZone(e)}
-          updatelogZone={(e) => this.updatelogZoneDB(e)}
-          saveOrAddZone={(e) => this.saveOrAddZone(e)}
-          stopAllZone={(e) => this.stopAllZone(e)}
-          startAllZone={(e) => this.startAllZone(e)}>
-        </ZoneFooter>
-      </div>
+          </Sider>
+        </Layout>
+          <Footer>
+            <ZoneFooter ref="zFooter"
+              synMachine={(e) => this.synMachine(e)}
+              startZone={(e) => this.startZone(e)}
+              stopZone={(e) => this.stopZone(e)}
+              deleteZone={(e) => this.deleteZone(e)}
+              updatelogZone={(e) => this.updatelogZoneDB(e)}
+              saveOrAddZone={(e) => this.saveOrAddZone(e)}
+              stopAllZone={(e) => this.stopAllZone(e)}
+              startAllZone={(e) => this.startAllZone(e)}>
+            </ZoneFooter>
+          </Footer>
+      </Layout>
     )
   }
 }

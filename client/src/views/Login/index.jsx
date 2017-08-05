@@ -17,14 +17,14 @@ const propTypes = {
 
 class Login extends React.Component {
 
-  constructor (props) {
+  constructor(props) {
     super(props);
     this.state = {
       loading: false
     }
   }
 
-  handleSubmit (e) {
+  handleSubmit(e) {
     e.preventDefault();
     this.setState({
       loading: true
@@ -37,7 +37,7 @@ class Login extends React.Component {
       if (res.error) {
         message.error(res.payload.response.data);
       }
-      if (!res.error && res.payload.data)  {
+      if (!res.error && res.payload.data) {
         message.success('Welcome ' + res.payload.data);
         this.props.history.replace('/');
       }
@@ -48,37 +48,33 @@ class Login extends React.Component {
     })
   }
 
-  toRegister () {
+  toRegister() {
     this.props.history.replace('/register');
   }
 
-  render () {
+  render() {
     const { getFieldDecorator } = this.props.form
     return (
       <Row className="login-row" type="flex" justify="space-around" align="middle">
-        <Col span="8">
-          <Form layout="horizontal" onSubmit={this.handleSubmit.bind(this)} className="login-form">
-            <h2 className="logo"><span>logo</span></h2>
-            <FormItem>
-              {getFieldDecorator('user')(
-                <Input prefix={<Icon type="user" style={{ fontSize: 13 }} />}/>
-              )}
-            </FormItem>
-            <FormItem>
-              {getFieldDecorator('password')(
-                <Input prefix={<Icon type="lock" style={{ fontSize: 13 }} />} type='password'/>
-              )}
-            </FormItem>
-            <p>
-              <Button className="btn-login" type='primary' size="large" icon="poweroff" loading={this.state.loading} htmlType='submit'>登录</Button>
-            </p>
-            <p>
-              <Button className="btn-register" size="large" icon="right-square-o" htmlType='button' onClick={this.toRegister.bind(this)} >去注册</Button>
-            </p>
-          </Form>
-        </Col>
+        <Form layout="horizontal" onSubmit={this.handleSubmit.bind(this)} className="login-form"> <h2 className="logo"><span>logo</span></h2>
+          <FormItem>
+            {getFieldDecorator('user')(
+              <Input prefix={<Icon type="user" style={{ fontSize: 13 }} />} />
+            )}
+          </FormItem>
+          <FormItem>
+            {getFieldDecorator('password')(
+              <Input prefix={<Icon type="lock" style={{ fontSize: 13 }} />} type='password' />
+            )}
+          </FormItem>
+          <p>
+            <Button className="btn-login" type='primary' size="large" icon="poweroff" loading={this.state.loading} htmlType='submit'>登录</Button>
+          </p>
+          <p>
+            <Button className="btn-register" size="large" icon="right-square-o" htmlType='button' onClick={this.toRegister.bind(this)} >去注册</Button>
+          </p>
+        </Form>
       </Row>
-
     )
   }
 }
@@ -88,12 +84,12 @@ Login.propTypes = propTypes;
 Login = Form.create()(Login);
 
 function mapStateToProps(state) {
-  const {auth} = state;
+  const { auth } = state;
   if (auth.user) {
-      return {user: auth.user, loggingIn: auth.loggingIn, loginErrors: ''};
+    return { user: auth.user, loggingIn: auth.loggingIn, loginErrors: '' };
   }
 
-  return {user: null, loggingIn: auth.loggingIn, loginErrors: auth.loginErrors};
+  return { user: null, loggingIn: auth.loggingIn, loginErrors: auth.loginErrors };
 }
 
 function mapDispatchToProps(dispatch) {

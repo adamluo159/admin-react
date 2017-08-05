@@ -74,12 +74,12 @@ class ZoneHead extends Component {
         let {curChannel, curZoneName} = this.state
         let {addZoneFunc} = this.props
         let width = {
-            width: '100px'
+            width: '200px'
         }
         return (
             <div>
                 <Row>
-                    <Col span={1}>
+                    <Col span={4}>
                         <Select
                             value={curChannel}
                             onChange={(e) => this.handleChannelChange(e)}
@@ -87,7 +87,7 @@ class ZoneHead extends Component {
                             {this.chanOptions}
                         </Select>
                     </Col>
-                    <Col span={1} offset={1}>
+                    <Col span={4}>
                         <Select
                             value={curZoneName}
                             onChange={(e) => this.onZoneChange(e)}

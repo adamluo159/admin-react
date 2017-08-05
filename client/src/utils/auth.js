@@ -25,9 +25,6 @@ export default function authHOC(BaseComponent) {
       const { history } = params;
       validate(history);
     }
-    printa(){
-      console.log("res----------------------")
-    }
     render() {
       return <BaseComponent {...this.props} />;
     }

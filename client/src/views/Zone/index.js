@@ -3,13 +3,12 @@ import { withRouter } from 'react-router-dom';
 import api from '../../api'
 var qs = require('qs');
 import { Select, Message, Button, Input, Row, Col, Form, Switch } from 'antd'
-import './zone.css'
 import ZoneHead from './ZoneHead'
 import ZoneForm from './ZoneForm'
 import ZoneFooter from './ZoneFooter'
 import ZoneShowTable from './ZoneShowTable'
 
-import { zoneConfig, zoneOptions, formItemLayout } from '../MachineTable/constant'
+import { zoneConfig, zoneOptions, formItemLayout } from '../../utils/constant'
 
 const Option = Select.Option
 const FormItem = Form.Item
@@ -24,13 +23,10 @@ class ZoneClass extends React.Component {
   }
 
   componentDidMount() {
-    //dispatch.fetchInitZones((json) => this.InitZones(json))
-    this.setState({ zoneEdit: false })
     api.get('/zone').then((res) => this.InitZones(res.data))
   }
 
   InitZones(json) {
-    console.log("json---", json)
     if (json.Result != "OK") {
       return
     }
@@ -40,7 +36,6 @@ class ZoneClass extends React.Component {
       json.Items.forEach(v => {
         this.zoneData[v.zid] = v
       })
-      console.log(this.refs)
       this.opZid = this.refs.zHead.Init(this.zoneData)
       let { setFieldsValue } = this.refs.zForm
       setFieldsValue(this.zoneData[this.opZid])

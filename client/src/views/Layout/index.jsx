@@ -24,7 +24,6 @@ class App extends React.Component {
 
   componentWillMount() {
     const {actions} = this.props;
-    //actions.fetchProfile();
   }
 
   render() {

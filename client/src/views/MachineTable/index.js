@@ -23,8 +23,8 @@ import {
   Col,
 } from 'antd';
 
-import { trim, checkIpFormat, checkHostName, checkAppliactionType } from './utils'
-import { typeOption, machineColumns, Commonhost } from './constant'
+import { trim, checkIpFormat, checkHostName, checkAppliactionType } from '../../utils'
+import { typeOption, machineColumns, Commonhost } from '../../utils/constant'
 
 class MachineTable extends React.Component {
   constructor(props) {
@@ -47,7 +47,6 @@ class MachineTable extends React.Component {
     }
   }
   componentDidMount() {
-    console.log("aaaaaaaaaaaaaa")
     api.get('/machine').then((res) => this.ResponseAllMachine(res))
   }
 

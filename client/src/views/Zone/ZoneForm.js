@@ -1,8 +1,7 @@
 import React, { Component } from 'react'
 import { Select, Message, Button, Input, Row, Col, Form, Switch } from 'antd'
-import './zone.css'
 import ZoneHead from './zoneHead'
-import { zoneConfig, zoneOptions, formItemLayout } from '../MachineTable/constant'
+import { zoneConfig, zoneOptions, formItemLayout } from '../../utils/constant'
 
 const Option = Select.Option
 const FormItem = Form.Item

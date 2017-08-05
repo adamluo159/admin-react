@@ -1,6 +1,5 @@
 import React, { Component } from 'react'
 import { Table, Tag } from 'antd'
-import './zone.css'
 
 class ZoneShowTable extends React.Component {
     constructor(props) {

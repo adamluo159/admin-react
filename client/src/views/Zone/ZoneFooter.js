@@ -1,6 +1,5 @@
 import React, { Component } from 'react'
 import { Row, Col, Button } from 'antd'
-import './zone.css'
 
 class ZoneFooter extends React.Component {
   constructor(props) {

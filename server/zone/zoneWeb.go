@@ -27,6 +27,7 @@ type Zone struct {
 	Channels      []string `json:"channels" bson:"channels"`
 	Whitelst      bool     `json:"whitelst" bson:"whitelst"`
 	PortNumber    int      `json:"portNumber" bson:"PortNumber"`
+	OpenTime      string   `json:"opentime" bson:"opentime"`
 }
 
 type PortCount struct {

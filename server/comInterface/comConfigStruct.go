@@ -42,6 +42,7 @@ type Center struct {
 	OnlineNumberCheckTime int
 	SingleServerLoad      int
 	ConnectServers        map[string]interface{}
+	OpenTime              int64
 }
 
 type CharDB struct {
@@ -62,6 +63,7 @@ type Logic struct {
 	ConnectServers map[string]interface{}
 	MapIds         []int
 	LoadAllMapIds  bool
+	OpenTime       int64
 }
 
 type Log struct {

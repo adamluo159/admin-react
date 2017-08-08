@@ -98,6 +98,10 @@ export const zoneConfig = {
       }
     },
     options: {}
+  },
+  datePick: {
+    Id: 'opentime',
+    label: '开服时间'
   }
 }
 export const zoneOptions = {

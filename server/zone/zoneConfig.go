@@ -6,6 +6,7 @@ import (
 	"log"
 	"os"
 	"strconv"
+	"time"
 
 	"encoding/json"
 
@@ -143,6 +144,7 @@ func GateLua(zone *Zone, zonem *comInterface.Machine, Dir string) error {
 }
 
 func CenterLua(zone *Zone, zonem *comInterface.Machine, Dir string) error {
+	theTime, _ := time.Parse("2006-01-02 15:04:05", zone.OpenTime) //使用模板在对应时区转化为time.time类型
 	centerLua := comInterface.Center{
 		ID:   zone.Zid,
 		Zid:  zone.Zid,
@@ -151,6 +153,7 @@ func CenterLua(zone *Zone, zonem *comInterface.Machine, Dir string) error {
 		OnlineNumberCheckTime: 60 * 5,
 		SingleServerLoad:      4000,
 		ConnectServers:        make(map[string]interface{}),
+		OpenTime:              theTime.Unix(),
 	}
 
 	centerLua.ConnectServers["CharDB"] = comInterface.Connect{
@@ -232,13 +235,13 @@ func CharDBLua(zone *Zone, zonem *comInterface.Machine, Dir string) error {
 }
 
 func LogicLua(zone *Zone, zonem *comInterface.Machine, Dir string) error {
+	theTime, _ := time.Parse(zone.OpenTime, zone.OpenTime) //使用模板在对应时区转化为time.time类型
 	logicLua := comInterface.Logic{
-		//ID:  1,
-		Zid: zone.Zid,
-		IP:  zonem.IP,
-		//Port:           comInterface.LogicPort + zoneCount*3 + 1,
+		Zid:            zone.Zid,
+		IP:             zonem.IP,
 		ConnectServers: make(map[string]interface{}),
 		LoadAllMapIds:  false,
+		OpenTime:       theTime.Unix(),
 	}
 	logicLua.ConnectServers["CharDB"] = comInterface.Connect{
 		ID:   zone.Zid,

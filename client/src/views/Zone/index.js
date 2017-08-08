@@ -8,6 +8,7 @@ import ZoneForm from './ZoneForm'
 import ZoneFooter from './ZoneFooter'
 import './index.less';
 import ZoneShowTable from './ZoneShowTable'
+import moment from 'moment'
 
 import { zoneConfig, zoneOptions, formItemLayout } from '../../utils/constant'
 const { Header, Footer, Sider, Content } = Layout;
@@ -36,6 +37,10 @@ class ZoneClass extends React.Component {
       this.setState({ zoneEdit: false })
     } else {
       json.Items.forEach(v => {
+         if (v.opentime == null) {
+           v.opentime = "2017-08-07 18:00:00"
+         }
+        v.opentime = moment(v.opentime, 'YYYY-MM-DD HH:mm:ss')
         this.zoneData[v.zid] = v
       })
       this.opZid = this.refs.zHead.Init(this.zoneData)
@@ -73,9 +78,11 @@ class ZoneClass extends React.Component {
     const { getFieldsValue, setFieldsValue } = this.refs.zForm
     let zone = getFieldsValue()
     zone.zid = Number(zone.zid)
+    zone.opentime = zone.opentime.format('YYYY-MM-DD HH:mm:ss');
+
     let { addZone } = this.refs.zFooter.state
     if (addZone) {
-      api.post('/zone/add', zone).then((res) => this.addZoneRsp(res.data))
+      api.post('/zone/add', zone).then((res) => this.saveZoneRsp(res.data))
     } else {
       let oldzone = this.zoneData[this.opZid]
       let data = {
@@ -105,6 +112,7 @@ class ZoneClass extends React.Component {
   addZoneRsp(json) {
     let { setFieldsValue } = this.refs.zForm
     let zone = json.Item
+    zone.opentime = moment(zone.opentime, 'YYYY-MM-DD HH:mm:ss')
     if (json.Result != "OK") {
       setFieldsValue(this.zoneData[this.opZid])
       return
@@ -128,6 +136,7 @@ class ZoneClass extends React.Component {
       setFieldsValue(this.zoneData(oldzid))
       return
     }
+    newZone.opentime = moment(newZone.opentime, 'YYYY-MM-DD HH:mm:ss')
     if (oldzid == newZone.zid) {
       this.zoneData[oldzid] = newZone
     } else {

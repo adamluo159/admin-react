@@ -1,5 +1,5 @@
 import React, { Component } from 'react'
-import { Select, Message, Button, Input, Row, Col, Form, Switch } from 'antd'
+import { Select, Message, Button, Input, Row, Col, Form, Switch, DatePicker } from 'antd'
 import ZoneHead from './zoneHead'
 import { zoneConfig, zoneOptions, formItemLayout } from '../../utils/constant'
 
@@ -9,7 +9,7 @@ class ZoneFormClass extends React.Component {
   constructor(props) {
     super(props);
 
-    const { getFieldDecorator} = this.props.form
+    const { getFieldDecorator } = this.props.form
     getFieldDecorator("edit")
     this.renderTabs(true)
   }
@@ -28,18 +28,19 @@ class ZoneFormClass extends React.Component {
   }
 
   renderTabs(disabled) {
-    const { channels, zoneInput, whitelst, switchEdit} = zoneConfig
+    const { channels, zoneInput, whitelst, switchEdit, datePick } = zoneConfig
     this.renderItems = []
     for (let i = 0; i < zoneInput.length; i++) {
       this.renderItems.push(this.dCreator(zoneInput[i], <Input disabled={disabled} />))
     }
+    this.renderItems.push(this.dCreator(datePick, <DatePicker disabled = {disabled} showTime format="YYYY-MM-DD HH:mm:ss" />))
     let ckinds = channels.kinds.map(k => <Option key={k}>{k}</Option>)
     this.renderItems.push(this.dCreator(channels, <Select mode={'multiple'} disabled={disabled}>{ckinds}</Select>))
     this.renderItems.push(this.dCreator(whitelst, <Switch disabled={disabled} checkedChildren={'开'} unCheckedChildren={'关'} />))
   }
 
   render() {
-    let {getFieldValue} = this.props.form
+    let { getFieldValue, getFieldsValue } = this.props.form
     let edit = getFieldValue("edit")
     edit ? this.renderTabs(false) : this.renderTabs(true)
     return (

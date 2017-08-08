@@ -103,6 +103,7 @@ func GateLua(zone *Zone, zonem *comInterface.Machine, Dir string) error {
 		n++
 	}
 
+	theTime, _ := time.Parse("2006-01-02 15:04:05", zone.OpenTime) //使用模板在对应时区转化为time.time类型
 	gateLua := comInterface.Gate{
 		ID:             zone.Zid,
 		Zid:            zone.Zid,
@@ -113,6 +114,7 @@ func GateLua(zone *Zone, zonem *comInterface.Machine, Dir string) error {
 		ChannelIds:     s,
 		Open:           zone.Whitelst,
 		Name:           zone.ZoneName,
+		OpenTime:       theTime.Unix(),
 		ConnectServers: make(map[string]interface{}),
 	}
 	gateLua.ConnectServers["CharDB"] = comInterface.Connect{

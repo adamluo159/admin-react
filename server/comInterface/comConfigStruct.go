@@ -31,6 +31,7 @@ type Gate struct {
 	ChannelIds     []int
 	Open           bool
 	Name           string
+	OpenTime       int64
 	ConnectServers map[string]interface{}
 }
 

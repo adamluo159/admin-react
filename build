@@ -1,0 +1,21 @@
+#!/bin/sh
+
+rm -rf opAdmin
+mkdir opAdmin
+
+echo "构建agent服务器中"
+cd server
+go build 
+
+mv server ../opAdmin/
+cp config.json ../opAdmin/
+
+echo "构建完毕..."
+
+echo "构建前端网页中..."
+cd ../client
+rm -rf dist/*
+npm run build
+cp -r dist ../opAdmin/
+echo "构建完毕..."
+

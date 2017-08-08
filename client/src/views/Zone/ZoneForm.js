@@ -1,6 +1,6 @@
 import React, { Component } from 'react'
 import { Select, Message, Button, Input, Row, Col, Form, Switch, DatePicker } from 'antd'
-import ZoneHead from './zoneHead'
+import ZoneHead from './ZoneHead'
 import { zoneConfig, zoneOptions, formItemLayout } from '../../utils/constant'
 
 const Option = Select.Option

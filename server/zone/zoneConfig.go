@@ -237,7 +237,7 @@ func CharDBLua(zone *Zone, zonem *comInterface.Machine, Dir string) error {
 }
 
 func LogicLua(zone *Zone, zonem *comInterface.Machine, Dir string) error {
-	theTime, _ := time.Parse(zone.OpenTime, zone.OpenTime) //使用模板在对应时区转化为time.time类型
+	theTime, _ := time.Parse("2006-01-02 15:04:05", zone.OpenTime) //使用模板在对应时区转化为time.time类型
 	logicLua := comInterface.Logic{
 		Zid:            zone.Zid,
 		IP:             zonem.IP,

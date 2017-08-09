@@ -9,6 +9,7 @@ go build
 
 mv server ../opAdmin/
 cp config.json ../opAdmin/
+cp startAdmin ../opAdmin/
 
 echo "构建完毕..."
 

@@ -16,6 +16,8 @@ import (
 	"gopkg.in/mgo.v2/bson"
 )
 
+const longForm = "2006-01-02 15:04:05"
+
 var srvHead = comInterface.ServerConfigHead{
 	NET_TIMEOUT_MSEC:  30000,
 	NET_MAX_CONNETION: comInterface.NetMaxConnection,
@@ -103,7 +105,9 @@ func GateLua(zone *Zone, zonem *comInterface.Machine, Dir string) error {
 		n++
 	}
 
-	theTime, _ := time.Parse("2006-01-02 15:04:05", zone.OpenTime) //使用模板在对应时区转化为time.time类型
+	loc, _ := time.LoadLocation("Local")
+	theTime, _ := time.ParseInLocation(longForm, zone.OpenTime, loc)
+
 	gateLua := comInterface.Gate{
 		ID:             zone.Zid,
 		Zid:            zone.Zid,
@@ -146,7 +150,8 @@ func GateLua(zone *Zone, zonem *comInterface.Machine, Dir string) error {
 }
 
 func CenterLua(zone *Zone, zonem *comInterface.Machine, Dir string) error {
-	theTime, _ := time.Parse("2006-01-02 15:04:05", zone.OpenTime) //使用模板在对应时区转化为time.time类型
+	loc, _ := time.LoadLocation("Local")
+	theTime, _ := time.ParseInLocation(longForm, zone.OpenTime, loc)
 	centerLua := comInterface.Center{
 		ID:   zone.Zid,
 		Zid:  zone.Zid,
@@ -237,7 +242,8 @@ func CharDBLua(zone *Zone, zonem *comInterface.Machine, Dir string) error {
 }
 
 func LogicLua(zone *Zone, zonem *comInterface.Machine, Dir string) error {
-	theTime, _ := time.Parse("2006-01-02 15:04:05", zone.OpenTime) //使用模板在对应时区转化为time.time类型
+	loc, _ := time.LoadLocation("Local")
+	theTime, _ := time.ParseInLocation(longForm, zone.OpenTime, loc)
 	logicLua := comInterface.Logic{
 		Zid:            zone.Zid,
 		IP:             zonem.IP,

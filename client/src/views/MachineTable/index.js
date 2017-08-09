@@ -65,7 +65,7 @@ class MachineTable extends React.Component {
     this.specialHosts = {}
     Items.forEach((element, index) => {
       if (element.applications != null) {
-        element.applications = element.applications.toString()
+        element.applications = trim(element.applications.toString())
       }
 
       if (Commonhost[element.hostname]) {

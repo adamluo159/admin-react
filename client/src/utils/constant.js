@@ -49,10 +49,11 @@ export const machineColumns = [{
   key: 'applications',
   width: '40%',
   filters: [
-    { text: 'empty', value: 0 },
+    { text: '空闲机器', value: 0 },
     { text: 'zone', value: 1 },
     { text: 'zonelogdb', value: 3 },
     { text: 'zonedb', value: 2 },
+    { text: '包含公共进程', value: 4},
   ],
 },
 {

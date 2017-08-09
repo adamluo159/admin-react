@@ -37,7 +37,7 @@ class ZoneClass extends React.Component {
       this.setState({ zoneEdit: false })
     } else {
       json.Items.forEach(v => {
-         if (v.opentime == null) {
+         if (v.opentime == null || v.opentime == "") {
            v.opentime = "2017-08-07 18:00:00"
          }
         v.opentime = moment(v.opentime, 'YYYY-MM-DD HH:mm:ss')

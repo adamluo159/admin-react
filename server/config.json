@@ -5,5 +5,7 @@
 		"ios": 2,
 		"yyb": 3,
 		"xiaomi": 4
-	}
+	},
+	"logicCount":2,
+	"gateCount":2
 }

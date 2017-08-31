@@ -68,7 +68,8 @@ var (
 	cl              *mgo.Collection
 	clPort          *mgo.Collection
 	Str2IntChannels map[string]int
-	LogicMap        map[int][]int
+	GateCount       int
+	LogicCount      int
 )
 
 func getM(c *echo.Context) (*Zone, error) {

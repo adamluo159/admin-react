@@ -110,18 +110,14 @@ func LoadZoneConfig() error {
 	if jsonerr != nil {
 		return errors.New(fmt.Sprintf("zone register load channels json file fail %v\n", jsonerr))
 	}
-	LogicMap = make(map[int][]int)
-	logic1 := []int{}
-	logic2 := []int{}
-	jsonerr = utils.GetConfigArray("logic1_maps", &logic1)
+	jsonerr = utils.GetConfigValue("gateCount", &GateCount)
 	if jsonerr != nil {
-		return errors.New(fmt.Sprintf("zone register load logic1 maps json file fail %v\n", jsonerr))
+		return errors.New(fmt.Sprintf("zone register load GateCount json file fail %v\n", jsonerr))
 	}
-	jsonerr = utils.GetConfigArray("logic2_maps", &logic2)
+	jsonerr = utils.GetConfigValue("logicCount", &LogicCount)
 	if jsonerr != nil {
-		return errors.New(fmt.Sprintf("zone register load logic2 maps json file fail %v\n", jsonerr))
+		return errors.New(fmt.Sprintf("zone register load LogicCount json file fail %v\n", jsonerr))
 	}
-	LogicMap[1] = logic1
-	LogicMap[2] = logic2
+
 	return nil
 }

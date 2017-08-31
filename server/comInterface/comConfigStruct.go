@@ -21,7 +21,7 @@ type RedisLua struct {
 	Password string
 }
 
-type Gate struct {
+type Zone struct {
 	ID             int
 	Zid            int
 	ServerIP       string
@@ -32,6 +32,16 @@ type Gate struct {
 	Open           bool
 	Name           string
 	OpenTime       int64
+	ConnectServers map[string]interface{}
+}
+
+type Gate struct {
+	ID             int
+	Zid            int
+	ServerIP       string
+	ServerPort     int
+	ClientIP       string
+	ClientPort     int
 	ConnectServers map[string]interface{}
 }
 
@@ -62,7 +72,6 @@ type Logic struct {
 	IP             string
 	Port           int
 	ConnectServers map[string]interface{}
-	MapIds         []int
 	LoadAllMapIds  bool
 	OpenTime       int64
 }

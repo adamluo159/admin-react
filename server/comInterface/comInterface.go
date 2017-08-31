@@ -15,20 +15,23 @@ const (
 	RelationAdd int = 2
 )
 const (
-	CharDBPort       int = 7000
-	GatePort         int = 7100
-	CenterPort       int = 7200
-	LogicPort        int = 7300 //logic1 7300起 logic2 7400起
-	ClientPort       int = 7800
-	MasterPort       int = 9500
-	LoginPort        int = 9550
-	LogPort          int = 7600
+	CharDBPort     int = 7000
+	CenterPort     int = 7100
+	LogPort        int = 7200
+	ClientPort     int = 7300
+	ZonePort       int = 7400
+	ZoneClientPort int = 7500
+	GatePort       int = 7600 //gate1 7500起 gate2 7510起
+	LogicPort      int = 7700 //logic1 7600起 logic2 7610起
+
 	AccountDBPort    int = 6500
 	RedisPort        int = 6379
 	MysqlPort        int = 3306
 	LoginWebPort     int = 1236
 	ErrLogPort       int = 1237
 	RedisAccountPort int = 6380
+	MasterPort       int = 9500
+	LoginPort        int = 9550
 
 	NetTimeOut       int = 1000 * 30
 	NetMaxConnection int = 5000
@@ -39,6 +42,7 @@ const (
 	LogServer        int = 5
 	MasterServer     int = 6
 	GateServer       int = 7
+	ZoneServer       int = 8
 
 	MasterCount int = 1
 	LogMaxLine  int = 10000

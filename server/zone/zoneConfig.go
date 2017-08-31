@@ -49,11 +49,19 @@ func WriteZoneConfigLua(zid int, ret *ZoneRsp, hostName string) {
 	dir := hostdir + "/zone" + strconv.Itoa(zone.Zid)
 	os.Mkdir(dir, os.ModePerm)
 	curDir := dir + "/"
+
+	zerr := ZoneLua(&zone, zonem, curDir)
+	if zerr != nil {
+		ret.Result = "zone " + zerr.Error()
+		return
+	}
+
 	gerr := GateLua(&zone, zonem, curDir)
 	if gerr != nil {
 		ret.Result = "gate " + gerr.Error()
 		return
 	}
+
 	cerr := CenterLua(&zone, zonem, curDir)
 	if cerr != nil {
 		ret.Result = "center" + cerr.Error()
@@ -92,7 +100,7 @@ func DelZoneConfig(zid int, hostname string) error {
 	return nil
 }
 
-func GateLua(zone *Zone, zonem *comInterface.Machine, Dir string) error {
+func ZoneLua(zone *Zone, zonem *comInterface.Machine, Dir string) error {
 	masterm := zMgr.machineMgr.GetMachineByName("master")
 	if masterm == nil {
 		return errors.New(" GateLua cannt find machine")
@@ -108,31 +116,56 @@ func GateLua(zone *Zone, zonem *comInterface.Machine, Dir string) error {
 	loc, _ := time.LoadLocation("Local")
 	theTime, _ := time.ParseInLocation(longForm, zone.OpenTime, loc)
 
-	gateLua := comInterface.Gate{
+	zoneLua := comInterface.Zone{
 		ID:             zone.Zid,
 		Zid:            zone.Zid,
 		ServerIP:       zonem.IP,
-		ServerPort:     comInterface.GatePort + zone.PortNumber,
+		ServerPort:     comInterface.ZonePort + zone.PortNumber,
 		ClientIP:       zonem.OutIP,
-		ClientPort:     comInterface.ClientPort + zone.PortNumber,
+		ClientPort:     comInterface.ZoneClientPort + zone.PortNumber,
 		ChannelIds:     s,
 		Open:           zone.Whitelst,
 		Name:           zone.ZoneName,
 		OpenTime:       theTime.Unix(),
 		ConnectServers: make(map[string]interface{}),
 	}
-	gateLua.ConnectServers["CharDB"] = comInterface.Connect{
-		ID:   zone.Zid,
-		IP:   zonem.IP,
-		Port: comInterface.CharDBPort + zone.PortNumber,
-	}
-	gateLua.ConnectServers["Master"] = comInterface.Connect{
+	zoneLua.ConnectServers["Master"] = comInterface.Connect{
 		ID:   1,
 		IP:   masterm.IP,
 		Port: comInterface.MasterPort + comInterface.MasterCount,
 	}
-	gateLua.ConnectServers["Log"] = comInterface.Connect{
+	zoneLua.ConnectServers["Log"] = comInterface.Connect{
 		ID:   zone.Zid,
+		IP:   zonem.IP,
+		Port: comInterface.LogPort + zone.PortNumber,
+	}
+
+	srv := make(map[string]int)
+	srv["nType"] = comInterface.ZoneServer
+	srvHead.StartService = []comInterface.SRV{srv}
+	srvHead.LOG_INDEX = "zone"
+
+	trans := struct2lua.ToLuaConfig(Dir, "Zone", zoneLua, srvHead, 0)
+	if trans == false {
+		log.Println("gate cannt wirte lua file")
+	}
+	return nil
+}
+
+func GateLua(zone *Zone, zonem *comInterface.Machine, Dir string) error {
+	gateLua := comInterface.Gate{
+		Zid:            zone.Zid,
+		ServerIP:       zonem.IP,
+		ClientIP:       zonem.OutIP,
+		ConnectServers: make(map[string]interface{}),
+	}
+	gateLua.ConnectServers["Zone"] = comInterface.Connect{
+		ID:   zone.Zid,
+		IP:   zonem.IP,
+		Port: comInterface.ZonePort + zone.PortNumber,
+	}
+	gateLua.ConnectServers["Log"] = comInterface.Connect{
+		ID:   1,
 		IP:   zonem.IP,
 		Port: comInterface.LogPort + zone.PortNumber,
 	}
@@ -140,12 +173,18 @@ func GateLua(zone *Zone, zonem *comInterface.Machine, Dir string) error {
 	srv := make(map[string]int)
 	srv["nType"] = comInterface.GateServer
 	srvHead.StartService = []comInterface.SRV{srv}
-	srvHead.LOG_INDEX = "gate"
 
-	trans := struct2lua.ToLuaConfig(Dir, "Gate", gateLua, srvHead, 0)
-	if trans == false {
-		log.Println("gate cannt wirte lua file")
+	for i := 1; i <= GateCount; i++ {
+		gateLua.ID = i
+		gateLua.ClientPort = comInterface.ClientPort + zone.PortNumber*10 + i - 1
+		gateLua.ServerPort = comInterface.GatePort + zone.PortNumber*10 + i - 1
+		srvHead.LOG_INDEX = "gate" + strconv.Itoa(i)
+		trans := struct2lua.ToLuaConfig(Dir, "Gate", gateLua, srvHead, i)
+		if trans == false {
+			log.Printf("gate cannt wirte lua file, gateid:%d\n", i)
+		}
 	}
+
 	return nil
 }
 
@@ -153,26 +192,28 @@ func CenterLua(zone *Zone, zonem *comInterface.Machine, Dir string) error {
 	loc, _ := time.LoadLocation("Local")
 	theTime, _ := time.ParseInLocation(longForm, zone.OpenTime, loc)
 	centerLua := comInterface.Center{
-		ID:   zone.Zid,
-		Zid:  zone.Zid,
-		IP:   zonem.IP,
-		Port: comInterface.CenterPort + zone.PortNumber,
-		OnlineNumberCheckTime: 60 * 5,
-		SingleServerLoad:      4000,
-		ConnectServers:        make(map[string]interface{}),
-		OpenTime:              theTime.Unix(),
+		ID:               1,
+		Zid:              zone.Zid,
+		IP:               zonem.IP,
+		Port:             comInterface.CenterPort + zone.PortNumber,
+		SingleServerLoad: 7000,
+		ConnectServers:   make(map[string]interface{}),
+		OpenTime:         theTime.Unix(),
 	}
-
 	centerLua.ConnectServers["CharDB"] = comInterface.Connect{
 		ID:   zone.Zid,
 		IP:   zonem.IP,
 		Port: comInterface.CharDBPort + zone.PortNumber,
 	}
-	centerLua.ConnectServers["Gate"] = comInterface.Connect{
-		ID:   zone.Zid,
-		IP:   zonem.IP,
-		Port: comInterface.GatePort + zone.PortNumber,
+	gateArray := make([]comInterface.Connect, GateCount)
+	for i := 1; i <= GateCount; i++ {
+		gateArray[i-1] = comInterface.Connect{
+			ID:   i,
+			IP:   zonem.IP,
+			Port: comInterface.GatePort + zone.PortNumber*10 + i - 1,
+		}
 	}
+	centerLua.ConnectServers["Gate"] = gateArray
 	centerLua.ConnectServers["Log"] = comInterface.Connect{
 		ID:   zone.Zid,
 		IP:   zonem.IP,
@@ -181,8 +222,8 @@ func CenterLua(zone *Zone, zonem *comInterface.Machine, Dir string) error {
 	srv := make(map[string]int)
 	srv["nType"] = comInterface.CenterServer
 	srvHead.StartService = []comInterface.SRV{srv}
-	srvHead.LOG_INDEX = "center" + strconv.Itoa(zone.Zid)
 
+	srvHead.LOG_INDEX = "center" + strconv.Itoa(zone.Zid)
 	trans := struct2lua.ToLuaConfig(Dir, "Center", centerLua, srvHead, 0)
 	if trans == false {
 		log.Println("center cannt wirte lua file")
@@ -252,22 +293,26 @@ func LogicLua(zone *Zone, zonem *comInterface.Machine, Dir string) error {
 		OpenTime:       theTime.Unix(),
 	}
 	logicLua.ConnectServers["CharDB"] = comInterface.Connect{
-		ID:   zone.Zid,
+		ID:   1,
 		IP:   zonem.IP,
 		Port: comInterface.CharDBPort + zone.PortNumber,
 	}
-	logicLua.ConnectServers["Gate"] = comInterface.Connect{
-		ID:   zone.Zid,
-		IP:   zonem.IP,
-		Port: comInterface.GatePort + zone.PortNumber,
+	gateArray := make([]comInterface.Connect, GateCount)
+	for i := 1; i <= GateCount; i++ {
+		gateArray[i-1] = comInterface.Connect{
+			ID:   i,
+			IP:   zonem.IP,
+			Port: comInterface.GatePort + zone.PortNumber*10 + i - 1,
+		}
 	}
+	logicLua.ConnectServers["Gate"] = gateArray
 	logicLua.ConnectServers["Center"] = comInterface.Connect{
-		ID:   zone.Zid,
+		ID:   1,
 		IP:   zonem.IP,
 		Port: comInterface.CenterPort + zone.PortNumber,
 	}
 	logicLua.ConnectServers["Log"] = comInterface.Connect{
-		ID:   zone.Zid,
+		ID:   1,
 		IP:   zonem.IP,
 		Port: comInterface.LogPort + zone.PortNumber,
 	}
@@ -275,18 +320,13 @@ func LogicLua(zone *Zone, zonem *comInterface.Machine, Dir string) error {
 	srv["nType"] = comInterface.LogicServer
 	srvHead.StartService = []comInterface.SRV{srv}
 
-	for k, v := range LogicMap {
-		logicLua.ID = k
-		logicLua.Port = comInterface.LogicPort + (k-1)*100 + zone.PortNumber
-		logicLua.MapIds = v
-
-		s := "logic" + strconv.Itoa(k)
-		srvHead.LOG_INDEX = s
-		srvHead.LOG_MAXLINE = comInterface.LogMaxLine
-
-		trans := struct2lua.ToLuaConfig(Dir, "Logic", logicLua, srvHead, k)
+	for i := 1; i <= LogicCount; i++ {
+		logicLua.ID = i
+		logicLua.Port = comInterface.LogicPort + 10*zone.PortNumber + i - 1
+		srvHead.LOG_INDEX = "logic" + strconv.Itoa(i)
+		trans := struct2lua.ToLuaConfig(Dir, "Logic", logicLua, srvHead, i)
 		if trans == false {
-			log.Println("logic cannt wirte lua file")
+			log.Printf("logic:%d cannt wirte lua file\n", i)
 		}
 	}
 

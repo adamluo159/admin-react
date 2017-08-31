@@ -1,0 +1,8 @@
+#!/bin/sh
+b=`ps fx | grep -w opAdmin | grep -v grep | grep -v tail | awk '{print $1}'`
+if [[ x"$b" != x ]]; then
+	kill $b
+fi
+
+echo $b
+

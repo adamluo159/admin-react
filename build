@@ -1,15 +1,21 @@
 #!/bin/sh
 
+client="opAdmin/client/"
+server="opAdmin/server/"
+
 rm -rf opAdmin
 mkdir opAdmin
+
+mkdir $client
+mkdir $server
 
 echo "构建agent服务器中"
 cd server
 go build 
 
-mv server ../opAdmin/
-cp config.json ../opAdmin/
-cp startAdmin ../opAdmin/
+mv server ../$server
+cp config.json ../$server
+cp gameTools/* ../$server
 
 echo "构建完毕..."
 
@@ -17,6 +23,6 @@ echo "构建前端网页中..."
 cd ../client
 rm -rf dist/*
 npm run build
-cp -r dist ../opAdmin/
+cp -r dist ../$client
 echo "构建完毕..."
 

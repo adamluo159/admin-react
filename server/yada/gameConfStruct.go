@@ -171,9 +171,3 @@ const (
 	RedisPassWord        string = ""
 	RedisAccountPassWord string = "cg2016"
 )
-
-func NewGameWirter(conf Conf) WirteGame {
-	return &wirteGame{
-		conf: conf,
-	}
-}

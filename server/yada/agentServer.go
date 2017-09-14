@@ -58,7 +58,8 @@ func (s *aserver) Listen() {
 	for {
 		conn, _ := listener.Accept()
 		client := &Client{
-			conn: &conn,
+			conn:    &conn,
+			gserver: s,
 		}
 		go client.OnMessage()
 	}
@@ -73,7 +74,9 @@ func (s *aserver) StartZone(host string, zid int) int {
 	r := protocol.C2sNotifyDone{
 		Do: protocol.NotifyDoFail,
 	}
-	p := protocol.S2cNotifyDo{}
+	p := protocol.S2cNotifyDo{
+		Name: "zone" + strconv.Itoa(zid),
+	}
 
 	c, ok := s.clients[host]
 	if !ok {
@@ -91,7 +94,9 @@ func (s *aserver) StopZone(host string, zid int) int {
 		Do: protocol.NotifyDoFail,
 	}
 
-	p := protocol.S2cNotifyDo{}
+	p := protocol.S2cNotifyDo{
+		Name: "zone" + strconv.Itoa(zid),
+	}
 
 	c, ok := s.clients[host]
 	if !ok {
@@ -164,6 +169,7 @@ func (s *aserver) OnlineZones() []ZoneStates {
 			sz = append(sz, state)
 		}
 	}
+	log.Println("wwwwwwwwwwww", sz)
 	return sz
 }
 

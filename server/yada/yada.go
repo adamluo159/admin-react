@@ -10,6 +10,7 @@ import (
 	"net/http"
 	"os"
 	"strconv"
+	"time"
 
 	"github.com/adamluo159/gameAgent/protocol"
 	"github.com/adamluo159/gameAgent/utils"
@@ -28,7 +29,6 @@ type (
 		conf       Conf
 		zMgr       ZoneMgr
 		machineMgr MachineMgr
-		wirteGame  WirteGame
 	}
 	Conf struct {
 		MongoIP    string
@@ -44,6 +44,14 @@ type (
 var (
 	localHost string
 )
+
+func ServerHeader(next echo.HandlerFunc) echo.HandlerFunc {
+	return func(c echo.Context) error {
+		err := next(c)
+		fmt.Println(c.Request().Method, c.Request().RequestURI, err)
+		return err
+	}
+}
 
 func New(pathFile string) Yada {
 	data, err := ioutil.ReadFile(pathFile)
@@ -70,11 +78,13 @@ func New(pathFile string) Yada {
 		zMgr:       NewZoneMgr(s),
 		conf:       fileConf,
 		machineMgr: NewMachineMgr(s, fileConf),
-		wirteGame:  NewGameWirter(fileConf),
+		session:    s,
 	}
 }
 
 func (y *yada) RegisterWeb() {
+
+	y.e.Use(ServerHeader)
 	y.e.GET("/zone", y.GetZones)
 	y.e.POST("/zone/add", y.AddZone)
 	y.e.POST("/zone/save", y.SaveZone)
@@ -94,16 +104,31 @@ func (y *yada) RegisterWeb() {
 	y.e.GET("machine/common", y.CommonConfig)
 	y.e.POST("machine/svnUpdate", y.SvnUpdate)
 	y.e.GET("machine/svnUpdateAll", y.SvnUpdateAll)
-
 }
 
 func (y *yada) Run() {
+	go y.YadaCheck()
 	go y.as.Listen()
-	y.RegisterWeb()
 
-	y.e.Static("/", "../../client/dist/")
-	y.e.File("/", "../../client/dist/index.html")
+	y.RegisterWeb()
+	y.e.Static("/", "../client/dist/")
+	y.e.File("/", "../client/dist/index.html")
 	y.e.Logger.Fatal(y.e.Start(":1323"))
+}
+
+func (y *yada) YadaCheck() {
+	for {
+		if err := y.session.Ping(); err != nil {
+			s, merr := mgo.Dial(y.conf.MongoIP)
+			if merr != nil {
+				log.Printf("reconnect mongodb fail:%v", merr)
+			} else {
+				y.session = s
+			}
+
+		}
+		time.Sleep(time.Second * 10)
+	}
 }
 
 //获取区服信息
@@ -121,7 +146,7 @@ func (y *yada) AddZone(c echo.Context) error {
 	zone := Zone{}
 	ret := ZoneRsp{}
 
-	if err := c.Bind(zone); err != nil {
+	if err := c.Bind(&zone); err != nil {
 		ret.Result = fmt.Sprintf("add zone bind data err %v", err)
 		return c.JSON(http.StatusOK, ret)
 	}
@@ -153,7 +178,8 @@ func (y *yada) AddZone(c echo.Context) error {
 func (y *yada) SaveZone(c echo.Context) error {
 	m := SaveZoneReq{}
 	ret := ZoneRsp{}
-	if err := c.Bind(m); err != nil {
+
+	if err := c.Bind(&m); err != nil {
 		ret.Result = fmt.Sprintf("save zone bind data err", err)
 		return c.JSON(http.StatusOK, ret)
 	}
@@ -183,7 +209,7 @@ func (y *yada) SaveZone(c echo.Context) error {
 func (y *yada) DelZone(c echo.Context) error {
 	ret := ZoneRsp{}
 	m := ZoneReq{}
-	if err := c.Bind(m); err != nil {
+	if err := c.Bind(&m); err != nil {
 		ret.Result = fmt.Sprintf("del zone bind data err", err)
 		return c.JSON(http.StatusOK, ret)
 	}
@@ -219,7 +245,7 @@ func (y *yada) DelZone(c echo.Context) error {
 func (y *yada) UpdateZonelogdb(c echo.Context) error {
 	zReq := ZoneReq{}
 	ret := ZoneRsp{}
-	if err := c.Bind(zReq); err != nil {
+	if err := c.Bind(&zReq); err != nil {
 		ret.Result = fmt.Sprintf("update zonelogdb  bind data err", err)
 		return c.JSON(http.StatusOK, ret)
 	}
@@ -252,9 +278,8 @@ func (y *yada) SynMachine(c echo.Context) error {
 	}
 
 	hostdir := y.conf.GConf + zone.ZoneHost
-	os.Mkdir(hostdir, os.ModePerm)
 	curDir := hostdir + "/zone" + strconv.Itoa(zone.Zid) + "/"
-	os.Mkdir(curDir, os.ModePerm)
+	os.MkdirAll(curDir, os.ModePerm)
 
 	zerr := y.machineMgr.ZoneLua(zone, curDir)
 	gerr := y.machineMgr.GateLua(zone, curDir)
@@ -267,6 +292,7 @@ func (y *yada) SynMachine(c echo.Context) error {
 		log.Printf("zone:%v,gate:%v,center:%v,log:%v, logic:%v, chardb:%v, logdberr:%v", zerr, gerr, cerr, lerr, logicerr, charErr)
 		return c.JSON(http.StatusOK, ret)
 	}
+
 	if _, err := utils.ExeShell("sh", y.conf.GitCommit, "add or update zone"+strconv.Itoa(zone.Zid)); err != nil {
 		log.Printf("exeshell fail %v", err)
 		return err
@@ -304,7 +330,7 @@ func (y *yada) Zonelist(c echo.Context) error {
 func (y *yada) StartZone(c echo.Context) error {
 	ret := ZoneRsp{}
 	m := ZoneReq{}
-	if err := c.Bind(m); err != nil {
+	if err := c.Bind(&m); err != nil {
 		ret.Result = fmt.Sprintf("start zone  bind data err", err)
 		return c.JSON(http.StatusOK, ret)
 	}
@@ -325,7 +351,7 @@ func (y *yada) StartZone(c echo.Context) error {
 func (y *yada) StopZone(c echo.Context) error {
 	ret := ZoneRsp{}
 	m := ZoneReq{}
-	if err := c.Bind(m); err != nil {
+	if err := c.Bind(&m); err != nil {
 		ret.Result = fmt.Sprintf("stop zone  bind data err", err)
 		return c.JSON(http.StatusOK, ret)
 	}

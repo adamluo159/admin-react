@@ -1,11 +1,15 @@
 {
-	"mongoIP": "mongodb://192.168.1.251:27017/",
-	"channels": {
+	"MongoIP": "mongodb://192.168.1.251:27017/",
+	"Channels": {
 		"cg": 1,
 		"ios": 2,
 		"yyb": 3,
 		"xiaomi": 4
 	},
-	"logicCount":2,
-	"gateCount":2
+	"LogicCount":2,
+	"GateCount":2,
+	"CommonConf": "/home/cgyx/gConf/commonConfig/",
+	"GitCommit":"/home/cgyx/gConf/gitCommit",
+	"GitDelete":"/home/cgyx/gConf/gitDelete",
+	"GConf": "/home/cgyx/gConf/"
 }

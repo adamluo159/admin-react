@@ -133,6 +133,7 @@ func (z *zoneMgr) SaveZone(oldZid int, oldZoneName string, newZone *Zone) error 
 	query := bson.M{"zid": oldZid, "zoneName": oldZoneName}
 	oldZone := Zone{}
 	err := z.cl.Find(query).One(&oldZone)
+
 	if err != nil {
 		return err
 	}
@@ -145,8 +146,7 @@ func (z *zoneMgr) SaveZone(oldZid int, oldZoneName string, newZone *Zone) error 
 		newZone.PortNumber = n
 	}
 
-	err = z.cl.Update(query, &newZone)
-	return err
+	return z.cl.Update(query, &newZone)
 
 	//newRelation := &comInterface.RelationZone{
 	//	Zid:           m.Item.Zid,

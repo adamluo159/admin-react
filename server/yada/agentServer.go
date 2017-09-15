@@ -169,7 +169,6 @@ func (s *aserver) OnlineZones() []ZoneStates {
 			sz = append(sz, state)
 		}
 	}
-	log.Println("wwwwwwwwwwww", sz)
 	return sz
 }
 

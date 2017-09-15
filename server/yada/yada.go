@@ -15,6 +15,7 @@ import (
 	"github.com/adamluo159/gameAgent/protocol"
 	"github.com/adamluo159/gameAgent/utils"
 	"github.com/labstack/echo"
+	permissions "github.com/xyproto/permissions2"
 	mgo "gopkg.in/mgo.v2"
 )
 
@@ -29,29 +30,24 @@ type (
 		conf       Conf
 		zMgr       ZoneMgr
 		machineMgr MachineMgr
+		perm       *permissions.Permissions
 	}
 	Conf struct {
-		MongoIP    string
-		Channels   map[string]int
-		LogicCount int
-		GateCount  int
-		CommonConf string
-		GitCommit  string
-		GConf      string
+		MongoIP      string
+		Channels     map[string]int
+		LogicCount   int
+		GateCount    int
+		CommonConf   string
+		GitCommit    string
+		GConf        string
+		PerRedisHost string
+		PerRedisPwd  string
 	}
 )
 
 var (
 	localHost string
 )
-
-func ServerHeader(next echo.HandlerFunc) echo.HandlerFunc {
-	return func(c echo.Context) error {
-		err := next(c)
-		fmt.Println(c.Request().Method, c.Request().RequestURI, err)
-		return err
-	}
-}
 
 func New(pathFile string) Yada {
 	data, err := ioutil.ReadFile(pathFile)
@@ -83,8 +79,10 @@ func New(pathFile string) Yada {
 }
 
 func (y *yada) RegisterWeb() {
+	y.RegisterPerm()
 
-	y.e.Use(ServerHeader)
+	y.e.POST("/login", y.WebLogin)
+
 	y.e.GET("/zone", y.GetZones)
 	y.e.POST("/zone/add", y.AddZone)
 	y.e.POST("/zone/save", y.SaveZone)
@@ -104,6 +102,33 @@ func (y *yada) RegisterWeb() {
 	y.e.GET("machine/common", y.CommonConfig)
 	y.e.POST("machine/svnUpdate", y.SvnUpdate)
 	y.e.GET("machine/svnUpdateAll", y.SvnUpdateAll)
+}
+
+func (y *yada) RegisterPerm() {
+	userstate, err := permissions.NewUserStateWithPassword2(y.conf.PerRedisHost, y.conf.PerRedisPwd)
+	if err != nil {
+		log.Fatal(err)
+	}
+	y.perm = permissions.NewPermissions(userstate)
+	y.perm.AddUserPath("/machine")
+	y.perm.AddUserPath("/zone")
+
+	y.perm.UserState().AddUser("cgyx", "cgyx!123", "bo@zombo.com")
+
+	f := func(next echo.HandlerFunc) echo.HandlerFunc {
+		return func(c echo.Context) error {
+			if y.perm.Rejected(c.Response(), c.Request()) {
+				// Deny the request
+				//return echo.NewHTTPError(http.StatusForbidden, denyMessage)
+				return c.String(http.StatusOK, "verify")
+			}
+			// Continue the chain of middleware
+			log.Println(c.Request().Method, c.Request().RequestURI, err)
+			return next(c)
+		}
+	}
+
+	y.e.Use(f)
 }
 
 func (y *yada) Run() {
@@ -129,6 +154,21 @@ func (y *yada) YadaCheck() {
 		}
 		time.Sleep(time.Second * 10)
 	}
+}
+func (y *yada) WebLogin(c echo.Context) error {
+	user := c.FormValue("user")
+	passwd := c.FormValue("password")
+	if y.perm.UserState().CorrectPassword(user, passwd) {
+		err := y.perm.UserState().Login(c.Response().Writer, user)
+		if err != nil {
+			c.String(http.StatusOK, err.Error())
+		} else {
+			c.String(http.StatusOK, "admin")
+		}
+	} else {
+		c.String(http.StatusInternalServerError, "Login fail")
+	}
+	return nil
 }
 
 //获取区服信息

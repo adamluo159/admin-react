@@ -9,7 +9,7 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/adamluo159/gameAgent/utils"
+	"github.com/adamluo159/admin-react/utils"
 	"github.com/adamluo159/struct2lua"
 	mgo "gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
@@ -341,8 +341,8 @@ func (m *machineMgr) CenterLua(zone *Zone, Dir string) error {
 	}
 	centerLua.ConnectServers["WebOp"] = Connect{
 		ID:   1,
-		IP:   zonem.IP,
-		Port: LogPort + zone.PortNumber,
+		IP:   m.conf.OpWebIP,
+		Port: OpWebPort,
 	}
 	srvHead := ServerConfigHead{
 		NET_TIMEOUT_MSEC:  30000,

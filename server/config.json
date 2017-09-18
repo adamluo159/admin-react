@@ -13,6 +13,7 @@
 	"GitDelete":"/home/cgyx/gConf/gitDelete",
 	"GConf": "/home/cgyx/gConf/",
 	"PerRedisHost" : "192.168.1.252",
-	"PerRedisPwd": ""
+	"PerRedisPwd": "",
+	"OpWebIP": "192.168.1.244"
 
 }

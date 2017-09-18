@@ -1,0 +1,13 @@
+#!/bin/sh
+client="build/opAdmin/client/"
+mkdir -p $client
+
+echo "构建前端网页中..."
+cd client
+rm -rf dist/*
+npm run build
+cp -r dist ../$client
+echo "构建完毕..."
+
+cd ../server
+./build

@@ -48,14 +48,13 @@ type (
 	}
 
 	CenterConf struct {
-		ID                    int
-		Zid                   int
-		IP                    string
-		Port                  int
-		OnlineNumberCheckTime int
-		SingleServerLoad      int
-		ConnectServers        map[string]interface{}
-		OpenTime              int64
+		ID               int
+		Zid              int
+		IP               string
+		Port             int
+		SingleServerLoad int
+		ConnectServers   map[string]interface{}
+		OpenTime         int64
 	}
 
 	CharDBConf struct {
@@ -145,6 +144,7 @@ const (
 	AccountDBPort    int = 6500
 	RedisPort        int = 6379
 	MysqlPort        int = 3306
+	OpWebPort        int = 1235
 	LoginWebPort     int = 1236
 	ErrLogPort       int = 1237
 	RedisAccountPort int = 6380
@@ -153,14 +153,15 @@ const (
 
 	NetTimeOut       int = 1000 * 30
 	NetMaxConnection int = 5000
-	DbproxyServer    int = 1
-	LoginServer      int = 2
-	CenterServer     int = 3
-	LogicServer      int = 4
-	LogServer        int = 5
-	MasterServer     int = 6
-	GateServer       int = 7
-	ZoneServer       int = 8
+
+	DbproxyServer int = 1
+	LoginServer   int = 2
+	CenterServer  int = 3
+	LogicServer   int = 4
+	LogServer     int = 5
+	MasterServer  int = 6
+	GateServer    int = 7
+	ZoneServer    int = 8
 
 	MasterCount int = 1
 	LogMaxLine  int = 10000

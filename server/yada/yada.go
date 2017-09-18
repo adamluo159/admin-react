@@ -12,8 +12,8 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/adamluo159/gameAgent/protocol"
-	"github.com/adamluo159/gameAgent/utils"
+	"github.com/adamluo159/admin-react/protocol"
+	"github.com/adamluo159/admin-react/utils"
 	"github.com/labstack/echo"
 	permissions "github.com/xyproto/permissions2"
 	mgo "gopkg.in/mgo.v2"
@@ -39,9 +39,11 @@ type (
 		GateCount    int
 		CommonConf   string
 		GitCommit    string
+		GitDelete    string
 		GConf        string
 		PerRedisHost string
 		PerRedisPwd  string
+		OpWebIP      string
 	}
 )
 

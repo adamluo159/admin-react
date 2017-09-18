@@ -5,8 +5,7 @@ import (
 	"net"
 	"strconv"
 
-	"github.com/adamluo159/admin-react/server/comInterface"
-	"github.com/adamluo159/gameAgent/protocol"
+	"github.com/adamluo159/admin-react/protocol"
 )
 
 type (
@@ -31,20 +30,17 @@ type (
 
 	// TCP server
 	aserver struct {
-		clients             map[string]*Client
-		address             string // Address to open connection: localhost:9999
-		mhMgr               comInterface.MachineMgr
-		zonelogDBserviceMap map[string][]string
-		allOperating        bool
+		clients      map[string]*Client
+		address      string // Address to open connection: localhost:9999
+		allOperating bool
 	}
 )
 
 func NewAS(address string) Aserver {
 	log.Println("Creating server with address", address)
 	return &aserver{
-		address:             address,
-		clients:             make(map[string]*Client),
-		zonelogDBserviceMap: make(map[string][]string),
+		address: address,
+		clients: make(map[string]*Client),
 	}
 }
 

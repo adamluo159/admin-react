@@ -6,8 +6,8 @@ import (
 	"log"
 	"net"
 
-	"github.com/adamluo159/gameAgent/protocol"
-	"github.com/adamluo159/gameAgent/utils"
+	"github.com/adamluo159/admin-react/protocol"
+	"github.com/adamluo159/admin-react/utils"
 )
 
 type (

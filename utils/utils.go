@@ -8,33 +8,8 @@ import (
 	"io/ioutil"
 	"log"
 	"os/exec"
-	"reflect"
-	"regexp"
 	"strings"
-	"time"
-
-	"errors"
-
-	"fmt"
-
-	"github.com/tidwall/gjson"
 )
-
-var configJson string = ""
-
-//每整点小时调用
-func SetTimerPerHour(F func()) {
-	go func() {
-		for {
-			F()
-			now := time.Now()
-			next := now.Add(time.Hour)
-			next = time.Date(next.Year(), next.Month(), next.Day(), next.Hour(), 0, 0, 0, next.Location())
-			t := time.NewTimer(next.Sub(now))
-			<-t.C
-		}
-	}()
-}
 
 //Md5校验
 func Md5Check(checkStr string, gen string) bool {
@@ -155,141 +130,10 @@ func ExeShellArgs3(syscmd string, dir string, arg1 string, arg2 string, arg3 str
 	return s, nil
 }
 
-func MatchType(a string, f string) bool {
-	reg := regexp.MustCompile(f)
-	s := reg.FindAllString(a, -1)
-	if len(s) > 0 {
-		return true
-	}
-	return false
-}
-
-func AgentServiceType(agentName string, tmap map[int]string) int {
-	for k, v := range tmap {
-		if MatchType(agentName, v) {
-			return k
-		}
-	}
-	return 0
-}
-
-func LoadConfigJson() error {
-	fBytes, err := ioutil.ReadFile("./config.json")
-	if err != nil {
-		return err
-	}
-	configJson = string(fBytes)
-	return nil
-}
 func DeepCopy(dst, src interface{}) error {
 	var buf bytes.Buffer
 	if err := gob.NewEncoder(&buf).Encode(src); err != nil {
 		return err
 	}
 	return gob.NewDecoder(bytes.NewBuffer(buf.Bytes())).Decode(dst)
-}
-
-func GetConfigValue(key string, value interface{}) error {
-	if configJson == "" {
-		err := LoadConfigJson()
-		if err != nil {
-			return err
-		}
-	}
-	v := gjson.Get(configJson, key)
-	switch v.Type {
-	case gjson.Null:
-		return errors.New("none value")
-	case gjson.String:
-		DeepCopy(value, v.String())
-	case gjson.Number:
-		DeepCopy(value, int(v.Int()))
-	case gjson.False:
-	case gjson.True:
-		DeepCopy(value, v.Bool())
-	default:
-		return errors.New("no result")
-	}
-	return nil
-}
-
-func GetConfigMap(key string, vMap interface{}) error {
-	if configJson == "" {
-		err := LoadConfigJson()
-		if err != nil {
-			return err
-		}
-	}
-
-	result := gjson.Get(configJson, key)
-	mapType := reflect.TypeOf(vMap)
-	switch mapType.String() {
-	case "*map[string]string":
-		{
-			s := make(map[string]string)
-			for k, name := range result.Map() {
-				s[k] = name.String()
-			}
-			DeepCopy(vMap, s)
-		}
-	case "*map[string]bool":
-		{
-			s := make(map[string]bool)
-			for k, name := range result.Map() {
-				s[k] = name.Bool()
-			}
-			DeepCopy(vMap, s)
-		}
-	case "*map[string]int":
-		{
-			s := make(map[string]int)
-			for k, name := range result.Map() {
-				s[k] = int(name.Int())
-			}
-			DeepCopy(vMap, s)
-		}
-	default:
-		return errors.New(fmt.Sprintf("map type valid, %s", mapType.String()))
-	}
-	return nil
-}
-
-func GetConfigArray(key string, vArray interface{}) error {
-	if configJson == "" {
-		err := LoadConfigJson()
-		if err != nil {
-			return err
-		}
-	}
-	result := gjson.Get(configJson, key)
-	mapType := reflect.TypeOf(vArray)
-	switch mapType.String() {
-	case "*[]string":
-		{
-			s := []string{}
-			for _, v := range result.Array() {
-				s = append(s, v.String())
-			}
-			DeepCopy(vArray, s)
-		}
-	case "*[]bool":
-		{
-			s := []bool{}
-			for _, v := range result.Array() {
-				s = append(s, v.Bool())
-			}
-			DeepCopy(vArray, s)
-		}
-	case "*[]int":
-		{
-			s := []int{}
-			for _, v := range result.Array() {
-				s = append(s, int(v.Int()))
-			}
-			DeepCopy(vArray, s)
-		}
-	default:
-		return errors.New("array type valid")
-	}
-	return nil
 }

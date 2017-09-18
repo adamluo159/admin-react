@@ -37,13 +37,25 @@ type (
 	}
 
 	ZoneMgr interface {
+		//获取所有服的信息
 		GetAllZoneInfo() *[]Zone
+
+		//通过zid找服信息
 		GetZoneInfoByZid(zid int) *Zone
+
+		//新增服信息
 		AddZone(zone *Zone) error
+
+		//保存更新服信息
 		SaveZone(oldZid int, oldZoneName string, newZone *Zone) error
+
+		//删除服信息
 		DelZone(zid int) error
+
+		//获取服相关机器信息
 		GetZoneRelation(zid int) *RelationZone
 	}
+
 	zoneMgr struct {
 		cl     *mgo.Collection
 		clPort *mgo.Collection
@@ -147,215 +159,12 @@ func (z *zoneMgr) SaveZone(oldZid int, oldZoneName string, newZone *Zone) error 
 	}
 
 	return z.cl.Update(query, &newZone)
-
-	//newRelation := &comInterface.RelationZone{
-	//	Zid:           m.Item.Zid,
-	//	ZoneDBHost:    m.Item.ZoneDBHost,
-	//	ZoneHost:      m.Item.ZoneHost,
-	//	ZonelogdbHost: m.Item.ZonelogdbHost,
-	//}
-
-	//oldRelation := zMgr.GetZoneRelation(m.OldZid)
-	//zMgr.machineMgr.UpdateZone(oldRelation, newRelation)
-
 }
 
 //删除
 func (z *zoneMgr) DelZone(zid int) error {
-	//dzone := Zone{}
-	//err := z.cl.Find(bson.M{"zid": zid}).One(&dzone)
-	//if err != nil {
-	//	return err
-	//}
-
-	//r := comInterface.RelationZone{
-	//	ZoneDBHost:    dzone.ZoneDBHost,
-	//	ZoneHost:      dzone.ZoneHost,
-	//	ZonelogdbHost: dzone.ZonelogdbHost,
-	//	Zid:           dzone.Zid,
-	//}
-	//log.Println("delete zone :", r)
-	//err = DelZoneConfig(r.Zid, r.ZoneHost)
-	//if err != nil {
-	//	ret.Result = "FALSE"
-	//	return c.JSON(http.StatusOK, ret)
-	//}
-	//zMgr.machineMgr.OpZoneRelation(&r, comInterface.RelationDel)
-	//err = cl.Remove(query)
-	//if err != nil {
-	//	ret.Result = "FALSE"
-	//}
-	//ret.Item = dzone
-	//return c.JSON(http.StatusOK, ret)
 	return z.cl.Remove(bson.M{"zid": zid})
 }
-
-//func (z *zoneMgr) UpdateZonelogdb(c echo.Context) error {
-//	zReq := ZoneReq{}
-//	err := c.Bind(&zReq)
-//	ret := ZoneRsp{}
-//	if err != nil {
-//		log.Println(err.Error())
-//		ret.Result = "FALSE"
-//		return c.JSON(http.StatusOK, ret)
-//	}
-//	m := zMgr.machineMgr.GetMachineByName(zReq.Host)
-//	if m == nil {
-//		ret.Result = "FAlse"
-//		return c.JSON(http.StatusOK, ret)
-//	}
-//	logdb := "zonelog" + strconv.Itoa(zReq.Zid)
-//	s, _ := utils.ExeShellArgs2("sh", "update_zonelogdb", logdb, m.IP)
-//	if logdb != s {
-//		ret.Result = fmt.Sprintf("update zonelogdb fail,%s", s)
-//	} else {
-//		ret.Result = "OK"
-//	}
-//	return c.JSON(http.StatusOK, ret)
-//}
-
-//func (z *zoneMgr) SynMachine(c echo.Context) error {
-//	ret := ZoneRsp{
-//		Result: "更新失败",
-//	}
-//
-//	zid, err := strconv.Atoi(c.QueryParam("zid"))
-//	if err != nil {
-//		ret.Result = "zid" + err.Error()
-//		return c.JSON(http.StatusOK, ret)
-//	}
-//
-//	hostname := c.QueryParam("hostname")
-//	if hostname == "" {
-//		ret.Result = "hostname none"
-//		return c.JSON(http.StatusOK, ret)
-//	}
-//
-//	WriteZoneConfigLua(zid, &ret, hostname)
-//	ncode := zMgr.aserver.UpdateZone(hostname)
-//	if ncode == protocol.NotifyDoSuc {
-//		ret.Result = "更新成功"
-//	}
-//
-//	return c.JSON(http.StatusOK, ret)
-//}
-
-//func (z *zoneMgr) Zonelist(c echo.Context) error {
-//	var zones []Zone
-//	zlst := ZoneYunYingLst{}
-//	err := cl.Find(nil).All(&zones)
-//	if err != nil {
-//	}
-//	for k := range zones {
-//		z := ZoneYunYing{
-//			Zid:      zones[k].Zid,
-//			ZoneName: zones[k].ZoneName,
-//			Channels: zones[k].Channels,
-//		}
-//		m := zMgr.machineMgr.GetMachineByName(zones[k].ZonelogdbHost)
-//		if m == nil {
-//			log.Println("zonelist cannt find machine info machineName:", zones[k].ZonelogdbHost)
-//			continue
-//		}
-//		z.ZonelogdbIP = m.IP
-//		zlst.Zlist = append(zlst.Zlist, z)
-//	}
-//	return c.JSON(http.StatusOK, zlst)
-//}
-
-//func (z *zoneMgr) StartZone(c echo.Context) error {
-//	ret := ZoneRsp{
-//		Result: "启服失败",
-//	}
-//	m := ZoneReq{}
-//	err := c.Bind(&m)
-//	if err != nil {
-//		ret.Result = "启服失败, parse post info fail"
-//		return c.JSON(http.StatusOK, ret)
-//	}
-//	zone := Zone{}
-//	query := bson.M{"zid": m.Zid}
-//	cl.Find(query).One(&zone)
-//	if zone.ZoneHost != m.Host {
-//		log.Printf(ret.Result, "send zid cannt match zonehost, zid:%d zonehost:%s", m.Zid, m.Host)
-//		return c.JSON(http.StatusOK, ret)
-//	}
-//	s := zMgr.aserver.StartZone(m.Host, m.Zid)
-//	log.Println("start result", s)
-//	switch s {
-//	case protocol.NotifyDoFail:
-//		ret.Result = "启服失败"
-//	case protocol.NotifyDoSuc:
-//		ret.Result = "启服成功"
-//	case protocol.NotifyDoing:
-//		ret.Result = "正在启服中，请勿重复启服"
-//	}
-//	log.Println("start ", ret)
-//	ret.Zstates = zMgr.aserver.OnlineZones()
-//	return c.JSON(http.StatusOK, ret)
-//}
-
-//func (z *zoneMgr) StopZone(c echo.Context) error {
-//	ret := ZoneRsp{
-//		Result: "关服失败",
-//	}
-//	m := ZoneReq{}
-//	err := c.Bind(&m)
-//	if err != nil {
-//		ret.Result = "关服失败, parse post info fail"
-//		return c.JSON(http.StatusOK, ret)
-//	}
-//	zone := Zone{}
-//	query := bson.M{"zid": m.Zid}
-//	cl.Find(query).One(&zone)
-//	if zone.ZoneHost != m.Host {
-//		log.Printf(ret.Result, "stopzone send zid cannt match zonehost, zid:%d zonehost:%s", m.Zid, m.Host)
-//		return c.JSON(http.StatusOK, ret)
-//	}
-//	s := zMgr.aserver.StopZone(m.Host, m.Zid)
-//	switch s {
-//	case protocol.NotifyDoFail:
-//		ret.Result = "关服失败"
-//	case protocol.NotifyDoSuc:
-//		ret.Result = "关服成功"
-//	case protocol.NotifyDoing:
-//		ret.Result = "正在关服中，请勿重复关服"
-//	}
-//	ret.Zstates = zMgr.aserver.OnlineZones()
-//	return c.JSON(http.StatusOK, ret)
-//}
-
-//func (z *zoneMgr) StartAllZone(c echo.Context) error {
-//	ret := ZoneRsp{}
-//	s := zMgr.aserver.StartAllZone()
-//	switch s {
-//	case protocol.NotifyDoFail:
-//		ret.Result = "全服启动失败"
-//	case protocol.NotifyDoSuc:
-//		ret.Result = "全服启动成功"
-//	case protocol.NotifyDoing:
-//		ret.Result = "正在启服中，请勿重复启服"
-//	}
-//	ret.Zstates = zMgr.aserver.OnlineZones()
-//	log.Println("startaaaaa:", ret)
-//	return c.JSON(http.StatusOK, ret)
-//}
-
-//func (z *zoneMgr) StopAllZone(c echo.Context) error {
-//	ret := ZoneRsp{}
-//	s := zMgr.aserver.StopAllZone()
-//	switch s {
-//	case protocol.NotifyDoFail:
-//		ret.Result = "全服关闭失败"
-//	case protocol.NotifyDoSuc:
-//		ret.Result = "全服关闭成功"
-//	case protocol.NotifyDoing:
-//		ret.Result = "正在关服中，请勿重复关服"
-//	}
-//	ret.Zstates = zMgr.aserver.OnlineZones()
-//	log.Println("stopaaaaa:", ret)
-//	return c.JSON(http.StatusOK, ret)
-//}
 
 func (z *zoneMgr) ReqPortCount(host string, zid int) (int, error) {
 	c := bson.M{"host": host}

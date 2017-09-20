@@ -12,7 +12,6 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/adamluo159/admin-react/protocol"
 	"github.com/adamluo159/admin-react/utils"
 	"github.com/labstack/echo"
 	permissions "github.com/xyproto/permissions2"
@@ -211,7 +210,7 @@ func (y *yada) AddZone(c echo.Context) error {
 		y.machineMgr.OpZoneRelation(&r, RelationAdd)
 
 		//通知agent更新配置
-		y.as.AddNewZone(zone.ZoneHost, zone.ZoneName, zone.Zid)
+		//y.as.AddNewZone(zone.ZoneHost, zone.ZoneName, zone.Zid)
 	}
 	return c.JSON(http.StatusOK, ret)
 }
@@ -308,9 +307,7 @@ func (y *yada) UpdateZonelogdb(c echo.Context) error {
 }
 
 func (y *yada) SynMachine(c echo.Context) error {
-	ret := ZoneRsp{
-		Result: "更新失败",
-	}
+	ret := ZoneRsp{}
 	zid, _ := strconv.Atoi(c.QueryParam("zid"))
 	hostname := c.QueryParam("hostname")
 
@@ -340,11 +337,7 @@ func (y *yada) SynMachine(c echo.Context) error {
 		return err
 	}
 
-	ncode := y.as.UpdateZone(hostname)
-	if ncode == protocol.NotifyDoSuc {
-		ret.Result = "更新成功"
-	}
-
+	ret.Result = y.as.UpdateZone(hostname)
 	return c.JSON(http.StatusOK, ret)
 }
 
@@ -376,17 +369,10 @@ func (y *yada) StartZone(c echo.Context) error {
 		ret.Result = fmt.Sprintf("start zone  bind data err", err)
 		return c.JSON(http.StatusOK, ret)
 	}
-	s := y.as.StartZone(m.Host, m.Zid)
-	switch s {
-	case protocol.NotifyDoFail:
-		ret.Result = "启服失败"
-	case protocol.NotifyDoSuc:
-		ret.Result = "启服成功"
-	case protocol.NotifyDoing:
-		ret.Result = "正在启服中，请勿重复启服"
-	}
-	log.Println("start ", ret)
+	ret.Result = y.as.StartZone(m.Host, m.Zid)
 	ret.Zstates = y.as.OnlineZones()
+
+	log.Println("start ", ret)
 	return c.JSON(http.StatusOK, ret)
 }
 
@@ -397,46 +383,24 @@ func (y *yada) StopZone(c echo.Context) error {
 		ret.Result = fmt.Sprintf("stop zone  bind data err", err)
 		return c.JSON(http.StatusOK, ret)
 	}
-	s := y.as.StopZone(m.Host, m.Zid)
-	switch s {
-	case protocol.NotifyDoFail:
-		ret.Result = "关服失败"
-	case protocol.NotifyDoSuc:
-		ret.Result = "关服成功"
-	case protocol.NotifyDoing:
-		ret.Result = "正在关服中，请勿重复关服"
-	}
+	ret.Result = y.as.StopZone(m.Host, m.Zid)
 	ret.Zstates = y.as.OnlineZones()
 	return c.JSON(http.StatusOK, ret)
 }
 
 func (y *yada) StartAllZone(c echo.Context) error {
-	ret := ZoneRsp{}
-	s := y.as.StartAllZone()
-	switch s {
-	case protocol.NotifyDoFail:
-		ret.Result = "全服启动失败"
-	case protocol.NotifyDoSuc:
-		ret.Result = "全服启动成功"
-	case protocol.NotifyDoing:
-		ret.Result = "正在启服中，请勿重复启服"
+	ret := ZoneRsp{
+		Result:  y.as.StartAllZone(),
+		Zstates: y.as.OnlineZones(),
 	}
-	ret.Zstates = y.as.OnlineZones()
 	return c.JSON(http.StatusOK, ret)
 }
 
 func (y *yada) StopAllZone(c echo.Context) error {
-	ret := ZoneRsp{}
-	s := y.as.StopAllZone()
-	switch s {
-	case protocol.NotifyDoFail:
-		ret.Result = "全服关闭失败"
-	case protocol.NotifyDoSuc:
-		ret.Result = "全服关闭成功"
-	case protocol.NotifyDoing:
-		ret.Result = "正在关服中，请勿重复关服"
+	ret := ZoneRsp{
+		Result:  y.as.StopAllZone(),
+		Zstates: y.as.OnlineZones(),
 	}
-	ret.Zstates = y.as.OnlineZones()
 	return c.JSON(http.StatusOK, ret)
 }
 
@@ -542,21 +506,17 @@ func (y *yada) CommonConfig(c echo.Context) error {
 
 func (y *yada) SvnUpdate(c echo.Context) error {
 	hostName := c.FormValue("HostName")
-	rsp := MachineAllRsp{Result: "OK"}
-	suc := y.as.UpdateSvn(hostName)
-	if !suc {
-		rsp.Result = "Fail"
+	rsp := MachineAllRsp{
+		Result: y.as.UpdateSvn(hostName),
+		Items:  y.MachineRspFunc(),
 	}
-	rsp.Items = y.MachineRspFunc()
 	return c.JSON(http.StatusOK, rsp)
 }
 
 func (y *yada) SvnUpdateAll(c echo.Context) error {
-	rsp := MachineAllRsp{Result: "OK"}
-	suc := y.as.UpdateSvnAll()
-	if !suc {
-		rsp.Result = "Fail"
+	rsp := MachineAllRsp{
+		Result: y.as.UpdateSvnAll(),
+		Items:  y.MachineRspFunc(),
 	}
-	rsp.Items = y.MachineRspFunc()
 	return c.JSON(http.StatusOK, rsp)
 }

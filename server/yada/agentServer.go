@@ -16,16 +16,15 @@ type (
 	}
 	Aserver interface {
 		Listen()
-		StartZone(host string, zid int) int
-		StopZone(host string, zid int) int
+		StartZone(host string, zid int) string
+		StopZone(host string, zid int) string
 		CheckOnlineMachine(mName string) (bool, string)
-		UpdateZone(host string) int
-		StartAllZone() int
-		StopAllZone() int
+		UpdateZone(host string) string
+		StartAllZone() string
+		StopAllZone() string
 		OnlineZones() []ZoneStates
-		AddNewZone(host string, zone string, zid int)
-		UpdateSvn(host string) bool
-		UpdateSvnAll() bool
+		UpdateSvn(host string) string
+		UpdateSvnAll() string
 	}
 
 	// TCP server
@@ -56,6 +55,15 @@ func (s *aserver) Listen() {
 		client := &Client{
 			conn:    &conn,
 			gserver: s,
+			opCmdDoing: map[uint32]bool{
+				protocol.CmdToken:         false,
+				protocol.CmdStartZone:     false,
+				protocol.CmdStopZone:      false,
+				protocol.CmdUpdateHost:    false,
+				protocol.CmdStartHostZone: false,
+				protocol.CmdStopHostZone:  false,
+				protocol.CmdZoneState:     false,
+			},
 		}
 		go client.OnMessage()
 	}
@@ -65,7 +73,7 @@ func (s *aserver) ClientDisconnect(host string) {
 	delete(s.clients, host)
 }
 
-func (s *aserver) StartZone(host string, zid int) int {
+func (s *aserver) StartZone(host string, zid int) string {
 	log.Println(" agentSserver startzone", host, " zid:", zid)
 	r := protocol.C2sNotifyDone{
 		Do: protocol.NotifyDoFail,
@@ -76,14 +84,21 @@ func (s *aserver) StartZone(host string, zid int) int {
 
 	c, ok := s.clients[host]
 	if !ok {
-		return r.Do
+		return "起zone服失败,找不到在线机器"
 	}
+	if _, ok := c.opCmdDoing[protocol.CmdStartZone]; ok {
+		return "zone服正在启动中, 请勿重复启动"
+	}
+
+	c.opCmdDoing[protocol.CmdStartZone] = true
 	protocol.SendJsonWaitCB(c.conn, protocol.CmdStartZone, p, &r)
-	return r.Do
+	c.opCmdDoing[protocol.CmdStartZone] = false
+
+	return r.Result
 
 }
 
-func (s *aserver) StopZone(host string, zid int) int {
+func (s *aserver) StopZone(host string, zid int) string {
 	log.Println(" agentServer stopzone", host, " zid:", zid)
 
 	r := protocol.C2sNotifyDone{
@@ -96,13 +111,20 @@ func (s *aserver) StopZone(host string, zid int) int {
 
 	c, ok := s.clients[host]
 	if !ok {
-		return r.Do
+		return "停zone服失败,找不到在线机器"
 	}
+
+	if _, ok := c.opCmdDoing[protocol.CmdStopZone]; ok {
+		return "zone服正在关服中, 请勿重复操作"
+	}
+
+	c.opCmdDoing[protocol.CmdStopZone] = true
 	protocol.SendJsonWaitCB(c.conn, protocol.CmdStopZone, p, &r)
-	return r.Do
+	c.opCmdDoing[protocol.CmdStopZone] = true
+	return r.Result
 }
 
-func (s *aserver) UpdateZone(host string) int {
+func (s *aserver) UpdateZone(host string) string {
 	log.Println(" agentServer update host info", host)
 	r := protocol.C2sNotifyDone{
 		Do: protocol.NotifyDoFail,
@@ -111,46 +133,59 @@ func (s *aserver) UpdateZone(host string) int {
 	p := protocol.S2cNotifyDo{}
 	c, ok := s.clients[host]
 	if !ok {
-		return r.Do
+		return "更新机器配置失败,找不到在线机器"
 	}
+	if _, ok := c.opCmdDoing[protocol.CmdUpdateHost]; ok {
+		return "正在更新机器配置, 请勿重复操作"
+	}
+
+	c.opCmdDoing[protocol.CmdUpdateHost] = true
 	protocol.SendJsonWaitCB(c.conn, protocol.CmdUpdateHost, p, &r)
-	return r.Do
+	c.opCmdDoing[protocol.CmdUpdateHost] = false
+	return r.Result
 }
 
-func (s *aserver) StartAllZone() int {
+func (s *aserver) StartAllZone() string {
 	if s.allOperating {
-		return protocol.NotifyDoing
+		return "正在全zone服启动中，请勿重复启动"
 	}
 	r := protocol.C2sNotifyDone{
 		Do: protocol.NotifyDoFail,
 	}
 
+	retStr := ""
 	p := protocol.S2cNotifyDo{}
 	s.allOperating = true
 	for _, v := range s.clients {
 		protocol.SendJsonWaitCB(v.conn, protocol.CmdStartHostZone, p, &r)
+		if r.Do != protocol.NotifyDoSuc {
+			retStr += "机器:" + v.host + "  " + r.Result + "\n"
+		}
 	}
 	s.allOperating = false
-	return r.Do
+	return retStr
 }
 
-func (s *aserver) StopAllZone() int {
+func (s *aserver) StopAllZone() string {
 	if s.allOperating {
-		return protocol.NotifyDoing
+		return "正在停全zone服中，请勿重复操作"
 	}
 	r := protocol.C2sNotifyDone{
 		Do: protocol.NotifyDoFail,
 	}
 
+	retStr := ""
 	p := protocol.S2cNotifyDo{}
 	s.allOperating = true
 	for _, v := range s.clients {
 		protocol.SendJsonWaitCB(v.conn, protocol.CmdStopHostZone, p, &r)
+		if r.Do != protocol.NotifyDoSuc {
+			retStr += "机器:" + v.host + "  " + r.Result + "\n"
+		}
 	}
-
 	s.allOperating = false
 
-	return r.Do
+	return retStr
 }
 
 func (s *aserver) OnlineZones() []ZoneStates {
@@ -168,47 +203,54 @@ func (s *aserver) OnlineZones() []ZoneStates {
 	return sz
 }
 
-func (s *aserver) CheckOnlineMachine(mName string) (bool, string) {
-	if v, ok := (*s).clients[mName]; ok {
+func (a *aserver) CheckOnlineMachine(mName string) (bool, string) {
+	if v, ok := a.clients[mName]; ok {
 		return true, v.codeVersion
 	}
 	return false, ""
 }
 
-func (s *aserver) AddNewZone(host string, zone string, zid int) {
+func (s *aserver) UpdateSvn(host string) string {
 	c := s.clients[host]
 	if c == nil {
-		log.Println(" AddNewZone, cannt find host client:", host, zone)
-		return
+		return " Update, cannt find host client:"
 	}
-	p := protocol.S2cNotifyDo{
-		Name: "zone" + strconv.Itoa(zid),
+	if _, ok := c.opCmdDoing[protocol.CmdUpdateSvn]; ok {
+		return "正在更新机器svn文件, 请勿重复操作"
 	}
-	r := protocol.C2sNotifyDone{}
-	protocol.SendJsonWaitCB(c.conn, protocol.CmdNewZone, p, &r)
-}
 
-func (s *aserver) UpdateSvn(host string) bool {
-	c := s.clients[host]
-	if c == nil {
-		log.Println(" Update, cannt find host client:", host)
-		return false
-	}
 	p := protocol.S2cNotifyDo{}
 	r := protocol.C2sNotifyDone{}
-	protocol.SendJsonWaitCB(c.conn, protocol.CmdNewZone, p, &r)
-	return r.Do == protocol.NotifyDoSuc
+
+	c.opCmdDoing[protocol.CmdUpdateSvn] = true
+	protocol.SendJsonWaitCB(c.conn, protocol.CmdUpdateSvn, p, &r)
+	c.opCmdDoing[protocol.CmdUpdateSvn] = false
+
+	if r.Do == protocol.NotifyDoSuc {
+		c.codeVersion = r.Result
+	}
+
+	return r.Result
 }
 
-func (s *aserver) UpdateSvnAll() bool {
+func (s *aserver) UpdateSvnAll() string {
 	r := protocol.C2sNotifyDone{}
 	p := protocol.S2cNotifyDo{}
-	suc := true
+
+	if s.allOperating {
+		return "正在全机器更新svn文件中，请勿重复操作"
+	}
+
+	retStr := ""
+	s.allOperating = true
 	for _, v := range s.clients {
 		protocol.SendJsonWaitCB(v.conn, protocol.CmdUpdateSvn, p, &r)
-		if r.Do == protocol.NotifyDoFail {
-			suc = false
+		if r.Do != protocol.NotifyDoSuc {
+			retStr += "机器:" + v.host + "  " + r.Result + "\n"
+		} else {
+			v.codeVersion = r.Result
 		}
 	}
-	return suc
+	s.allOperating = false
+	return retStr
 }

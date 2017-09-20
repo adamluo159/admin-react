@@ -17,40 +17,30 @@ import (
 const (
 	HSize int = 4
 
-	//agent反馈的状态
-	NotifyDoFail int = 1
-	NotifyDoSuc  int = 2
-	NotifyDoing  int = 3
-
-	Tzone      int = 1
-	TzoneDB    int = 2
-	TzonelogDB int = 3
-	TSvn       int = 4
-
 	Regzone      string = "^zone[0-9]*[1-9][0-9]*$"
 	RegzoneDB    string = "^zonedb[0-9]*[1-9][0-9]*$"
 	RegzonelogDB string = "^zonelogdb[0-9]*[1-9][0-9]*$"
+
+	NotifyDoFail int = iota
+	NotifyDoSuc
+	NotifyDoing
 )
 
 var (
 	gReqIndex    int                      = 1 //同步消息序号
 	indexChanMap map[int]chan interface{} = make(map[int]chan interface{})
-	TserviceReg                           = map[int]string{
-		Tzone: Regzone,
-	}
 )
 
 const (
-	CmdNone          uint32 = 0
-	CmdToken         uint32 = 1 //token验证
-	CmdStartZone     uint32 = 2 //区服启动
-	CmdStopZone      uint32 = 3 //区服停
-	CmdStartHostZone uint32 = 4 //启动该机器上的所有区服
-	CmdUpdateHost    uint32 = 5 //机器配置更新
-	CmdStopHostZone  uint32 = 6 //关闭该机器上所有区服
-	CmdZoneState     uint32 = 7 //区服状态(true:开启，false:关闭)
-	CmdNewZone       uint32 = 8 //新增区服
-	CmdUpdateSvn     uint32 = 9 //svn更新
+	CmdNone          uint32 = iota
+	CmdToken                //token验证
+	CmdStartZone            //区服启动
+	CmdStopZone             //区服停
+	CmdStartHostZone        //启动该机器上的所有区服
+	CmdUpdateHost           //机器配置更新
+	CmdStopHostZone         //关闭该机器上所有区服
+	CmdZoneState            //区服状态(true:开启，false:关闭)
+	CmdUpdateSvn            //svn更新
 )
 
 type C2sToken struct {

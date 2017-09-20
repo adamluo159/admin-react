@@ -34,17 +34,25 @@ type (
 	}
 
 	MachineMgr interface {
+		//删除机器配置
 		DelMachine(hostname string) error
+		//保存机器配置
 		SaveMachine(oldhost string, m *Machine) error
+		//新增机器配置
 		AddMachine(m *Machine) error
+		//获取所有机器配置
 		GetAllMachines() []Machine
-		UpdateZone(old *RelationZone, new *RelationZone)
+		//查找机器配置
 		GetMachineByName(name string) *Machine
 
+		//更新用途关系
+		UpdateZone(old *RelationZone, new *RelationZone)
+		//删除游戏服配置
 		DelZoneConf(zr *RelationZone) error
-
+		//机器用途关系设置
 		OpZoneRelation(r *RelationZone, op int)
 
+		//写游戏服配置文件
 		ZoneLua(zone *Zone, Dir string) error
 		GateLua(zone *Zone, Dir string) error
 		CenterLua(zone *Zone, Dir string) error
@@ -83,33 +91,27 @@ func NewMachineMgr(session *mgo.Session, mconf Conf) MachineMgr {
 	}
 }
 
-func (m *machineMgr) UpdateMachineApplications(host string, apps []string) {
-	err := m.cl.Update(bson.M{"hostname": host}, bson.M{"$set": bson.M{"applications": apps}})
-	if err != nil {
-		log.Println("UpdateMachineApplications update err, ", err.Error())
-		return
-	}
-}
-
-func (m *machineMgr) SliceString(A *[]string, name string, op int) {
-	index := -1
-	for i := range *A {
-		if name == (*A)[i] {
-			index = i
-			break
-		}
-	}
-	if (index == -1 && RelationDel == op) || (index >= 0 && RelationAdd == op) {
-		return
-	}
-
+func (m *machineMgr) UpdateMachineApps(host string, A *[]string, name string, op int) {
 	switch op {
 	case RelationDel:
-		(*A) = append((*A)[:index], (*A)[index+1:]...)
+		{
+			for k, v := range *A {
+				if v == name {
+					(*A) = append((*A)[:k], (*A)[k+1:]...)
+					break
+				}
+			}
+		}
 	case RelationAdd:
 		(*A) = append((*A), name)
 	default:
-		log.Println("SliceString op wrong ", op)
+		log.Println("UpdateMachineApps op wrong ", op)
+	}
+
+	h := bson.M{"hostname": host}
+	setv := bson.M{"$set": bson.M{"applications": *A}}
+	if err := m.cl.Update(h, setv); err != nil {
+		log.Println(" UpdateMachineApps err, ", err.Error())
 	}
 }
 
@@ -147,20 +149,17 @@ func (m *machineMgr) OpZoneRelation(r *RelationZone, op int) {
 	z := m.GetMachineByName((*r).ZoneHost)
 	if z != nil {
 		name := "zone" + strconv.Itoa((*r).Zid)
-		m.SliceString(&z.Applications, name, op)
-		m.UpdateMachineApplications(z.Hostname, z.Applications)
+		m.UpdateMachineApps(z.Hostname, &z.Applications, name, op)
 	}
 	db := m.GetMachineByName((*r).ZoneDBHost)
 	if db != nil {
 		name := "zonedb" + strconv.Itoa((*r).Zid)
-		m.SliceString(&db.Applications, name, op)
-		m.UpdateMachineApplications(db.Hostname, db.Applications)
+		m.UpdateMachineApps(db.Hostname, &db.Applications, name, op)
 	}
 	logdb := m.GetMachineByName((*r).ZonelogdbHost)
 	if logdb != nil {
 		name := "zonelogdb" + strconv.Itoa((*r).Zid)
-		m.SliceString(&logdb.Applications, name, op)
-		m.UpdateMachineApplications(logdb.Hostname, logdb.Applications)
+		m.UpdateMachineApps(logdb.Hostname, &logdb.Applications, name, op)
 	}
 }
 
@@ -193,7 +192,7 @@ func (m *machineMgr) DelMachine(hostname string) error {
 }
 
 func (m *machineMgr) DelZoneConf(zr *RelationZone) error {
-	dir := zr.ZoneHost + "/" + "zone" + strconv.Itoa(zr.Zid)
+	dir := zr.ZoneHost + "/zone" + strconv.Itoa(zr.Zid)
 	if _, err := utils.ExeShell("sh", m.conf.GitCommit, dir); err != nil {
 		return err
 	}

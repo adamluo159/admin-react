@@ -17,21 +17,9 @@ type (
 		curServices map[string]bool
 		codeVersion string
 		gserver     *aserver
+		opCmdDoing  map[uint32]bool
 	}
 )
-
-func (c *Client) RegCmd() *map[uint32]func(data []byte) {
-	return &map[uint32]func(data []byte){
-		protocol.CmdToken:         c.TokenCheck,
-		protocol.CmdStartZone:     c.CallBackHandle,
-		protocol.CmdStopZone:      c.CallBackHandle,
-		protocol.CmdUpdateHost:    c.CallBackHandle,
-		protocol.CmdStartHostZone: c.CallBackHandle,
-		protocol.CmdStopHostZone:  c.CallBackHandle,
-		protocol.CmdNewZone:       c.CallBackHandle,
-		protocol.CmdZoneState:     c.ZoneState,
-	}
-}
 
 func (c *Client) OnMessage() {
 	// 消息缓冲
@@ -40,9 +28,15 @@ func (c *Client) OnMessage() {
 	databuf := make([]byte, 1024)
 	// 消息长度
 	length := 0
-
-	//注册消息处理
-	msgMap := c.RegCmd()
+	msgMap := map[uint32]func(data []byte){
+		protocol.CmdToken:         c.TokenCheck,
+		protocol.CmdStartZone:     c.CallBackHandle,
+		protocol.CmdStopZone:      c.CallBackHandle,
+		protocol.CmdUpdateHost:    c.CallBackHandle,
+		protocol.CmdStartHostZone: c.CallBackHandle,
+		protocol.CmdStopHostZone:  c.CallBackHandle,
+		protocol.CmdZoneState:     c.ZoneState,
+	}
 
 	for {
 		// 读取数据
@@ -64,7 +58,7 @@ func (c *Client) OnMessage() {
 			if cmd <= 0 {
 				break
 			}
-			mfunc := (*msgMap)[cmd]
+			mfunc := msgMap[cmd]
 			if mfunc == nil {
 				log.Printf("cannt find msg handle Client cmd: %d data: %s\n", cmd, string(data))
 			} else {

@@ -1,0 +1,32 @@
+#!/usr/bin/expect
+set timeout 10
+#set src_host [lindex $argv 0]
+#set src_file [lindex $argv 2]
+#set dest_file [lindex $argv 3]
+#spawn scp $src_file $username@$host:$dest_file
+
+
+set src_host [lindex $argv 0]
+set src_dir  [lindex $argv 1]
+set dest_dir [lindex $argv 2]
+#spawn rm -rf $dest_dir
+spawn mkdir $dest_dir
+
+
+spawn scp -r cgyx@$src_host:$src_dir $dest_dir
+
+set password "cgyx!123"
+expect {
+	"(yes/no)?"
+	{
+		send "yes\n"
+			expect "*assword:" { send "$password\n"}
+	}
+	"*assword:"
+	{
+		send "$password\n"
+	}
+}
+expect "100%"
+expect eof
+

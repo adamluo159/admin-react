@@ -9,197 +9,167 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/adamluo159/admin-react/utils"
 	"github.com/adamluo159/struct2lua"
-	mgo "gopkg.in/mgo.v2"
-	"gopkg.in/mgo.v2/bson"
 )
 
+const longForm = "2006-01-02 15:04:05"
+
 type (
-	RelationZone struct {
-		Zid           int
-		ZoneHost      string
-		ZoneDBHost    string
-		ZonelogdbHost string
+	ZoneConf struct {
+		ID             int
+		Zid            int
+		ServerIP       string
+		ServerPort     int
+		ClientIP       string
+		ClientPort     int
+		ChannelIds     []int
+		Open           bool
+		Name           string
+		OpenTime       int64
+		ConnectServers map[string]interface{}
+	}
+	Connect struct {
+		ID   int
+		Port int
+		IP   string
 	}
 
-	//机器信息
-	Machine struct {
-		Hostname     string `json:"hostname" bson:"hostname"`
-		IP           string
-		OutIP        string   `json:"outIP" bson:"outIP"`
-		Applications []string `json:"applications" bson:"applications"`
-		Online       bool
-		CodeVersion  string `json:"codeVersion" bson:"codeVersion"`
+	MysqlLua struct {
+		IP             string
+		Port           int
+		UserName       string
+		Password       string
+		FlushFrequency int
+		DataBase       string
 	}
 
-	MachineMgr interface {
-		//删除机器配置
-		DelMachine(hostname string) error
-		//保存机器配置
-		SaveMachine(oldhost string, m *Machine) error
-		//新增机器配置
-		AddMachine(m *Machine) error
-		//获取所有机器配置
-		GetAllMachines() []Machine
-		//查找机器配置
-		GetMachineByName(name string) *Machine
-
-		//更新用途关系
-		UpdateZone(old *RelationZone, new *RelationZone)
-		//删除游戏服配置
-		DelZoneConf(zr *RelationZone) error
-		//机器用途关系设置
-		OpZoneRelation(r *RelationZone, op int)
-
-		//写游戏服配置文件
-		ZoneLua(zone *Zone, Dir string) error
-		GateLua(zone *Zone, Dir string) error
-		CenterLua(zone *Zone, Dir string) error
-		LogLua(zone *Zone, Dir string) error
-		LogicLua(zone *Zone, Dir string) error
-		CharDBLua(zone *Zone, Dir string) error
-		LoginLua() error
-		AccountDBLua() error
-		MasterLogLua() error
-		MasterLua() error
+	RedisLua struct {
+		IP       string
+		Port     int
+		Password string
 	}
 
-	machineMgr struct {
-		cl   *mgo.Collection
-		conf Conf
+	GateConf struct {
+		ID             int
+		Zid            int
+		ServerIP       string
+		ServerPort     int
+		ClientIP       string
+		ClientPort     int
+		ConnectServers map[string]interface{}
+	}
+
+	CenterConf struct {
+		ID               int
+		Zid              int
+		IP               string
+		Port             int
+		SingleServerLoad int
+		ConnectServers   map[string]interface{}
+		OpenTime         int64
+	}
+
+	CharDBConf struct {
+		ID             int
+		Zid            int
+		IP             string
+		Port           int
+		Mysql          MysqlLua
+		Redis          RedisLua
+		ConnectServers map[string]interface{}
+	}
+
+	LogicConf struct {
+		ID             int
+		Zid            int
+		IP             string
+		Port           int
+		ConnectServers map[string]interface{}
+		LoadAllMapIds  bool
+		OpenTime       int64
+	}
+
+	LogConf struct {
+		ID             int
+		IP             string
+		Port           int
+		ConnectServers map[string]interface{}
+	}
+
+	LogDBConf struct {
+		DirName string
+		IP      string
+	}
+
+	LoginConf struct {
+		ID             int
+		IP             string
+		Port           int
+		VesionStr      string
+		ConnectServers map[string]interface{}
+	}
+
+	MasterConf struct {
+		ID             int
+		IP             string
+		Port           int
+		AllZoneOpen    bool
+		ConnectServers map[string]interface{}
+	}
+	AccountDBConf struct {
+		ID             int
+		Zid            int
+		IP             string
+		Port           int
+		Mysql          MysqlLua
+		Redis          RedisLua
+		ConnectServers map[string]interface{}
+	}
+
+	ServerConfigHead struct {
+		NET_TIMEOUT_MSEC  int
+		NET_MAX_CONNETION int
+		StartService      []map[string]int
+		LOG_INDEX         string
+		LOG_MAXLINE       int
+		OpenGM            int
 	}
 )
 
 const (
-	RelationDel int = 1
-	RelationAdd int = 2
+	CharDBPort     int = 7000
+	CenterPort     int = 7100
+	LogPort        int = 7200
+	ClientPort     int = 7300
+	ZonePort       int = 7400
+	ZoneClientPort int = 7500
+	GatePort       int = 7600 //gate1 7500起 gate2 7510起
+	LogicPort      int = 7700 //logic1 7600起 logic2 7610起
+
+	AccountDBPort    int = 6500
+	RedisPort        int = 6379
+	MysqlPort        int = 3306
+	OpWebPort        int = 1235
+	LoginWebPort     int = 1236
+	ErrLogPort       int = 1237
+	RedisAccountPort int = 6380
+	MasterPort       int = 9501
+	LoginPort        int = 9550
+
+	NetTimeOut       int = 1000 * 30
+	NetMaxConnection int = 5000
+
+	DbproxyServer int = 1
+	LoginServer   int = 2
+	CenterServer  int = 3
+	LogicServer   int = 4
+	LogServer     int = 5
+	MasterServer  int = 6
+	GateServer    int = 7
+	ZoneServer    int = 8
+
+	LogMaxLine int = 10000
 )
-
-//机器模块注册
-func NewMachineMgr(session *mgo.Session, mconf Conf) MachineMgr {
-	mcl := session.DB("gameAdmin").C("machine")
-	if mcl == nil {
-		log.Fatal("cannt find Collection about machine")
-	}
-	if err := mcl.EnsureIndex(mgo.Index{Key: []string{"hostname"}, Unique: true}); err != nil {
-		log.Fatalf("mongodb ensureindex err:%s", err.Error())
-	}
-	return &machineMgr{
-		cl:   mcl,
-		conf: mconf,
-	}
-}
-
-func (m *machineMgr) UpdateMachineApps(host string, A *[]string, name string, op int) {
-	switch op {
-	case RelationDel:
-		{
-			for k, v := range *A {
-				if v == name {
-					(*A) = append((*A)[:k], (*A)[k+1:]...)
-					break
-				}
-			}
-		}
-	case RelationAdd:
-		(*A) = append((*A), name)
-	default:
-		log.Println("UpdateMachineApps op wrong ", op)
-	}
-
-	h := bson.M{"hostname": host}
-	setv := bson.M{"$set": bson.M{"applications": *A}}
-	if err := m.cl.Update(h, setv); err != nil {
-		log.Println(" UpdateMachineApps err, ", err.Error())
-	}
-}
-
-func (m *machineMgr) GetMachineByName(name string) *Machine {
-	d := Machine{}
-	err := m.cl.Find(bson.M{"hostname": name}).One(&d)
-	if err != nil {
-		log.Println(" GetMachineByName name: ", name, err.Error())
-		return nil
-	}
-	return &d
-}
-
-func (m *machineMgr) GetAllMachines() []Machine {
-	ms := []Machine{}
-	err := m.cl.Find(nil).All(&ms)
-	if err != nil {
-		log.Println(" GetAllMachines", err.Error())
-		return nil
-	}
-	return ms
-}
-
-func (m *machineMgr) UpdateZone(old *RelationZone, new *RelationZone) {
-	if old == nil || new == nil {
-		log.Println("machine Relation UpdateZone old or new is nil", old, new)
-		return
-	}
-	log.Println("update:", *old, *new)
-	m.OpZoneRelation(old, RelationDel)
-	m.OpZoneRelation(new, RelationAdd)
-}
-
-func (m *machineMgr) OpZoneRelation(r *RelationZone, op int) {
-	z := m.GetMachineByName((*r).ZoneHost)
-	if z != nil {
-		name := "zone" + strconv.Itoa((*r).Zid)
-		m.UpdateMachineApps(z.Hostname, &z.Applications, name, op)
-	}
-	db := m.GetMachineByName((*r).ZoneDBHost)
-	if db != nil {
-		name := "zonedb" + strconv.Itoa((*r).Zid)
-		m.UpdateMachineApps(db.Hostname, &db.Applications, name, op)
-	}
-	logdb := m.GetMachineByName((*r).ZonelogdbHost)
-	if logdb != nil {
-		name := "zonelogdb" + strconv.Itoa((*r).Zid)
-		m.UpdateMachineApps(logdb.Hostname, &logdb.Applications, name, op)
-	}
-}
-
-//添加机器信息
-func (m *machineMgr) AddMachine(machine *Machine) error {
-	return m.cl.Insert(*machine)
-}
-
-//保存
-func (m *machineMgr) SaveMachine(oldhost string, machine *Machine) error {
-	if oldhost != machine.Hostname {
-		if err := m.cl.Remove(bson.M{"hostname": oldhost}); err != nil {
-			return err
-		}
-		if err := m.cl.Insert(machine); err != nil {
-			return err
-		}
-
-	} else {
-		if err := m.cl.Update(bson.M{"hostname": machine.Hostname}, machine); err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
-//删除
-func (m *machineMgr) DelMachine(hostname string) error {
-	return m.cl.Remove(bson.M{"hostname": hostname})
-}
-
-func (m *machineMgr) DelZoneConf(zr *RelationZone) error {
-	dir := zr.ZoneHost + "/zone" + strconv.Itoa(zr.Zid)
-	if _, err := utils.ExeShell("sh", m.conf.GitCommit, dir); err != nil {
-		return err
-	}
-	m.OpZoneRelation(zr, RelationDel)
-
-	return nil
-}
 
 func (m *machineMgr) ZoneLua(zone *Zone, Dir string) error {
 	zonem := m.GetMachineByName(zone.ZoneHost)
@@ -235,7 +205,7 @@ func (m *machineMgr) ZoneLua(zone *Zone, Dir string) error {
 	zoneLua.ConnectServers["Master"] = Connect{
 		ID:   1,
 		IP:   masterm.IP,
-		Port: MasterPort + MasterCount,
+		Port: MasterPort,
 	}
 	zoneLua.ConnectServers["Log"] = Connect{
 		ID:   zone.Zid,
@@ -385,15 +355,15 @@ func (m *machineMgr) CharDBLua(zone *Zone, Dir string) error {
 		Mysql: MysqlLua{
 			IP:             zonedb.IP,
 			Port:           MysqlPort,
-			UserName:       UserName,
-			Password:       PassWord,
+			UserName:       m.conf.MysqlUsr,
+			Password:       m.conf.MysqlPwd,
 			FlushFrequency: 300,
 			DataBase:       mysqldbName,
 		},
 		Redis: RedisLua{
 			IP:       zonedb.IP,
 			Port:     RedisPort,
-			Password: RedisPassWord,
+			Password: m.conf.RedisCharPwd,
 		},
 		ConnectServers: make(map[string]interface{}),
 	}
@@ -657,15 +627,15 @@ func (m *machineMgr) AccountDBLua() error {
 		Mysql: MysqlLua{
 			IP:             accountDBM.IP,
 			Port:           MysqlPort,
-			UserName:       UserName,
-			Password:       PassWord,
+			UserName:       m.conf.MysqlUsr,
+			Password:       m.conf.MysqlPwd,
 			FlushFrequency: 300,
 			DataBase:       "",
 		},
 		Redis: RedisLua{
 			IP:       accountDBM.OutIP,
 			Port:     RedisAccountPort,
-			Password: RedisAccountPassWord,
+			Password: m.conf.RedisAccountPWd,
 		},
 		ConnectServers: make(map[string]interface{}),
 	}

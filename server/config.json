@@ -14,6 +14,9 @@
 	"GConf": "/home/cgyx/gConf/",
 	"PerRedisHost" : "192.168.1.252",
 	"PerRedisPwd": "",
-	"OpWebIP": "192.168.1.244"
-
+	"OpWebIP": "192.168.1.244",
+	"MysqlUsr":"root",
+	"MysqlPwd":"cg2016",
+	"RedisCharPwd": "",
+	"RedisAccountPWd": "cg2016"
 }

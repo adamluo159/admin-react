@@ -1,0 +1,23 @@
+#!/bin/sh
+
+if [[ x"$1" == x ]]; then
+	echo "args err"
+	exit 0
+fi
+
+check () {
+	process=`ps fx | grep -w $1 | grep -v "grep" | grep -v tail | grep -v cgServer | grep -v sh`
+	if [[ x"$process" == x ]]; then
+		echo "no process" $1
+	fi
+}
+
+check $1"_"logic1
+check $1"_"logic2
+check $1"_"center
+check $1"_"log
+check $1"_"gate1
+check $1"_"gate2
+check $1"_"zone
+check $1"_"chardb
+

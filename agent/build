@@ -1,0 +1,13 @@
+#!/bin/sh
+agent="../build/agent/"
+mkdir -p $agent
+
+echo "构建agent客户端中"
+go build example/main.go
+
+mv main $agent/agent
+cp config.json $agent
+cp shells/* $agent
+
+echo "构建完毕..."
+

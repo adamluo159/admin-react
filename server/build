@@ -15,11 +15,3 @@ cp config.json $server
 cp shells/* $server
 
 echo "构建完毕..."
-
-#echo "构建前端网页中..."
-#cd ../client
-#rm -rf dist/*
-#npm run build
-#cp -r dist ../$client
-#echo "构建完毕..."
-

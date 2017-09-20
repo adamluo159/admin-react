@@ -14,6 +14,16 @@ import (
 
 const longForm = "2006-01-02 15:04:05"
 
+var (
+	sHead ServerConfigHead = ServerConfigHead{
+		NET_TIMEOUT_MSEC:  30000,
+		NET_MAX_CONNETION: NetMaxConnection,
+		StartService:      []map[string]int{{"nType": 1}},
+		LOG_MAXLINE:       LogMaxLine,
+		OpenGM:            1,
+	}
+)
+
 type (
 	ZoneConf struct {
 		ID             int
@@ -212,15 +222,9 @@ func (m *machineMgr) ZoneLua(zone *Zone, Dir string) error {
 		IP:   zonem.IP,
 		Port: LogPort + zone.PortNumber,
 	}
-	srvHead := ServerConfigHead{
-		NET_TIMEOUT_MSEC:  30000,
-		NET_MAX_CONNETION: NetMaxConnection,
-		StartService:      []map[string]int{{"nType": ZoneServer}},
-		LOG_INDEX:         "zone",
-		LOG_MAXLINE:       LogMaxLine,
-		OpenGM:            1,
-	}
-	trans := struct2lua.ToLuaConfig(Dir, "Zone", zoneLua, srvHead, 0)
+	sHead.StartService[0]["nType"] = ZoneServer
+	sHead.LOG_INDEX = "zone"
+	trans := struct2lua.ToLuaConfig(Dir, "Zone", zoneLua, sHead, 0)
 	if trans == false {
 		log.Println("gate cannt wirte lua file")
 	}
@@ -249,21 +253,14 @@ func (m *machineMgr) GateLua(zone *Zone, Dir string) error {
 		IP:   zonem.IP,
 		Port: LogPort + zone.PortNumber,
 	}
-	srvHead := ServerConfigHead{
-		NET_TIMEOUT_MSEC:  30000,
-		NET_MAX_CONNETION: NetMaxConnection,
-		StartService:      []map[string]int{{"nType": GateServer}},
-		LOG_INDEX:         "zone",
-		LOG_MAXLINE:       LogMaxLine,
-		OpenGM:            1,
-	}
+	sHead.StartService[0]["nType"] = GateServer
 
 	for i := 1; i <= m.conf.GateCount; i++ {
 		gateLua.ID = i
 		gateLua.ClientPort = ClientPort + zone.PortNumber*10 + i - 1
 		gateLua.ServerPort = GatePort + zone.PortNumber*10 + i - 1
-		srvHead.LOG_INDEX = "gate" + strconv.Itoa(i)
-		trans := struct2lua.ToLuaConfig(Dir, "Gate", gateLua, srvHead, i)
+		sHead.LOG_INDEX = "gate" + strconv.Itoa(i)
+		trans := struct2lua.ToLuaConfig(Dir, "Gate", gateLua, sHead, i)
 		if trans == false {
 			log.Printf("gate cannt wirte lua file, gateid:%d\n", i)
 		}
@@ -313,16 +310,10 @@ func (m *machineMgr) CenterLua(zone *Zone, Dir string) error {
 		IP:   m.conf.OpWebIP,
 		Port: OpWebPort,
 	}
-	srvHead := ServerConfigHead{
-		NET_TIMEOUT_MSEC:  30000,
-		NET_MAX_CONNETION: NetMaxConnection,
-		StartService:      []map[string]int{{"nType": CenterServer}},
-		LOG_INDEX:         "center" + strconv.Itoa(zone.Zid),
-		LOG_MAXLINE:       LogMaxLine,
-		OpenGM:            1,
-	}
+	sHead.StartService[0]["nType"] = CenterServer
+	sHead.LOG_INDEX = "center"
 
-	trans := struct2lua.ToLuaConfig(Dir, "Center", centerLua, srvHead, 0)
+	trans := struct2lua.ToLuaConfig(Dir, "Center", centerLua, sHead, 0)
 	if trans == false {
 		log.Println("center cannt wirte lua file")
 	}
@@ -373,16 +364,10 @@ func (m *machineMgr) CharDBLua(zone *Zone, Dir string) error {
 		IP:   zonem.IP,
 		Port: LogPort + zone.PortNumber,
 	}
-	srvHead := ServerConfigHead{
-		NET_TIMEOUT_MSEC:  30000,
-		NET_MAX_CONNETION: NetMaxConnection,
-		StartService:      []map[string]int{{"nType": DbproxyServer}},
-		LOG_INDEX:         "charDB" + strconv.Itoa(zone.Zid),
-		LOG_MAXLINE:       LogMaxLine,
-		OpenGM:            1,
-	}
+	sHead.StartService[0]["nType"] = DbproxyServer
+	sHead.LOG_INDEX = "charDB"
 
-	trans := struct2lua.ToLuaConfig(Dir, "CharDB", charDBLua, srvHead, 0)
+	trans := struct2lua.ToLuaConfig(Dir, "CharDB", charDBLua, sHead, 0)
 	if trans == false {
 		log.Println("chardb cannt wirte lua file")
 	}
@@ -428,20 +413,12 @@ func (m *machineMgr) LogicLua(zone *Zone, Dir string) error {
 		IP:   zonem.IP,
 		Port: LogPort + zone.PortNumber,
 	}
-
-	srvHead := ServerConfigHead{
-		NET_TIMEOUT_MSEC:  30000,
-		NET_MAX_CONNETION: NetMaxConnection,
-		StartService:      []map[string]int{{"nType": LogicServer}},
-		LOG_MAXLINE:       LogMaxLine,
-		OpenGM:            1,
-	}
-
+	sHead.StartService[0]["nType"] = LogicServer
 	for i := 1; i <= m.conf.LogicCount; i++ {
 		logicLua.ID = i
 		logicLua.Port = LogicPort + 10*zone.PortNumber + i - 1
-		srvHead.LOG_INDEX = "logic" + strconv.Itoa(i)
-		trans := struct2lua.ToLuaConfig(Dir, "Logic", logicLua, srvHead, i)
+		sHead.LOG_INDEX = "logic" + strconv.Itoa(i)
+		trans := struct2lua.ToLuaConfig(Dir, "Logic", logicLua, sHead, i)
 		if trans == false {
 			log.Printf("logic:%d cannt wirte lua file\n", i)
 		}
@@ -472,17 +449,10 @@ func (m *machineMgr) LogLua(zone *Zone, Dir string) error {
 		IP:   errCollect.IP,
 		Port: ErrLogPort,
 	}
+	sHead.StartService[0]["nType"] = LogServer
+	sHead.LOG_INDEX = "logServer"
 
-	srvHead := ServerConfigHead{
-		NET_TIMEOUT_MSEC:  30000,
-		NET_MAX_CONNETION: NetMaxConnection,
-		StartService:      []map[string]int{{"nType": LogServer}},
-		LOG_INDEX:         "logserver",
-		LOG_MAXLINE:       LogMaxLine,
-		OpenGM:            1,
-	}
-
-	trans := struct2lua.ToLuaConfig(Dir, "Log", logLua, srvHead, 0)
+	trans := struct2lua.ToLuaConfig(Dir, "Log", logLua, sHead, 0)
 	if trans == false {
 		log.Println("log cannt wirte lua file")
 	}
@@ -560,16 +530,9 @@ func (m *machineMgr) LoginLua() error {
 		IP:   masterM.IP,
 		Port: MasterPort,
 	}
-	srvHead := ServerConfigHead{
-		NET_TIMEOUT_MSEC:  30000,
-		NET_MAX_CONNETION: NetMaxConnection,
-		StartService:      []map[string]int{{"nType": LoginServer}},
-		LOG_INDEX:         "login1",
-		LOG_MAXLINE:       LogMaxLine,
-		OpenGM:            1,
-	}
-
-	trans := struct2lua.ToLuaConfig(m.conf.CommonConf, "Login", loginLua, srvHead, 1)
+	sHead.StartService[0]["nType"] = LoginServer
+	sHead.LOG_INDEX = "login1"
+	trans := struct2lua.ToLuaConfig(m.conf.CommonConf, "Login", loginLua, sHead, 1)
 	if trans == false {
 		log.Println("log cannt wirte lua file")
 	}
@@ -593,17 +556,10 @@ func (m *machineMgr) MasterLua() error {
 		IP:   masterM.IP,
 		Port: LogPort,
 	}
+	sHead.StartService[0]["nType"] = MasterServer
+	sHead.LOG_INDEX = "master"
 
-	srvHead := ServerConfigHead{
-		NET_TIMEOUT_MSEC:  30000,
-		NET_MAX_CONNETION: NetMaxConnection,
-		StartService:      []map[string]int{{"nType": MasterServer}},
-		LOG_INDEX:         "master",
-		LOG_MAXLINE:       LogMaxLine,
-		OpenGM:            1,
-	}
-
-	trans := struct2lua.ToLuaConfig(m.conf.CommonConf, "Master", masterlua, srvHead, 0)
+	trans := struct2lua.ToLuaConfig(m.conf.CommonConf, "Master", masterlua, sHead, 0)
 	if trans == false {
 		return errors.New("master cannt wirte lua file")
 	}
@@ -644,17 +600,10 @@ func (m *machineMgr) AccountDBLua() error {
 		IP:   masterM.IP,
 		Port: LogPort,
 	}
+	sHead.StartService[0]["nType"] = DbproxyServer
+	sHead.LOG_INDEX = "accountdb"
 
-	srvHead := ServerConfigHead{
-		NET_TIMEOUT_MSEC:  30000,
-		NET_MAX_CONNETION: NetMaxConnection,
-		StartService:      []map[string]int{{"nType": DbproxyServer}},
-		LOG_INDEX:         "accountdb",
-		LOG_MAXLINE:       LogMaxLine,
-		OpenGM:            1,
-	}
-
-	trans := struct2lua.ToLuaConfig(m.conf.CommonConf, "AccountDB", accountDBlua, srvHead, 0)
+	trans := struct2lua.ToLuaConfig(m.conf.CommonConf, "AccountDB", accountDBlua, sHead, 0)
 	if trans == false {
 		return errors.New("accountdblua cannt wirte lua file")
 	}
@@ -683,17 +632,10 @@ func (m *machineMgr) MasterLogLua() error {
 		IP:   errLogM.IP,
 		Port: ErrLogPort,
 	}
+	sHead.StartService[0]["nType"] = LogServer
+	sHead.LOG_INDEX = "masterlog"
 
-	srvHead := ServerConfigHead{
-		NET_TIMEOUT_MSEC:  30000,
-		NET_MAX_CONNETION: NetMaxConnection,
-		StartService:      []map[string]int{{"nType": LogServer}},
-		LOG_INDEX:         "masterlog",
-		LOG_MAXLINE:       LogMaxLine,
-		OpenGM:            1,
-	}
-
-	trans := struct2lua.ToLuaConfig(m.conf.CommonConf, "Log", loglua, srvHead, 0)
+	trans := struct2lua.ToLuaConfig(m.conf.CommonConf, "Log", loglua, sHead, 0)
 	if trans == false {
 		return errors.New("masterLog cannt wirte lua file")
 	}

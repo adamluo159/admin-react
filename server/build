@@ -1,16 +1,12 @@
 #!/bin/sh
 
-#client="../build/opAdmin/client/"
-
 server="../build/opAdmin/server/"
 mkdir -p $server
 
-#mkdir -p $client
-
 echo "构建agent服务器中"
-go build 
+go build example/main.go
 
-mv server $server
+mv main $server/server
 cp config.json $server
 cp shells/* $server
 

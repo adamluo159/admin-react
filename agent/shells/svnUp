@@ -1,0 +1,15 @@
+#!/bin/sh
+cd ..
+en=`svn up |grep "At revision" |awk '{print $3}'| awk -F '.' '{print$1}'`
+ch=`svn up |grep -w "版本" | awk '{print $2}'| awk -F '。' '{print$1}'`
+
+if [[ x"$en" != x ]]; then
+	echo $en
+	exit
+fi
+
+if [[ x"$ch" != x ]]; then
+	echo $ch
+	exit
+fi
+

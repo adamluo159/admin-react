@@ -1,0 +1,13 @@
+#!/bin/sh
+en=`svn info |grep Revision: |awk '{print $2}'`
+ch=`svn info |grep -w "版本" | awk '{print $2}'`
+
+if [[ x"$en" != x ]]; then
+	echo $en
+	exit
+fi
+
+if [[ x"$ch" != x ]]; then
+	echo $ch
+	exit
+fi

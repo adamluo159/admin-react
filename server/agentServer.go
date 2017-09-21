@@ -63,6 +63,7 @@ func (s *aserver) Listen() {
 				protocol.CmdStartHostZone: false,
 				protocol.CmdStopHostZone:  false,
 				protocol.CmdZoneState:     false,
+				protocol.CmdUpdateSvn:     false,
 			},
 		}
 		go client.OnMessage()
@@ -86,7 +87,8 @@ func (s *aserver) StartZone(host string, zid int) string {
 	if !ok {
 		return "起zone服失败,找不到在线机器"
 	}
-	if _, ok := c.opCmdDoing[protocol.CmdStartZone]; ok {
+
+	if do, ok := c.opCmdDoing[protocol.CmdStartZone]; ok && do {
 		return "zone服正在启动中, 请勿重复启动"
 	}
 
@@ -114,7 +116,7 @@ func (s *aserver) StopZone(host string, zid int) string {
 		return "停zone服失败,找不到在线机器"
 	}
 
-	if _, ok := c.opCmdDoing[protocol.CmdStopZone]; ok {
+	if do, ok := c.opCmdDoing[protocol.CmdStopZone]; ok && do {
 		return "zone服正在关服中, 请勿重复操作"
 	}
 
@@ -135,7 +137,7 @@ func (s *aserver) UpdateZone(host string) string {
 	if !ok {
 		return "更新机器配置失败,找不到在线机器"
 	}
-	if _, ok := c.opCmdDoing[protocol.CmdUpdateHost]; ok {
+	if do, ok := c.opCmdDoing[protocol.CmdUpdateHost]; ok && do {
 		return "正在更新机器配置, 请勿重复操作"
 	}
 
@@ -215,7 +217,8 @@ func (s *aserver) UpdateSvn(host string) string {
 	if c == nil {
 		return " Update, cannt find host client:"
 	}
-	if _, ok := c.opCmdDoing[protocol.CmdUpdateSvn]; ok {
+
+	if do, ok := c.opCmdDoing[protocol.CmdUpdateSvn]; ok && do {
 		return "正在更新机器svn文件, 请勿重复操作"
 	}
 
@@ -228,6 +231,7 @@ func (s *aserver) UpdateSvn(host string) string {
 
 	if r.Do == protocol.NotifyDoSuc {
 		c.codeVersion = r.Result
+		r.Result = "OK"
 	}
 
 	return r.Result

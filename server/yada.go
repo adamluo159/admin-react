@@ -56,6 +56,10 @@ type (
 		Result string
 		Items  []Machine
 	}
+
+	MachineSvnUpReq struct {
+		HostName string
+	}
 )
 
 type (
@@ -450,9 +454,10 @@ func (y *yada) StopAllZone(c echo.Context) error {
 
 func (y *yada) MachineRspFunc() []Machine {
 	ms := y.machineMgr.GetAllMachines()
-	for _, v := range ms {
-		v.Online, v.CodeVersion = y.as.CheckOnlineMachine(v.Hostname)
+	for k, v := range ms {
+		ms[k].Online, ms[k].CodeVersion = y.as.CheckOnlineMachine(v.Hostname)
 	}
+
 	return ms
 }
 
@@ -549,11 +554,17 @@ func (y *yada) CommonConfig(c echo.Context) error {
 }
 
 func (y *yada) SvnUpdate(c echo.Context) error {
-	hostName := c.FormValue("HostName")
-	rsp := MachineAllRsp{
-		Result: y.as.UpdateSvn(hostName),
-		Items:  y.MachineRspFunc(),
+	m := MachineSvnUpReq{}
+
+	rsp := MachineAllRsp{}
+	if err := c.Bind(&m); err != nil {
+		rsp.Result = fmt.Sprintf("updateSvn machine bind data err %v", err)
+		return c.JSON(http.StatusOK, rsp)
 	}
+	rsp.Result = y.as.UpdateSvn(m.HostName)
+	rsp.Items = y.MachineRspFunc()
+
+	log.Println("__________", rsp.Result, m.HostName)
 	return c.JSON(http.StatusOK, rsp)
 }
 

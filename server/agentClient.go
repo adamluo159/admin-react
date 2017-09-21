@@ -36,6 +36,7 @@ func (c *Client) OnMessage() {
 		protocol.CmdStartHostZone: c.CallBackHandle,
 		protocol.CmdStopHostZone:  c.CallBackHandle,
 		protocol.CmdZoneState:     c.ZoneState,
+		protocol.CmdUpdateSvn:     c.CallBackHandle,
 	}
 
 	for {

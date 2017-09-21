@@ -38,6 +38,8 @@ type (
 		GetAllMachines() []Machine
 		//查找机器配置
 		GetMachineByName(name string) *Machine
+		//更新机器svn版本号
+		UpdateSvnVersion(host string, ver string) error
 
 		//更新用途关系
 		UpdateZone(old *RelationZone, new *RelationZone)
@@ -107,6 +109,13 @@ func (m *machineMgr) UpdateMachineApps(host string, A *[]string, name string, op
 	if err := m.cl.Update(h, setv); err != nil {
 		log.Println(" UpdateMachineApps err, ", err.Error())
 	}
+}
+
+func (m *machineMgr) UpdateSvnVersion(host string, ver string) error {
+	h := bson.M{"hostname": host}
+	setv := bson.M{"$set": bson.M{"codeVersion": ver}}
+	return m.cl.Update(h, setv)
+
 }
 
 func (m *machineMgr) GetMachineByName(name string) *Machine {

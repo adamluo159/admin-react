@@ -218,6 +218,8 @@ func (a *agent) S2cStartZone(data []byte) {
 		Result: "启zone服成功",
 	}
 	run := StartZone(zone)
+	a.srvs[zone].Started = run
+
 	if run {
 		a.srvs[zone].RegularlyCheck = true
 		a.C2sZoneState(zone)
@@ -226,7 +228,6 @@ func (a *agent) S2cStartZone(data []byte) {
 		r.Result = "启zone服失败"
 	}
 
-	a.srvs[zone].Started = run
 	protocol.SendJson(a.conn, protocol.CmdStartZone, r)
 }
 
@@ -248,6 +249,7 @@ func (a *agent) S2cStopZone(data []byte) {
 	if StopZone(zone) {
 		a.srvs[zone].Started = false
 		a.srvs[zone].RegularlyCheck = false
+		a.C2sZoneState(zone)
 	} else {
 		r.Do = protocol.NotifyDoFail
 		r.Result = "关zone服失败"
@@ -271,7 +273,7 @@ func (a *agent) S2cStartHostZones(data []byte) {
 
 	for k, v := range a.srvs {
 		run := StartZone(k)
-		v.Started = run
+		a.srvs[k].Started = run
 		if run {
 			a.srvs[k].RegularlyCheck = true
 			a.C2sZoneState(k)
@@ -304,8 +306,8 @@ func (a *agent) S2cStopHostZones(data []byte) {
 	for k, v := range a.srvs {
 		stop := StopZone(k)
 		if stop {
-			v.Started = false
-			v.RegularlyCheck = false
+			a.srvs[k].Started = false
+			a.srvs[k].RegularlyCheck = false
 			a.C2sZoneState(k)
 		} else {
 			r.Do = protocol.NotifyDoFail

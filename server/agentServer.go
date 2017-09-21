@@ -10,9 +10,9 @@ import (
 
 type (
 	ZoneStates struct {
-		Host     string
-		Online   bool
-		ZoneName string
+		Host     string `json:"host" bson:"host"`
+		Online   bool   `json:"online" bson:"online"`
+		ZoneName string `json:"zoneName" bson:"zoneName"`
 	}
 	Aserver interface {
 		Listen()
@@ -93,7 +93,9 @@ func (s *aserver) StartZone(host string, zid int) string {
 	}
 
 	c.opCmdDoing[protocol.CmdStartZone] = true
-	protocol.SendJsonWaitCB(c.conn, protocol.CmdStartZone, p, &r)
+	if err := protocol.SendJsonWaitCB(c.conn, protocol.CmdStartZone, p, &r); err != nil {
+		r.Result = err.Error()
+	}
 	c.opCmdDoing[protocol.CmdStartZone] = false
 
 	return r.Result
@@ -121,8 +123,10 @@ func (s *aserver) StopZone(host string, zid int) string {
 	}
 
 	c.opCmdDoing[protocol.CmdStopZone] = true
-	protocol.SendJsonWaitCB(c.conn, protocol.CmdStopZone, p, &r)
-	c.opCmdDoing[protocol.CmdStopZone] = true
+	if err := protocol.SendJsonWaitCB(c.conn, protocol.CmdStopZone, p, &r); err != nil {
+		r.Result = err.Error()
+	}
+	c.opCmdDoing[protocol.CmdStopZone] = false
 	return r.Result
 }
 
@@ -142,8 +146,11 @@ func (s *aserver) UpdateZone(host string) string {
 	}
 
 	c.opCmdDoing[protocol.CmdUpdateHost] = true
-	protocol.SendJsonWaitCB(c.conn, protocol.CmdUpdateHost, p, &r)
+	if err := protocol.SendJsonWaitCB(c.conn, protocol.CmdUpdateHost, p, &r); err != nil {
+		r.Result = err.Error()
+	}
 	c.opCmdDoing[protocol.CmdUpdateHost] = false
+
 	return r.Result
 }
 
@@ -159,7 +166,10 @@ func (s *aserver) StartAllZone() string {
 	p := protocol.S2cNotifyDo{}
 	s.allOperating = true
 	for _, v := range s.clients {
-		protocol.SendJsonWaitCB(v.conn, protocol.CmdStartHostZone, p, &r)
+		if err := protocol.SendJsonWaitCB(v.conn, protocol.CmdStartHostZone, p, &r); err != nil {
+			r.Result = err.Error()
+		}
+
 		if r.Do != protocol.NotifyDoSuc {
 			retStr += "机器:" + v.host + "  " + r.Result + "\n"
 		}
@@ -180,7 +190,9 @@ func (s *aserver) StopAllZone() string {
 	p := protocol.S2cNotifyDo{}
 	s.allOperating = true
 	for _, v := range s.clients {
-		protocol.SendJsonWaitCB(v.conn, protocol.CmdStopHostZone, p, &r)
+		if err := protocol.SendJsonWaitCB(v.conn, protocol.CmdStopHostZone, p, &r); err != nil {
+			r.Result = err.Error()
+		}
 		if r.Do != protocol.NotifyDoSuc {
 			retStr += "机器:" + v.host + "  " + r.Result + "\n"
 		}
@@ -226,7 +238,9 @@ func (s *aserver) UpdateSvn(host string) string {
 	r := protocol.C2sNotifyDone{}
 
 	c.opCmdDoing[protocol.CmdUpdateSvn] = true
-	protocol.SendJsonWaitCB(c.conn, protocol.CmdUpdateSvn, p, &r)
+	if err := protocol.SendJsonWaitCB(c.conn, protocol.CmdUpdateSvn, p, &r); err != nil {
+		r.Result = err.Error()
+	}
 	c.opCmdDoing[protocol.CmdUpdateSvn] = false
 
 	if r.Do == protocol.NotifyDoSuc {
@@ -248,7 +262,9 @@ func (s *aserver) UpdateSvnAll() string {
 	retStr := ""
 	s.allOperating = true
 	for _, v := range s.clients {
-		protocol.SendJsonWaitCB(v.conn, protocol.CmdUpdateSvn, p, &r)
+		if err := protocol.SendJsonWaitCB(v.conn, protocol.CmdUpdateSvn, p, &r); err != nil {
+			r.Result = err.Error()
+		}
 		if r.Do != protocol.NotifyDoSuc {
 			retStr += "机器:" + v.host + "  " + r.Result + "\n"
 		} else {

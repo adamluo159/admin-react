@@ -9,7 +9,7 @@ class ZoneShowTable extends React.Component {
         }
         this.columns = [{
             title: '区服名',
-            dataIndex: 'zoneName',
+            dataIndex: 'name',
         }, {
             title: '状态',
             dataIndex: 'online',
@@ -37,9 +37,8 @@ class ZoneShowTable extends React.Component {
         const {getZoneName} = this.props
         show.forEach(v => {
             let k = v.zoneName.replace(/[^0-9]/ig,"")
-            let name = getZoneName(k)
             v.key = v.zoneName
-            v.zoneName = name
+            v.name = getZoneName(k)
         })
         return (
             <Table columns={this.columns} dataSource={show} size="small" />

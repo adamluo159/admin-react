@@ -108,4 +108,5 @@ func (c *Client) ZoneState(data []byte) {
 		return
 	}
 	c.curServices[p.Zone] = p.Open
+	log.Println("notify zone state", p, c.curServices[p.Zone])
 }

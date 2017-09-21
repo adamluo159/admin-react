@@ -420,7 +420,7 @@ func (y *yada) StartZone(c echo.Context) error {
 	ret.Result = y.as.StartZone(m.Host, m.Zid)
 	ret.Zstates = y.as.OnlineZones()
 
-	log.Println("start ", ret)
+	log.Println("start ", ret.Result, ret.Zstates)
 	return c.JSON(http.StatusOK, ret)
 }
 

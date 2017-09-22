@@ -106,9 +106,10 @@ type (
 		ConnectServers map[string]interface{}
 	}
 
-	LogDBConf struct {
-		DirName string
-		IP      string
+	GameJsonConf struct {
+		DirName     string
+		IP          string
+		ClientPorts []int
 	}
 
 	LoginConf struct {
@@ -231,7 +232,7 @@ func (m *machineMgr) ZoneLua(zone *Zone, Dir string) error {
 	return nil
 }
 
-func (m *machineMgr) GateLua(zone *Zone, Dir string) error {
+func (m *machineMgr) GateLua(zone *Zone, Dir string, arrayClientPorts *[]int) error {
 	zonem := m.GetMachineByName(zone.ZoneHost)
 	if zonem == nil {
 		return errors.New(fmt.Sprintf("gateLua zone machine info err"))
@@ -264,6 +265,7 @@ func (m *machineMgr) GateLua(zone *Zone, Dir string) error {
 		if trans == false {
 			log.Printf("gate cannt wirte lua file, gateid:%d\n", i)
 		}
+		(*arrayClientPorts)[i-1] = gateLua.ClientPort
 	}
 
 	return nil
@@ -454,29 +456,8 @@ func (m *machineMgr) LogLua(zone *Zone, Dir string) error {
 
 	trans := struct2lua.ToLuaConfig(Dir, "Log", logLua, sHead, 0)
 	if trans == false {
-		log.Println("log cannt wirte lua file")
+		return errors.New("log cannt wirte lua file")
 	}
-
-	zonelogdbm := m.GetMachineByName(zone.ZonelogdbHost)
-	if zonelogdbm == nil {
-		return errors.New(fmt.Sprintf("zone logdb conf info err"))
-	}
-
-	l := LogDBConf{
-		DirName: "zonelog" + strconv.Itoa(zone.Zid),
-		IP:      zonelogdbm.IP,
-	}
-
-	c, err := json.Marshal(l)
-	if err != nil {
-		return err
-	}
-	f, cerr := os.Create(Dir + "logdbconf")
-	if cerr != nil {
-		return cerr
-	}
-	f.Write(c)
-	defer f.Close()
 
 	return nil
 }
@@ -641,4 +622,32 @@ func (m *machineMgr) MasterLogLua() error {
 	}
 	return nil
 
+}
+
+func (m *machineMgr) GameJsonConf(zone *Zone, arrayClientPorts *[]int, Dir string) error {
+	zonelogdbm := m.GetMachineByName(zone.ZonelogdbHost)
+	if zonelogdbm == nil {
+		return errors.New(fmt.Sprintf("zone logdb conf info err"))
+	}
+
+	l := GameJsonConf{
+		DirName:     "zonelog" + strconv.Itoa(zone.Zid),
+		IP:          zonelogdbm.IP,
+		ClientPorts: *arrayClientPorts,
+	}
+
+	c, err := json.Marshal(l)
+	if err != nil {
+		return err
+	}
+	f, cerr := os.Create(Dir + "gameJsonConf")
+	if cerr != nil {
+		return cerr
+	}
+	defer f.Close()
+
+	if _, err := f.Write(c); err != nil {
+		return err
+	}
+	return nil
 }

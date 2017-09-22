@@ -50,7 +50,7 @@ type (
 
 		//写游戏服配置文件
 		ZoneLua(zone *Zone, Dir string) error
-		GateLua(zone *Zone, Dir string) error
+		GateLua(zone *Zone, Dir string, arrayClientPorts *[]int) error
 		CenterLua(zone *Zone, Dir string) error
 		LogLua(zone *Zone, Dir string) error
 		LogicLua(zone *Zone, Dir string) error
@@ -59,6 +59,7 @@ type (
 		AccountDBLua() error
 		MasterLogLua() error
 		MasterLua() error
+		GameJsonConf(zone *Zone, arrayClientPorts *[]int, Dir string) error
 	}
 
 	machineMgr struct {

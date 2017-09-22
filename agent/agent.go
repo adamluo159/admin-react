@@ -5,6 +5,7 @@ import (
 	"log"
 	"net"
 	"os"
+	"strconv"
 	"strings"
 	"time"
 
@@ -20,6 +21,7 @@ type (
 		Sname          string //服务名
 		Started        bool   //游戏区服是否已启动
 		RegularlyCheck bool   //是否开启定时检查进程功能
+		ClientPorts    []int
 	}
 	Agent interface {
 		Run() error
@@ -36,14 +38,10 @@ type (
 	Conf struct {
 		ConAddress string
 
-		RemoteIP       string //远端游戏配置仓库地址
-		RemoteConfDir  string //远端游戏配置仓库目录
-		LocalConfDir   string //本地游戏配置地址
-		GameShell      string //游戏启动关闭脚本
-		CheckZoneshell string //检查游戏服进程脚本
-
-		CmdSvnVer string //svn版本更新执行串
-		CmdSvnUp  string //svn更新
+		RemoteIP      string //远端游戏配置仓库地址
+		RemoteConfDir string //远端游戏配置仓库目录
+		LocalConfDir  string //本地游戏配置地址
+		GameShell     string //游戏启动关闭脚本
 	}
 )
 
@@ -93,7 +91,7 @@ func StopZone(zone string) bool {
 
 //获取svn版本
 func SvnInfo() string {
-	ver, err := utils.ExeShell("sh", conf.CmdSvnVer, "")
+	ver, err := utils.ExeShell("sh", "scripts/svnInfo", "")
 	if err != nil {
 		log.Fatal("update svn ", err)
 	}
@@ -102,22 +100,31 @@ func SvnInfo() string {
 
 //svn更新
 func SvnUp() error {
-	_, upErr := utils.ExeShell("sh", conf.CmdSvnUp, "")
+	_, upErr := utils.ExeShell("sh", "scripts/svnUp", "")
 	return upErr
 }
 
 //更新本地配置
 func UpdateGameConf() error {
-	_, err := utils.ExeShellArgs3("expect", "./synGameConf_expt", conf.RemoteIP, conf.RemoteConfDir, conf.LocalConfDir)
+	_, err := utils.ExeShellArgs3("expect", "scripts/synGameConf_expt", conf.RemoteIP, conf.RemoteConfDir, conf.LocalConfDir)
 	return err
 }
 
 //检查进程是否存在
 func CheckProcess(dstName string) bool {
-	ret, _ := utils.ExeShell("sh", conf.CheckZoneshell, dstName)
+	ret, _ := utils.ExeShell("sh", "scripts/checkZoneProcess", dstName)
 	s := strings.Replace(string(ret), " ", "", -1)
 	if s != "" {
 		return false
 	}
 	return true
+}
+
+//端口的连接数
+func OnlinePlayers(port string) int {
+	ret, _ := utils.ExeShell("sh", "scripts/onlinePlayers", port)
+	if n, err := strconv.Atoi(ret); err == nil {
+		return n
+	}
+	return 0
 }

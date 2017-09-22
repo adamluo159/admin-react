@@ -368,15 +368,22 @@ func (y *yada) SynMachine(c echo.Context) error {
 	curDir := hostdir + "/zone" + strconv.Itoa(zone.Zid) + "/"
 	os.MkdirAll(curDir, os.ModePerm)
 
+	arrayClientPorts := make([]int, y.conf.GateCount)
+
 	zerr := y.machineMgr.ZoneLua(zone, curDir)
-	gerr := y.machineMgr.GateLua(zone, curDir)
+	gerr := y.machineMgr.GateLua(zone, curDir, &arrayClientPorts)
 	cerr := y.machineMgr.CenterLua(zone, curDir)
 	lerr := y.machineMgr.LogLua(zone, curDir)
 	logicerr := y.machineMgr.LogicLua(zone, curDir)
 	charErr := y.machineMgr.CharDBLua(zone, curDir)
 
 	if zerr != nil || gerr != nil || cerr != nil || lerr != nil || logicerr != nil || charErr != nil {
-		log.Printf("zone:%v,gate:%v,center:%v,log:%v, logic:%v, chardb:%v, logdberr:%v", zerr, gerr, cerr, lerr, logicerr, charErr)
+		ret.Result = fmt.Sprintf("zone:%v,gate:%v,center:%v,log:%v, logic:%v, chardb:%v, logdberr:%v", zerr, gerr, cerr, lerr, logicerr, charErr)
+		return c.JSON(http.StatusOK, ret)
+	}
+
+	if err := y.machineMgr.GameJsonConf(zone, &arrayClientPorts, curDir); err != nil {
+		ret.Result = fmt.Sprintf("gameJsonConf err %v", err)
 		return c.JSON(http.StatusOK, ret)
 	}
 
@@ -564,7 +571,6 @@ func (y *yada) SvnUpdate(c echo.Context) error {
 	rsp.Result = y.as.UpdateSvn(m.HostName)
 	rsp.Items = y.MachineRspFunc()
 
-	log.Println("__________", rsp.Result, m.HostName)
 	return c.JSON(http.StatusOK, rsp)
 }
 

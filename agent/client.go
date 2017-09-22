@@ -9,6 +9,7 @@ import (
 	"log"
 	"net"
 	"os"
+	"strconv"
 	"time"
 
 	"github.com/adamluo159/admin-react/protocol"
@@ -36,6 +37,7 @@ func New(cfPath string) {
 	a.LoadServices()
 
 	go a.RegularlyCheckProcess()
+	go a.GetOnlinePlayers()
 
 	a.Connect()
 }
@@ -55,6 +57,22 @@ func (a *agent) Connect() {
 		time.Sleep(5 * time.Second)
 	}
 
+}
+
+func (a *agent) GetOnlinePlayers() {
+	for {
+		for _, v := range a.srvs {
+			count := 0
+			for _, p := range v.ClientPorts {
+				port := strconv.Itoa(p)
+				count += OnlinePlayers(port)
+			}
+			log.Println(v.Sname, "online players : ", count)
+			//resp, err := http.Get("http://example.com/")
+
+		}
+		time.Sleep(3 * time.Minute)
+	}
 }
 
 //加载本地游戏配置
@@ -123,6 +141,24 @@ func (a *agent) OnMessage() {
 	}
 }
 
+func (a *agent) ReadGameJson(name string) []int {
+	fpath := conf.LocalConfDir + a.hostName + "/" + name + "/gameJsonConf"
+	cp := struct {
+		ClientPorts []int
+	}{}
+	data, err := ioutil.ReadFile(fpath)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	datajson := []byte(data)
+	err = json.Unmarshal(datajson, &cp)
+	if err != nil {
+		log.Fatal(err)
+	}
+	return cp.ClientPorts
+}
+
 //目前只有zone级服务初始化,后面添加登陆、充值等
 func (a *agent) InitSrv(name string) {
 	if _, ok := a.srvs[name]; ok {
@@ -134,6 +170,7 @@ func (a *agent) InitSrv(name string) {
 		Started:        run,
 		RegularlyCheck: run,
 		Sname:          name,
+		ClientPorts:    a.ReadGameJson(name),
 	}
 }
 

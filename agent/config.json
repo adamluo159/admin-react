@@ -3,8 +3,5 @@
 	"RemoteIP"	: "192.168.1.252",
 	"RemoteConfDir"	: "/home/cgyx/gConf/",
 	"LocalConfDir"	: "/home/cgyx/GameConfig/",
-	"GameShell"	: "/home/cgyx/product/server/cgServer",
-	"CheckZoneshell": "/home/cgyx/product/server/agent/checkZoneProcess",
-	"CmdSvnVer" 	: "/home/cgyx/product/server/agent/svnInfo",
-	"CmdSvnUp" 	: "/home/cgyx/product/server/agent/svnUp"
+	"GameShell"	: "/home/cgyx/product/server/cgServer"
 }

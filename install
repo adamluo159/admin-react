@@ -12,3 +12,5 @@ echo "构建完毕..."
 cd ../server
 ./build
 
+cd ../agent
+./build

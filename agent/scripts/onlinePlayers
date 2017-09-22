@@ -1,0 +1,7 @@
+#!/bin/sh
+if [[ x"$1" == x ]]; then
+	echo "args err"
+	exit 0
+fi
+
+netstat -an | grep $1 | grep "ESTABLISHED" | wc -l

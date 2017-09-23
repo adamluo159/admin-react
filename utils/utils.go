@@ -25,7 +25,7 @@ func Md5Check(checkStr string, gen string) bool {
 
 func CreateMd5(gen string) string {
 	md5Ctx := md5.New()
-	md5Ctx.Write([]byte("cgyx2017"))
+	md5Ctx.Write([]byte(gen))
 	cipherStr := md5Ctx.Sum(nil)
 	return hex.EncodeToString(cipherStr)
 }

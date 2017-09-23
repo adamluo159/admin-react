@@ -21,8 +21,10 @@ type (
 		Sname          string //服务名
 		Started        bool   //游戏区服是否已启动
 		RegularlyCheck bool   //是否开启定时检查进程功能
-		ClientPorts    []int
+		ClientPorts    *[]int
+		Zid            int
 	}
+
 	Agent interface {
 		Run() error
 	}
@@ -42,6 +44,18 @@ type (
 		RemoteConfDir string //远端游戏配置仓库目录
 		LocalConfDir  string //本地游戏配置地址
 		GameShell     string //游戏启动关闭脚本
+		HttpStr       string //在线人数上报地址
+		HttpKey       string //上报数据时做签名的key
+	}
+
+	OnlineReport struct {
+		Method    string       `json:"method"`
+		Param     []ZoneOnline `json:"param"`
+		TimeStamp int64        `json:"timestamp"`
+	}
+	ZoneOnline struct {
+		Zid       int `json:"zid"`
+		OnlineNum int `json:"onlineNum"`
 	}
 )
 

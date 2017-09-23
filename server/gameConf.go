@@ -107,7 +107,7 @@ type (
 	}
 
 	GameJsonConf struct {
-		DirName     string
+		Zid         int
 		IP          string
 		ClientPorts []int
 	}
@@ -160,7 +160,7 @@ const (
 	AccountDBPort    int = 6500
 	RedisPort        int = 6379
 	MysqlPort        int = 3306
-	OpWebPort        int = 1235
+	OpWebPort        int = 1252
 	LoginWebPort     int = 1236
 	ErrLogPort       int = 1237
 	RedisAccountPort int = 6380
@@ -631,7 +631,7 @@ func (m *machineMgr) GameJsonConf(zone *Zone, arrayClientPorts *[]int, Dir strin
 	}
 
 	l := GameJsonConf{
-		DirName:     "zonelog" + strconv.Itoa(zone.Zid),
+		Zid:         zone.Zid,
 		IP:          zonelogdbm.IP,
 		ClientPorts: *arrayClientPorts,
 	}

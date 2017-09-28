@@ -18,5 +18,7 @@
 	"MysqlUsr":"root",
 	"MysqlPwd":"cg2016",
 	"RedisCharPwd": "",
-	"RedisAccountPWd": "cg2016"
+	"RedisAccountPWd": "cg2016",
+	"HttpPort": ":8080"
+
 }

@@ -88,7 +88,6 @@ export const zoneConfig = {
   channels: {
     Id: 'channels',
     label: '渠道',
-    kinds: ['ios', 'yyb', 'xiaomi', "cg"]
   },
   switchEdit: {
     Id: 'edit',

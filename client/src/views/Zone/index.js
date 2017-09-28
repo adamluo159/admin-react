@@ -23,6 +23,7 @@ class ZoneClass extends React.Component {
     this.state = {
       zoneEdit: false,
     }
+    this.kinds = []
   }
 
   componentDidMount() {
@@ -36,6 +37,7 @@ class ZoneClass extends React.Component {
     if (json.Items.length <= 0) {
       this.setState({ zoneEdit: false })
     } else {
+      this.kinds = json.Channels
       json.Items.forEach(v => {
          if (v.opentime == null || v.opentime == "") {
            v.opentime = "2017-08-07 18:00:00"
@@ -44,10 +46,13 @@ class ZoneClass extends React.Component {
         this.zoneData[v.zid] = v
       })
       this.opZid = this.refs.zHead.Init(this.zoneData)
-      let { setFieldsValue } = this.refs.zForm
+      let { setFieldsValue,getFieldsValue } = this.refs.zForm
       setFieldsValue(this.zoneData[this.opZid])
     }
     this.refs.zShowTable.setState({ show: json.Zstates })
+  }
+  getZoneChannels(){
+	  return this.kinds
   }
 
   ShowZone(zid) {
@@ -277,7 +282,7 @@ class ZoneClass extends React.Component {
               </Col>
             </Row>
             <Row type="flex" justify="center" align="top">
-              <ZoneForm ref="zForm"></ZoneForm>
+              <ZoneForm ref="zForm" getZoneChannels = {()=>this.getZoneChannels()}></ZoneForm>
             </Row>
           </Content>
           <Sider className="layout-head">

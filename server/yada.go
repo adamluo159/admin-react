@@ -21,10 +21,11 @@ import (
 type (
 	//回复信息
 	ZoneRsp struct {
-		Result  string
-		Item    Zone
-		Items   []Zone
-		Zstates []ZoneStates
+		Result   string
+		Item     Zone
+		Items    []Zone
+		Zstates  []ZoneStates
+		Channels []string
 	}
 
 	SaveZoneReq struct {
@@ -91,6 +92,7 @@ type (
 		MysqlPwd        string
 		RedisCharPwd    string
 		RedisAccountPWd string
+		HttpPort        string
 	}
 )
 
@@ -187,7 +189,7 @@ func (y *yada) Run() {
 	y.RegisterWeb()
 	y.e.Static("/", "../client/dist/")
 	y.e.File("/", "../client/dist/index.html")
-	y.e.Logger.Fatal(y.e.Start(":1323"))
+	y.e.Logger.Fatal(y.e.Start(y.conf.HttpPort))
 }
 
 func (y *yada) YadaCheck() {
@@ -222,10 +224,15 @@ func (y *yada) WebLogin(c echo.Context) error {
 
 //获取区服信息
 func (y *yada) GetZones(c echo.Context) error {
+	channels := []string{}
+	for k, _ := range y.conf.Channels {
+		channels = append(channels, k)
+	}
 	rsp := ZoneRsp{
-		Zstates: y.as.OnlineZones(),
-		Items:   *y.zMgr.GetAllZoneInfo(),
-		Result:  "OK",
+		Zstates:  y.as.OnlineZones(),
+		Items:    *y.zMgr.GetAllZoneInfo(),
+		Result:   "OK",
+		Channels: channels,
 	}
 	return c.JSON(http.StatusOK, rsp)
 }

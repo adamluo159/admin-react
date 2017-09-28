@@ -616,7 +616,7 @@ func (m *machineMgr) MasterLogLua() error {
 	sHead.StartService[0]["nType"] = LogServer
 	sHead.LOG_INDEX = "masterlog"
 
-	trans := struct2lua.ToLuaConfig(m.conf.CommonConf, "Log", loglua, sHead, 0)
+	trans := struct2lua.ToLuaConfig(m.conf.CommonConf, "MasterLog", loglua, sHead, 0)
 	if trans == false {
 		return errors.New("masterLog cannt wirte lua file")
 	}

@@ -234,6 +234,7 @@ func (y *yada) GetZones(c echo.Context) error {
 		Result:   "OK",
 		Channels: channels,
 	}
+	log.Println("aaaaa-", channels, "   www---", y.conf.Channels)
 	return c.JSON(http.StatusOK, rsp)
 }
 

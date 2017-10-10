@@ -34,10 +34,10 @@ class ZoneClass extends React.Component {
     if (json.Result != "OK") {
       return
     }
+    this.kinds = json.Channels
     if (json.Items.length <= 0) {
       this.setState({ zoneEdit: false })
     } else {
-      this.kinds = json.Channels
       json.Items.forEach(v => {
          if (v.opentime == null || v.opentime == "") {
            v.opentime = "2017-08-07 18:00:00"

@@ -88,26 +88,27 @@ func NewMachineMgr(session *mgo.Session, mconf Conf) MachineMgr {
 	}
 }
 
-func (m *machineMgr) UpdateMachineApps(host string, A *[]string, name string, op int) {
+func (m *machineMgr) UpdateMachineApps(host string, name string, op int) {
+
+	if name == "" {
+		return
+	}
+
+	updateM := make(bson.M)
+	s := bson.M{"applications": name}
+
 	switch op {
 	case RelationDel:
-		{
-			for k, v := range *A {
-				if v == name {
-					(*A) = append((*A)[:k], (*A)[k+1:]...)
-					break
-				}
-			}
-		}
+		updateM["$pull"] = s
 	case RelationAdd:
-		(*A) = append((*A), name)
+		updateM["$push"] = s
 	default:
 		log.Println("UpdateMachineApps op wrong ", op)
 	}
 
 	h := bson.M{"hostname": host}
-	setv := bson.M{"$set": bson.M{"applications": *A}}
-	if err := m.cl.Update(h, setv); err != nil {
+
+	if err := m.cl.Update(h, updateM); err != nil {
 		log.Println(" UpdateMachineApps err, ", err.Error())
 	}
 }
@@ -153,17 +154,17 @@ func (m *machineMgr) OpZoneRelation(r *RelationZone, op int) {
 	z := m.GetMachineByName((*r).ZoneHost)
 	if z != nil {
 		name := "zone" + strconv.Itoa((*r).Zid)
-		m.UpdateMachineApps(z.Hostname, &z.Applications, name, op)
+		m.UpdateMachineApps(z.Hostname, name, op)
 	}
 	db := m.GetMachineByName((*r).ZoneDBHost)
 	if db != nil {
 		name := "zonedb" + strconv.Itoa((*r).Zid)
-		m.UpdateMachineApps(db.Hostname, &db.Applications, name, op)
+		m.UpdateMachineApps(db.Hostname, name, op)
 	}
 	logdb := m.GetMachineByName((*r).ZonelogdbHost)
 	if logdb != nil {
 		name := "zonelogdb" + strconv.Itoa((*r).Zid)
-		m.UpdateMachineApps(logdb.Hostname, &logdb.Applications, name, op)
+		m.UpdateMachineApps(logdb.Hostname, name, op)
 	}
 }
 

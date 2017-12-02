@@ -249,6 +249,16 @@ class ZoneClass extends React.Component {
     })
   }
 
+  allZoneConf() {
+    this.refs.zFooter.setState({ edit: false, allZoneConfLoading : true })
+    api.post('/zone/synAllZoneGameConf').then((res) => {
+      this.NotifyRsp(res.data)
+    })
+    this.refs.zFooter.setState({ edit: false, allZoneConfLoading : true })
+
+  }
+
+
   stopAllZoneRsp(json) {
     this.NotifyRsp(json)
     this.refs.zFooter.setState({ stopAllZoneLoading: false })
@@ -298,7 +308,8 @@ class ZoneClass extends React.Component {
               updatelogZone={(e) => this.updatelogZoneDB(e)}
               saveOrAddZone={(e) => this.saveOrAddZone(e)}
               stopAllZone={(e) => this.stopAllZone(e)}
-              startAllZone={(e) => this.startAllZone(e)}>
+              startAllZone={(e) => this.startAllZone(e)}
+	      allZoneConf = {(e) => this.allZoneConf(e)}>
             </ZoneFooter>
           </Footer>
       </Layout>

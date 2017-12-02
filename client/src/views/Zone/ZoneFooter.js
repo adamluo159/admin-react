@@ -1,6 +1,8 @@
 import React, { Component } from 'react'
 import { Row, Col, Button } from 'antd'
 
+
+
 class ZoneFooter extends React.Component {
   constructor(props) {
     super(props);
@@ -15,11 +17,32 @@ class ZoneFooter extends React.Component {
       delZoneLoading: false,
       synMachineLoading: false,
       deleteZoneLoading: false,
+      allZoneConfLoading: false,
     }
   }
   render() {
-    const { stopZoneLoading, edit, startZoneLoading, startAllZoneLoading, stopAllZoneLoading, addZone, addZoneLoading, delZoneLoading, synMachineLoading, deleteZoneLoading } = this.state
-    const { saveOrAddZone, synMachine, startZone, stopZone, startAllZone, stopAllZone, deleteZone, updatelogZoneDB } = this.props
+    const { stopZoneLoading, 
+	    edit, 
+	    startZoneLoading, 
+	    startAllZoneLoading, 
+	    stopAllZoneLoading, 
+	    addZone, 
+	    addZoneLoading, 
+	    delZoneLoading, 
+	    synMachineLoading, 
+	    deleteZoneLoading,
+   	    allZoneConfLoading } = this.state
+		    
+    const { saveOrAddZone, 
+	    synMachine, 
+	    startZone, 
+	    stopZone, 
+	    startAllZone, 
+	    stopAllZone, 
+	    deleteZone, 
+	    updatelogZoneDB,
+   	    allZoneConf } = this.props
+
     let buttonText = addZone ? "新增" : "保存"
     return (
       <div>
@@ -38,6 +61,7 @@ class ZoneFooter extends React.Component {
             <Row type="flex" justify="space-around">
               <Button type="primary" loading={startAllZoneLoading} onClick={(e) => startAllZone(e)} >全服启动</Button>
               <Button type="primary" loading={stopAllZoneLoading} onClick={(e) => stopAllZone(e)} >全服关闭</Button>
+              <Button type="primary" loading={allZoneConfLoading} onClick={(e) => allZoneConf(e)} >全服更新配置</Button>
             </Row>
           </Col>
         </Row>

@@ -20,16 +20,16 @@ export const Commonhost = {
 }
 
 export const machineColumns = [{
-  title: 'HostName',
+  title: 'Host',
   dataIndex: 'hostname',
   key: 'hostname',
-  width: '10%',
+  width: '5%',
 },
 {
-  title: "CodeVersion",
+  title: "SvnVer",
   dataIndex: 'codeVersion',
   key: 'codeVersion',
-  width: '10%',
+  width: '5%',
 },
 {
   title: '内网IP',
@@ -47,7 +47,7 @@ export const machineColumns = [{
   title: '机器用途',
   dataIndex: 'applications',
   key: 'applications',
-  width: '40%',
+  width: '50%',
   filters: [
     { text: '空闲机器', value: 0 },
     { text: 'zone', value: 1 },

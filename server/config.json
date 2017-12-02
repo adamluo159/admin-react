@@ -1,10 +1,8 @@
 {
-	"MongoIP": "mongodb://192.168.1.251:27017/",
+	"MongoIP": "mongodb://192.168.70.240:27017/",
 	"Channels": {
-		"cg": 1,
-		"ios": 2,
-		"yyb": 3,
-		"xiaomi": 4
+		"开发渠道": 1,
+		"新动": 2
 	},
 	"LogicCount":2,
 	"GateCount":2,
@@ -12,13 +10,14 @@
 	"GitCommit":"/home/cgyx/gConf/gitCommit",
 	"GitDelete":"/home/cgyx/gConf/gitDelete",
 	"GConf": "/home/cgyx/gConf/",
-	"PerRedisHost" : "192.168.1.252",
+	"PerRedisHost" : "192.168.70.240",
 	"PerRedisPwd": "",
-	"OpWebIP": "192.168.1.244",
+	"OpWebIP": "192.168.70.240",
 	"MysqlUsr":"root",
 	"MysqlPwd":"cg2016",
-	"RedisCharPwd": "",
+	"RedisCharPwd": "cg2016",
 	"RedisAccountPWd": "cg2016",
-	"HttpPort": ":8080"
-
+	"HttpPort": ":8080",
+	"DataLogIP": "192.168.70.240",
+	"DataLogPort": 1201
 }

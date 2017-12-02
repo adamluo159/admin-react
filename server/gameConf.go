@@ -103,6 +103,7 @@ type (
 		ID             int
 		IP             string
 		Port           int
+		Zid            int
 		ConnectServers map[string]interface{}
 	}
 
@@ -179,7 +180,7 @@ const (
 	GateServer    int = 7
 	ZoneServer    int = 8
 
-	LogMaxLine int = 10000
+	LogMaxLine int = 20000
 )
 
 func (m *machineMgr) ZoneLua(zone *Zone, Dir string) error {
@@ -441,9 +442,10 @@ func (m *machineMgr) LogLua(zone *Zone, Dir string) error {
 	}
 
 	logLua := LogConf{
-		ID:             zone.Zid,
+		ID:             1,
 		IP:             zonem.IP,
 		Port:           LogPort + zone.PortNumber,
+		Zid:            zone.Zid,
 		ConnectServers: make(map[string]interface{}),
 	}
 	logLua.ConnectServers["Collect"] = Connect{
@@ -451,6 +453,12 @@ func (m *machineMgr) LogLua(zone *Zone, Dir string) error {
 		IP:   errCollect.IP,
 		Port: ErrLogPort,
 	}
+	logLua.ConnectServers["DataLog"] = Connect{
+		ID:   0,
+		IP:   m.conf.DataLogIP,
+		Port: m.conf.DataLogPort,
+	}
+
 	sHead.StartService[0]["nType"] = LogServer
 	sHead.LOG_INDEX = "logServer"
 
@@ -612,6 +620,11 @@ func (m *machineMgr) MasterLogLua() error {
 		ID:   1,
 		IP:   errLogM.IP,
 		Port: ErrLogPort,
+	}
+	loglua.ConnectServers["DataLog"] = Connect{
+		ID:   1,
+		IP:   m.conf.DataLogIP,
+		Port: m.conf.DataLogPort,
 	}
 	sHead.StartService[0]["nType"] = LogServer
 	sHead.LOG_INDEX = "masterlog"

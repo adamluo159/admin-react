@@ -88,11 +88,14 @@ type (
 		PerRedisHost    string
 		PerRedisPwd     string
 		OpWebIP         string
+		OpWebPort       int
 		MysqlUsr        string
 		MysqlPwd        string
 		RedisCharPwd    string
 		RedisAccountPWd string
 		HttpPort        string
+		DataLogIP       string
+		DataLogPort     int
 	}
 )
 
@@ -137,7 +140,8 @@ func (y *yada) RegisterWeb() {
 	y.e.GET("/zone", y.GetZones)
 	y.e.POST("/zone/add", y.AddZone)
 	y.e.POST("/zone/save", y.SaveZone)
-	y.e.GET("/zone/synMachine", y.SynMachine)
+	y.e.GET("/zone/synMachine", y.SynGameConfReq)
+	y.e.POST("/zone/synAllZoneGameConf", y.SynAllZoneConfReq)
 	y.e.POST("/zone/startZone", y.StartZone)
 	y.e.POST("/zone/stopZone", y.StopZone)
 	y.e.POST("/zone/del", y.DelZone)
@@ -234,7 +238,6 @@ func (y *yada) GetZones(c echo.Context) error {
 		Result:   "OK",
 		Channels: channels,
 	}
-	log.Println("aaaaa-", channels, "   www---", y.conf.Channels)
 	return c.JSON(http.StatusOK, rsp)
 }
 
@@ -281,6 +284,7 @@ func (y *yada) SaveZone(c echo.Context) error {
 		return c.JSON(http.StatusOK, ret)
 	}
 
+	oldRelation := y.zMgr.GetZoneRelation(m.OldZid)
 	if err := y.zMgr.SaveZone(m.OldZid, m.OldZoneName, &m.Item); err != nil {
 		ret.Result = fmt.Sprintf("save zone info err, %v", err)
 	} else {
@@ -294,7 +298,6 @@ func (y *yada) SaveZone(c echo.Context) error {
 		}
 
 		//更换机器用途信息
-		oldRelation := y.zMgr.GetZoneRelation(m.OldZid)
 		y.machineMgr.UpdateZone(oldRelation, newRelation)
 
 	}
@@ -362,15 +365,7 @@ func (y *yada) UpdateZonelogdb(c echo.Context) error {
 	return c.JSON(http.StatusOK, ret)
 }
 
-func (y *yada) SynMachine(c echo.Context) error {
-	ret := ZoneRsp{}
-	zid, _ := strconv.Atoi(c.QueryParam("zid"))
-	hostname := c.QueryParam("hostname")
-
-	zone := y.zMgr.GetZoneInfoByZid(zid)
-	if zone == nil || zone.ZoneHost != hostname {
-		return c.JSON(http.StatusOK, ret)
-	}
+func (y *yada) SynGameConf(zone *Zone) string {
 
 	hostdir := y.conf.GConf + zone.ZoneHost
 	curDir := hostdir + "/zone" + strconv.Itoa(zone.Zid) + "/"
@@ -386,21 +381,40 @@ func (y *yada) SynMachine(c echo.Context) error {
 	charErr := y.machineMgr.CharDBLua(zone, curDir)
 
 	if zerr != nil || gerr != nil || cerr != nil || lerr != nil || logicerr != nil || charErr != nil {
-		ret.Result = fmt.Sprintf("zone:%v,gate:%v,center:%v,log:%v, logic:%v, chardb:%v, logdberr:%v", zerr, gerr, cerr, lerr, logicerr, charErr)
-		return c.JSON(http.StatusOK, ret)
+		return fmt.Sprintf("zone:%v,gate:%v,center:%v,log:%v, logic:%v, chardb:%v, logdberr:%v", zerr, gerr, cerr, lerr, logicerr, charErr)
 	}
 
 	if err := y.machineMgr.GameJsonConf(zone, &arrayClientPorts, curDir); err != nil {
-		ret.Result = fmt.Sprintf("gameJsonConf err %v", err)
-		return c.JSON(http.StatusOK, ret)
+		return fmt.Sprintf("gameJsonConf err %v", err)
 	}
 
 	if _, err := utils.ExeShell("sh", y.conf.GitCommit, "add or update zone"+strconv.Itoa(zone.Zid)); err != nil {
-		log.Printf("exeshell fail %v", err)
-		return err
+		return fmt.Sprintf("exeshell fail %v", err)
 	}
+	return y.as.UpdateZone(zone.ZoneHost)
+}
 
-	ret.Result = y.as.UpdateZone(hostname)
+func (y *yada) SynAllZoneConfReq(c echo.Context) error {
+	ret := ZoneRsp{}
+	zones := y.zMgr.GetAllZoneInfo()
+	for _, v := range *zones {
+		s := y.SynGameConf(&v)
+		log.Println("a------------", v.ZoneName, s)
+	}
+	ret.Result = "OK"
+	return c.JSON(http.StatusOK, &ret)
+}
+
+func (y *yada) SynGameConfReq(c echo.Context) error {
+	ret := ZoneRsp{}
+	zid, _ := strconv.Atoi(c.QueryParam("zid"))
+	hostname := c.QueryParam("hostname")
+
+	zone := y.zMgr.GetZoneInfoByZid(zid)
+	if zone == nil || zone.ZoneHost != hostname {
+		return c.JSON(http.StatusOK, ret)
+	}
+	ret.Result = y.SynGameConf(zone)
 	return c.JSON(http.StatusOK, ret)
 }
 

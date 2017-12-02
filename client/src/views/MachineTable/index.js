@@ -34,7 +34,9 @@ class MachineTable extends React.Component {
     }
     this.state = {
       data: [],
-      pagination: {},
+      pagination: {
+	 pageSize:18,
+      },
       svnUpdate: false,
       commonlding: false,
     }
@@ -113,14 +115,17 @@ class MachineTable extends React.Component {
     }
 
     let { data, pagination } = this.state
-    if (pagination.current + 1 == pagination.pageSize) {
-      current = 0;
-      pageSize += 1;
+
+    let index = 0
+    if (pagination.current > 1) {
+      index = pagination.pageSize * (pagination.current - 1)
     }
+    console.log("aaaa-----", index, data)
     this.setState({
       data: [
+	...data.slice(0, index),
         this.editInput,
-        ...data,
+	...data.slice(index+1),
       ],
       pagination: pagination
     })

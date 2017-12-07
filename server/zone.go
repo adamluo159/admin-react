@@ -15,6 +15,7 @@ type (
 		ZoneHost      string   `json:"zoneHost" bson:"zoneHost"`
 		ZoneDBHost    string   `json:"zoneDBHost" bson:"zoneDBHost"`
 		ZonelogdbHost string   `json:"zonelogdbHost" bson:"zonelogdbHost"`
+		DatalogdbHost string   `json:"datalogdbHost" bson:"datalogdbHost"`
 		Channels      []string `json:"channels" bson:"channels"`
 		Whitelst      bool     `json:"whitelst" bson:"whitelst"`
 		PortNumber    int      `json:"portNumber" bson:"PortNumber"`
@@ -99,6 +100,7 @@ func (z *zoneMgr) GetZoneRelation(zid int) *RelationZone {
 		ZoneHost:      dz.ZoneHost,
 		ZoneDBHost:    dz.ZoneDBHost,
 		ZonelogdbHost: dz.ZonelogdbHost,
+		DatalogdbHost: dz.DatalogdbHost,
 	}
 }
 

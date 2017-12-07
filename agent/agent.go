@@ -21,8 +21,6 @@ type (
 		Sname          string //服务名
 		Started        bool   //游戏区服是否已启动
 		RegularlyCheck bool   //是否开启定时检查进程功能
-		ClientPorts    *[]int
-		Zid            int
 	}
 
 	Agent interface {

@@ -8,9 +8,7 @@ import (
 	"io/ioutil"
 	"log"
 	"net"
-	"net/http"
 	"os"
-	"strconv"
 	"time"
 
 	"github.com/adamluo159/admin-react/protocol"
@@ -38,7 +36,6 @@ func New(cfPath string) {
 	a.LoadServices()
 
 	go a.RegularlyCheckProcess()
-	go a.GetOnlinePlayers()
 
 	a.Connect()
 }
@@ -58,48 +55,6 @@ func (a *agent) Connect() {
 		time.Sleep(5 * time.Second)
 	}
 
-}
-
-func (a *agent) GetOnlinePlayers() {
-	for {
-		rt := OnlineReport{
-			Method:    "Backend.onlineData",
-			TimeStamp: time.Now().Unix(),
-			Param:     []ZoneOnline{},
-		}
-		n := 0
-		zo := ZoneOnline{}
-		sigkey := conf.HttpKey + "method=Backend.onlineDataparam"
-		for _, v := range a.srvs {
-			count := 0
-			if v.ClientPorts != nil {
-				for _, p := range *v.ClientPorts {
-					port := strconv.Itoa(p)
-					count += OnlinePlayers(port)
-				}
-				zo.Zid = v.Zid
-				zo.OnlineNum = count
-				sigkey += "=" + strconv.Itoa(n) + "=onlineNum=" + strconv.Itoa(count) + "zid=" + strconv.Itoa(v.Zid)
-				log.Println(v.Sname, "online players : ", count)
-				rt.Param = append(rt.Param, zo)
-			}
-		}
-
-		timeStamp := time.Now().Unix()
-		sigkey += "timestamp=" + strconv.FormatInt(timeStamp, 10)
-
-		if jdata, err := json.Marshal(&rt); err == nil {
-			webStr := fmt.Sprintf(conf.HttpStr, string(jdata), utils.CreateMd5(sigkey))
-			if resp, err := http.Get(webStr); err != nil {
-				log.Println("http get err", err)
-			} else {
-				body, err := ioutil.ReadAll(resp.Body)
-				log.Println("http result:", string(body), err)
-			}
-		}
-
-		time.Sleep(3 * time.Minute)
-	}
 }
 
 //加载本地游戏配置
@@ -169,39 +124,17 @@ func (a *agent) OnMessage() {
 	}
 }
 
-func (a *agent) ReadGameJson(name string) (*[]int, int) {
-	fpath := conf.LocalConfDir + a.hostName + "/" + name + "/gameJsonConf"
-	cp := struct {
-		ClientPorts []int
-		Zid         int
-	}{}
-	data, err := ioutil.ReadFile(fpath)
-	if err != nil {
-		return nil, 0
-	}
-
-	datajson := []byte(data)
-	err = json.Unmarshal(datajson, &cp)
-	if err != nil {
-		log.Fatal(err)
-	}
-	return &cp.ClientPorts, cp.Zid
-}
-
 //目前只有zone级服务初始化,后面添加登陆、充值等
 func (a *agent) InitSrv(name string) {
 	if _, ok := a.srvs[name]; ok {
 		return
 	}
-	cp, zid := a.ReadGameJson(name)
 
 	run := CheckProcess(name)
 	a.srvs[name] = &ServiceInfo{
 		Started:        run,
 		RegularlyCheck: run,
 		Sname:          name,
-		ClientPorts:    cp,
-		Zid:            zid,
 	}
 }
 

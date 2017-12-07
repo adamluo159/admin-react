@@ -28,15 +28,21 @@ class ZoneFormClass extends React.Component {
   }
 
   renderTabs(disabled) {
-    const { channels, zoneInput, whitelst, switchEdit, datePick } = zoneConfig
+    const { channels, zoneInput, whitelst, switchEdit, datePick, cghostSelect } = zoneConfig
     let w = this.props.form.getFieldValue("whitelst") || false
     this.renderItems = []
     for (let i = 0; i < zoneInput.length; i++) {
       this.renderItems.push(this.dCreator(zoneInput[i], <Input disabled={disabled} />))
     }
-    this.renderItems.push(this.dCreator(datePick, <DatePicker disabled = {disabled} showTime format="YYYY-MM-DD HH:mm:ss" />))
 
+    let mNames = this.props.getMachines()
+    let cmNames = mNames.map(k => <Option key={k}>{k}</Option>)
+    for (let i = 0; i < cghostSelect.length; i++){
+	    this.renderItems.push(this.dCreator(cghostSelect[i], <Select showSearch disabled={disabled}>{cmNames}</Select>))
+    }
+    this.renderItems.push(this.dCreator(datePick, <DatePicker disabled = {disabled} showTime format="YYYY-MM-DD HH:mm:ss" />))
     let kinds = this.props.getZoneChannels()
+
     let ckinds = kinds.map(k => <Option key={k}>{k}</Option>)
     this.renderItems.push(this.dCreator(channels, <Select mode={'multiple'} disabled={disabled}>{ckinds}</Select>))
     this.renderItems.push(this.dCreator(whitelst, <Switch checked ={w} disabled = {disabled} checkedChildren={'开'} unCheckedChildren={'关'} />))

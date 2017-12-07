@@ -23,6 +23,7 @@ class ZoneClass extends React.Component {
     this.state = {
       zoneEdit: false,
     }
+    this.machines = []
     this.kinds = []
   }
 
@@ -35,6 +36,7 @@ class ZoneClass extends React.Component {
       return
     }
     this.kinds = json.Channels
+    this.machines = json.Hosts
     if (json.Items.length <= 0) {
       this.setState({ zoneEdit: false })
     } else {
@@ -51,8 +53,12 @@ class ZoneClass extends React.Component {
     }
     this.refs.zShowTable.setState({ show: json.Zstates })
   }
+
   getZoneChannels(){
 	  return this.kinds
+  }
+  getMachines(){
+	  return this.machines
   }
 
   ShowZone(zid) {
@@ -86,8 +92,13 @@ class ZoneClass extends React.Component {
     zone.opentime = zone.opentime.format('YYYY-MM-DD HH:mm:ss');
 
     let { addZone } = this.refs.zFooter.state
+    if(this.zoneData[zone.zid] && addZone){
+	    Message.warning("zid不能重复", 5);
+	    return
+    }
+
     if (addZone) {
-      api.post('/zone/add', zone).then((res) => this.saveZoneRsp(res.data))
+	    api.post('/zone/add', zone).then((res) => this.saveZoneRsp(res.data))
     } else {
       let oldzone = this.zoneData[this.opZid]
       let data = {
@@ -292,12 +303,14 @@ class ZoneClass extends React.Component {
               </Col>
             </Row>
             <Row type="flex" justify="center" align="top">
-              <ZoneForm ref="zForm" getZoneChannels = {()=>this.getZoneChannels()}></ZoneForm>
-            </Row>
+	    <ZoneForm ref="zForm" getZoneChannels = {()=>this.getZoneChannels()} getMachines = {()=>this.getMachines()} ></ZoneForm>
+	    </Row>
           </Content>
+	  /*
           <Sider className="layout-head">
             <ZoneShowTable ref="zShowTable" getZoneName={(zid) => this.getZoneName(zid)}></ZoneShowTable>
           </Sider>
+	  */
         </Layout>
           <Footer>
             <ZoneFooter ref="zFooter"

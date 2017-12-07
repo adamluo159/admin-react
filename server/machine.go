@@ -3,6 +3,7 @@ package yada
 import (
 	"log"
 	"strconv"
+	"strings"
 
 	"github.com/adamluo159/admin-react/utils"
 	mgo "gopkg.in/mgo.v2"
@@ -15,6 +16,7 @@ type (
 		ZoneHost      string
 		ZoneDBHost    string
 		ZonelogdbHost string
+		DatalogdbHost string
 	}
 
 	//机器信息
@@ -36,6 +38,9 @@ type (
 		AddMachine(m *Machine) error
 		//获取所有机器配置
 		GetAllMachines() []Machine
+		//获取所有机器名
+		GetAllMachineName() []string
+
 		//查找机器配置
 		GetMachineByName(name string) *Machine
 		//更新机器svn版本号
@@ -59,7 +64,6 @@ type (
 		AccountDBLua() error
 		MasterLogLua() error
 		MasterLua() error
-		GameJsonConf(zone *Zone, arrayClientPorts *[]int, Dir string) error
 	}
 
 	machineMgr struct {
@@ -140,6 +144,20 @@ func (m *machineMgr) GetAllMachines() []Machine {
 	return ms
 }
 
+func (m *machineMgr) GetAllMachineName() []string {
+	names := make([]string, 0)
+	ms := m.GetAllMachines()
+	if ms != nil {
+		for _, v := range ms {
+			if strings.Contains(v.Hostname, "cghost") {
+				names = append(names, v.Hostname)
+			}
+		}
+	}
+
+	return names
+}
+
 func (m *machineMgr) UpdateZone(old *RelationZone, new *RelationZone) {
 	if old == nil || new == nil {
 		log.Println("machine Relation UpdateZone old or new is nil", old, new)
@@ -166,6 +184,12 @@ func (m *machineMgr) OpZoneRelation(r *RelationZone, op int) {
 		name := "zonelogdb" + strconv.Itoa((*r).Zid)
 		m.UpdateMachineApps(logdb.Hostname, name, op)
 	}
+	datalogdb := m.GetMachineByName((*r).DatalogdbHost)
+	if datalogdb != nil {
+		name := "datalogdb" + strconv.Itoa((*r).Zid)
+		m.UpdateMachineApps(datalogdb.Hostname, name, op)
+	}
+
 }
 
 //添加机器信息

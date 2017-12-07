@@ -26,6 +26,7 @@ type (
 		Items    []Zone
 		Zstates  []ZoneStates
 		Channels []string
+		Hosts    []string
 	}
 
 	SaveZoneReq struct {
@@ -237,6 +238,7 @@ func (y *yada) GetZones(c echo.Context) error {
 		Items:    *y.zMgr.GetAllZoneInfo(),
 		Result:   "OK",
 		Channels: channels,
+		Hosts:    y.machineMgr.GetAllMachineName(),
 	}
 	return c.JSON(http.StatusOK, rsp)
 }
@@ -262,6 +264,7 @@ func (y *yada) AddZone(c echo.Context) error {
 			ZoneHost:      zone.ZoneHost,
 			ZoneDBHost:    zone.ZoneDBHost,
 			ZonelogdbHost: zone.ZonelogdbHost,
+			DatalogdbHost: zone.DatalogdbHost,
 		}
 		ret.Result = "OK"
 
@@ -295,6 +298,7 @@ func (y *yada) SaveZone(c echo.Context) error {
 			ZoneDBHost:    m.Item.ZoneDBHost,
 			ZoneHost:      m.Item.ZoneHost,
 			ZonelogdbHost: m.Item.ZonelogdbHost,
+			DatalogdbHost: m.Item.DatalogdbHost,
 		}
 
 		//更换机器用途信息
@@ -329,6 +333,7 @@ func (y *yada) DelZone(c echo.Context) error {
 			ZoneHost:      zone.ZoneHost,
 			ZonelogdbHost: zone.ZonelogdbHost,
 			Zid:           zone.Zid,
+			DatalogdbHost: zone.DatalogdbHost,
 		}
 		if err := y.machineMgr.DelZoneConf(&r); err != nil {
 			ret.Result = fmt.Sprintf("del zone conf err, %v", err)
@@ -384,10 +389,6 @@ func (y *yada) SynGameConf(zone *Zone) string {
 		return fmt.Sprintf("zone:%v,gate:%v,center:%v,log:%v, logic:%v, chardb:%v, logdberr:%v", zerr, gerr, cerr, lerr, logicerr, charErr)
 	}
 
-	if err := y.machineMgr.GameJsonConf(zone, &arrayClientPorts, curDir); err != nil {
-		return fmt.Sprintf("gameJsonConf err %v", err)
-	}
-
 	if _, err := utils.ExeShell("sh", y.conf.GitCommit, "add or update zone"+strconv.Itoa(zone.Zid)); err != nil {
 		return fmt.Sprintf("exeshell fail %v", err)
 	}
@@ -398,10 +399,8 @@ func (y *yada) SynAllZoneConfReq(c echo.Context) error {
 	ret := ZoneRsp{}
 	zones := y.zMgr.GetAllZoneInfo()
 	for _, v := range *zones {
-		s := y.SynGameConf(&v)
-		log.Println("a------------", v.ZoneName, s)
+		ret.Result = y.SynGameConf(&v)
 	}
-	ret.Result = "OK"
 	return c.JSON(http.StatusOK, &ret)
 }
 

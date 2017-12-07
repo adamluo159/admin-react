@@ -66,6 +66,7 @@ func (s *aserver) Listen() {
 				protocol.CmdUpdateSvn:     false,
 			},
 		}
+		log.Println("agent server accpet socket, ip:", conn.RemoteAddr().String())
 		go client.OnMessage()
 	}
 }
@@ -133,7 +134,8 @@ func (s *aserver) StopZone(host string, zid int) string {
 func (s *aserver) UpdateZone(host string) string {
 	log.Println(" agentServer update host info", host)
 	r := protocol.C2sNotifyDone{
-		Do: protocol.NotifyDoFail,
+		Do:     protocol.NotifyDoFail,
+		Result: "OK",
 	}
 
 	p := protocol.S2cNotifyDo{}

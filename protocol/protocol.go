@@ -123,7 +123,7 @@ func UnPacket(length *int, msgbuf *bytes.Buffer) (uint32, []byte) {
 		*length = int(ulength)
 		// 检查超长消息
 		if *length > 1024 {
-			log.Printf("Message too length: %d\n", length)
+			log.Printf("Message too cmd:%d length: %d\n", cmd, length)
 			return 0, nil
 		}
 	}

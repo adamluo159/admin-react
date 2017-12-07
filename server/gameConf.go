@@ -1,11 +1,9 @@
 package yada
 
 import (
-	"encoding/json"
 	"errors"
 	"fmt"
 	"log"
-	"os"
 	"strconv"
 	"time"
 
@@ -33,9 +31,11 @@ type (
 		ClientIP       string
 		ClientPort     int
 		ChannelIds     []int
-		Open           bool
+		WhiteLst       bool
 		Name           string
 		OpenTime       int64
+		DataLogDB      string
+		ZoneLogDB      string
 		ConnectServers map[string]interface{}
 	}
 	Connect struct {
@@ -105,12 +105,6 @@ type (
 		Port           int
 		Zid            int
 		ConnectServers map[string]interface{}
-	}
-
-	GameJsonConf struct {
-		Zid         int
-		IP          string
-		ClientPorts []int
 	}
 
 	LoginConf struct {
@@ -186,11 +180,20 @@ const (
 func (m *machineMgr) ZoneLua(zone *Zone, Dir string) error {
 	zonem := m.GetMachineByName(zone.ZoneHost)
 	if zonem == nil {
-		return errors.New(fmt.Sprintf("zone machine info err"))
+		return errors.New(fmt.Sprintf("zone machine info err, %s", zone.ZoneHost))
 	}
 	masterm := m.GetMachineByName("master")
 	if zonem == nil {
 		return errors.New(fmt.Sprintf("master machine info err"))
+	}
+	zonelogdb := m.GetMachineByName(zone.ZonelogdbHost)
+	if zonelogdb == nil {
+		return errors.New(fmt.Sprintf("zonelogdb machine info err %s", zone.ZonelogdbHost))
+	}
+
+	datalogdb := m.GetMachineByName(zone.DatalogdbHost)
+	if datalogdb == nil {
+		return errors.New(fmt.Sprintf("datalogdb machine info err, %s", zone.DatalogdbHost))
 	}
 
 	s := make([]int, len(zone.Channels))
@@ -209,9 +212,11 @@ func (m *machineMgr) ZoneLua(zone *Zone, Dir string) error {
 		ClientIP:       zonem.OutIP,
 		ClientPort:     ZoneClientPort + zone.PortNumber,
 		ChannelIds:     s,
-		Open:           zone.Whitelst,
+		WhiteLst:       zone.Whitelst,
 		Name:           zone.ZoneName,
 		OpenTime:       theTime.Unix(),
+		DataLogDB:      datalogdb.IP,
+		ZoneLogDB:      zonelogdb.IP,
 		ConnectServers: make(map[string]interface{}),
 	}
 	zoneLua.ConnectServers["Master"] = Connect{
@@ -635,32 +640,4 @@ func (m *machineMgr) MasterLogLua() error {
 	}
 	return nil
 
-}
-
-func (m *machineMgr) GameJsonConf(zone *Zone, arrayClientPorts *[]int, Dir string) error {
-	zonelogdbm := m.GetMachineByName(zone.ZonelogdbHost)
-	if zonelogdbm == nil {
-		return errors.New(fmt.Sprintf("zone logdb conf info err"))
-	}
-
-	l := GameJsonConf{
-		Zid:         zone.Zid,
-		IP:          zonelogdbm.IP,
-		ClientPorts: *arrayClientPorts,
-	}
-
-	c, err := json.Marshal(l)
-	if err != nil {
-		return err
-	}
-	f, cerr := os.Create(Dir + "gameJsonConf")
-	if cerr != nil {
-		return cerr
-	}
-	defer f.Close()
-
-	if _, err := f.Write(c); err != nil {
-		return err
-	}
-	return nil
 }

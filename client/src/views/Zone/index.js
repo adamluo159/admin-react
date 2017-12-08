@@ -96,6 +96,10 @@ class ZoneClass extends React.Component {
 	    Message.warning("zid不能重复", 5);
 	    return
     }
+    if (zone.zonedbBakHost == zone.zoneDBHost){
+	    Message.warning("角色主从db不能在同一台机器上", 5);
+	    return
+    }
 
     if (addZone) {
 	    api.post('/zone/add', zone).then((res) => this.saveZoneRsp(res.data))
@@ -107,6 +111,7 @@ class ZoneClass extends React.Component {
         OldZid: oldzone.zid,
         cb: (json) => this.saveZoneRsp(json)
       }
+      console.log("----------------", data.Item)
       api.post('/zone/save', data).then((res) => this.addZoneRsp(res.data))
     }
     setFieldsValue({ edit: false })

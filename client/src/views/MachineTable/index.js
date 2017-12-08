@@ -93,6 +93,7 @@ class MachineTable extends React.Component {
       }
       element.edit = false
     })
+    console.log("++++++++++++",this.hosts)
     this.editState = false
     Items.sort(this.sortTable)
     this.setState({ data: Items })
@@ -120,7 +121,6 @@ class MachineTable extends React.Component {
     if (pagination.current > 1) {
       index = pagination.pageSize * (pagination.current - 1)
     }
-    console.log("aaaa-----", index, data)
     this.setState({
       data: [
 	...data.slice(0, index),
@@ -343,7 +343,7 @@ class MachineTable extends React.Component {
 
   commonConfig() {
     for (var key in Commonhost) {
-      if (!this.hosts[key]) {
+      if (this.hosts[key] == null) {
         Message.error("cannt write common config, lack " + key + " machine Info", 10)
         return
       }

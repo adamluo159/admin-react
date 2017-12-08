@@ -10,18 +10,6 @@ import (
 	"github.com/adamluo159/struct2lua"
 )
 
-const longForm = "2006-01-02 15:04:05"
-
-var (
-	sHead ServerConfigHead = ServerConfigHead{
-		NET_TIMEOUT_MSEC:  30000,
-		NET_MAX_CONNETION: NetMaxConnection,
-		StartService:      []map[string]int{{"nType": 1}},
-		LOG_MAXLINE:       LogMaxLine,
-		OpenGM:            1,
-	}
-)
-
 type (
 	ZoneConf struct {
 		ID             int
@@ -36,6 +24,7 @@ type (
 		OpenTime       int64
 		DataLogDB      string
 		ZoneLogDB      string
+		ZoneDBBak      string
 		ConnectServers map[string]interface{}
 	}
 	Connect struct {
@@ -143,14 +132,15 @@ type (
 )
 
 const (
-	CharDBPort     int = 7000
-	CenterPort     int = 7100
-	LogPort        int = 7200
-	ClientPort     int = 7300
-	ZonePort       int = 7400
-	ZoneClientPort int = 7500
-	GatePort       int = 7600 //gate1 7500起 gate2 7510起
-	LogicPort      int = 7700 //logic1 7600起 logic2 7610起
+	CharDBPort int = 5000
+	CenterPort int = 5100
+	LogPort    int = 5200
+	ClientPort int = 5300
+	ZonePort   int = 5400
+	LogicPort  int = 5500 //logic1 5500起 logic2 5500起
+
+	ZoneClientPort int = 7000
+	GatePort       int = 7100 //gate1 7100起 gate2 7110起
 
 	AccountDBPort    int = 6500
 	RedisPort        int = 6379
@@ -159,10 +149,11 @@ const (
 	LoginWebPort     int = 1236
 	ErrLogPort       int = 1237
 	RedisAccountPort int = 6380
-	MasterPort       int = 9501
-	LoginPort        int = 9550
 
-	NetTimeOut       int = 1000 * 30
+	LoginPort int = 9550
+
+	InNetTimeOut     int = 1000 * 300
+	OutNetTimeOut    int = 1000 * 120
 	NetMaxConnection int = 5000
 
 	DbproxyServer int = 1
@@ -175,6 +166,18 @@ const (
 	ZoneServer    int = 8
 
 	LogMaxLine int = 20000
+)
+
+const longForm = "2006-01-02 15:04:05"
+
+var (
+	sHead ServerConfigHead = ServerConfigHead{
+		NET_TIMEOUT_MSEC:  InNetTimeOut,
+		NET_MAX_CONNETION: NetMaxConnection,
+		StartService:      []map[string]int{{"nType": 1}},
+		LOG_MAXLINE:       LogMaxLine,
+		OpenGM:            1,
+	}
 )
 
 func (m *machineMgr) ZoneLua(zone *Zone, Dir string) error {
@@ -194,6 +197,11 @@ func (m *machineMgr) ZoneLua(zone *Zone, Dir string) error {
 	datalogdb := m.GetMachineByName(zone.DatalogdbHost)
 	if datalogdb == nil {
 		return errors.New(fmt.Sprintf("datalogdb machine info err, %s", zone.DatalogdbHost))
+	}
+
+	zonedbBak := m.GetMachineByName(zone.ZonedbBakHost)
+	if zonedbBak == nil {
+		return errors.New(fmt.Sprintf("zonedbBak machine info err, %s", zone.DatalogdbHost))
 	}
 
 	s := make([]int, len(zone.Channels))
@@ -217,12 +225,13 @@ func (m *machineMgr) ZoneLua(zone *Zone, Dir string) error {
 		OpenTime:       theTime.Unix(),
 		DataLogDB:      datalogdb.IP,
 		ZoneLogDB:      zonelogdb.IP,
+		ZoneDBBak:      zonedbBak.IP,
 		ConnectServers: make(map[string]interface{}),
 	}
 	zoneLua.ConnectServers["Master"] = Connect{
 		ID:   1,
 		IP:   masterm.IP,
-		Port: MasterPort,
+		Port: m.conf.MasterPort,
 	}
 	zoneLua.ConnectServers["Log"] = Connect{
 		ID:   zone.Zid,
@@ -231,6 +240,7 @@ func (m *machineMgr) ZoneLua(zone *Zone, Dir string) error {
 	}
 	sHead.StartService[0]["nType"] = ZoneServer
 	sHead.LOG_INDEX = "zone"
+	sHead.NET_TIMEOUT_MSEC = OutNetTimeOut
 	trans := struct2lua.ToLuaConfig(Dir, "Zone", zoneLua, sHead, 0)
 	if trans == false {
 		log.Println("gate cannt wirte lua file")
@@ -261,6 +271,7 @@ func (m *machineMgr) GateLua(zone *Zone, Dir string, arrayClientPorts *[]int) er
 		Port: LogPort + zone.PortNumber,
 	}
 	sHead.StartService[0]["nType"] = GateServer
+	sHead.NET_TIMEOUT_MSEC = OutNetTimeOut
 
 	for i := 1; i <= m.conf.GateCount; i++ {
 		gateLua.ID = i
@@ -522,7 +533,7 @@ func (m *machineMgr) LoginLua() error {
 	loginLua.ConnectServers["Master"] = Connect{
 		ID:   1,
 		IP:   masterM.IP,
-		Port: MasterPort,
+		Port: m.conf.MasterPort,
 	}
 	sHead.StartService[0]["nType"] = LoginServer
 	sHead.LOG_INDEX = "login1"
@@ -541,7 +552,7 @@ func (m *machineMgr) MasterLua() error {
 	masterlua := MasterConf{
 		ID:             1,
 		IP:             masterM.IP,
-		Port:           MasterPort,
+		Port:           m.conf.MasterPort,
 		AllZoneOpen:    true,
 		ConnectServers: make(map[string]interface{}),
 	}
@@ -580,10 +591,10 @@ func (m *machineMgr) AccountDBLua() error {
 			UserName:       m.conf.MysqlUsr,
 			Password:       m.conf.MysqlPwd,
 			FlushFrequency: 300,
-			DataBase:       "",
+			DataBase:       "gameAccount",
 		},
 		Redis: RedisLua{
-			IP:       accountDBM.OutIP,
+			IP:       accountDBM.IP,
 			Port:     RedisAccountPort,
 			Password: m.conf.RedisAccountPWd,
 		},
@@ -634,7 +645,7 @@ func (m *machineMgr) MasterLogLua() error {
 	sHead.StartService[0]["nType"] = LogServer
 	sHead.LOG_INDEX = "masterlog"
 
-	trans := struct2lua.ToLuaConfig(m.conf.CommonConf, "MasterLog", loglua, sHead, 0)
+	trans := struct2lua.ToLuaConfig(m.conf.CommonConf, "Log", loglua, sHead, 0)
 	if trans == false {
 		return errors.New("masterLog cannt wirte lua file")
 	}

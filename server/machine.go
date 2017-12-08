@@ -17,6 +17,7 @@ type (
 		ZoneDBHost    string
 		ZonelogdbHost string
 		DatalogdbHost string
+		ZonedbBakHost string
 	}
 
 	//机器信息
@@ -95,6 +96,7 @@ func NewMachineMgr(session *mgo.Session, mconf Conf) MachineMgr {
 func (m *machineMgr) UpdateMachineApps(host string, name string, op int) {
 
 	if name == "" {
+		log.Println("update Machine apps, name", name, host, op)
 		return
 	}
 
@@ -189,7 +191,11 @@ func (m *machineMgr) OpZoneRelation(r *RelationZone, op int) {
 		name := "datalogdb" + strconv.Itoa((*r).Zid)
 		m.UpdateMachineApps(datalogdb.Hostname, name, op)
 	}
-
+	dbbak := m.GetMachineByName((*r).ZonedbBakHost)
+	if dbbak != nil {
+		name := "zonedbBak" + strconv.Itoa((*r).Zid)
+		m.UpdateMachineApps(dbbak.Hostname, name, op)
+	}
 }
 
 //添加机器信息

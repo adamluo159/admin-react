@@ -19,5 +19,6 @@
 	"RedisAccountPWd": "cg2016",
 	"HttpPort": ":8080",
 	"DataLogIP": "192.168.70.240",
-	"DataLogPort": 1201
+	"DataLogPort": 1201,
+	"MasterPort":9501
 }

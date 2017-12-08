@@ -97,6 +97,7 @@ type (
 		HttpPort        string
 		DataLogIP       string
 		DataLogPort     int
+		MasterPort      int
 	}
 )
 
@@ -265,6 +266,7 @@ func (y *yada) AddZone(c echo.Context) error {
 			ZoneDBHost:    zone.ZoneDBHost,
 			ZonelogdbHost: zone.ZonelogdbHost,
 			DatalogdbHost: zone.DatalogdbHost,
+			ZonedbBakHost: zone.ZonedbBakHost,
 		}
 		ret.Result = "OK"
 
@@ -299,6 +301,7 @@ func (y *yada) SaveZone(c echo.Context) error {
 			ZoneHost:      m.Item.ZoneHost,
 			ZonelogdbHost: m.Item.ZonelogdbHost,
 			DatalogdbHost: m.Item.DatalogdbHost,
+			ZonedbBakHost: m.Item.ZonedbBakHost,
 		}
 
 		//更换机器用途信息
@@ -334,6 +337,7 @@ func (y *yada) DelZone(c echo.Context) error {
 			ZonelogdbHost: zone.ZonelogdbHost,
 			Zid:           zone.Zid,
 			DatalogdbHost: zone.DatalogdbHost,
+			ZonedbBakHost: zone.ZonedbBakHost,
 		}
 		if err := y.machineMgr.DelZoneConf(&r); err != nil {
 			ret.Result = fmt.Sprintf("del zone conf err, %v", err)

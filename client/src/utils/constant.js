@@ -51,9 +51,11 @@ export const machineColumns = [{
 	filters: [
 	{ text: '空闲机器', value: 0 },
 	{ text: 'zone', value: 1 },
-	{ text: 'zonelogdb', value: 3 },
 	{ text: 'zonedb', value: 2 },
-	{ text: '包含公共进程', value: 4},
+	{ text: 'zonelogdb', value: 3 },
+	{ text: 'zonedbBak', value: 4 },
+	{ text: 'datalogdb', value: 5 },
+	{ text: '包含公共进程', value: 6},
 	],
 },
 {
@@ -78,6 +80,9 @@ export const zoneConfig = {
 	}, {
 		Id: 'zoneDBHost',
 		label: 'db主机名'
+	}, {
+		Id: 'zonedbBakHost',
+		label: 'db备份主机名'
 	}, {
 		Id: 'zonelogdbHost',
 		label: '日志db主机名'

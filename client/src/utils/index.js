@@ -21,7 +21,9 @@ export const checkHostName = (str) => {
 export const Atype_Zone = 1
 export const Atype_ZoneDB = 2
 export const Atype_ZoneLogDB = 3
-export const Atype_Frame = 4
+export const Atype_ZONEBAKDB = 4
+export const Atype_DATALOGDB = 5
+export const Atype_Frame = 6
 
 export const checkAppliactionType = (str) => {
     let re = /^zone[0-9]*[1-9][0-9]*$/g
@@ -36,6 +38,15 @@ export const checkAppliactionType = (str) => {
     if (re2.test(str)) {
         return Atype_ZoneLogDB
     }
+    let re3 = /^zonedbBak[0-9]*[1-9][0-9]*$/g
+    if (re3.test(str)) {
+        return Atype_ZONEBAKDB 
+    }
+    let re4 = /^datalogdb[0-9]*[1-9][0-9]*$/g
+    if (re3.test(str)) {
+        return Atype_DATALOGDB 
+    }
+
     if (str == ""){
         return 0
     }

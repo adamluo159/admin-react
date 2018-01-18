@@ -12,12 +12,13 @@ import (
 
 type (
 	Client struct {
-		conn        *net.Conn
-		host        string
-		curServices map[string]bool
-		codeVersion string
-		gserver     *aserver
-		opCmdDoing  map[uint32]bool
+		conn          *net.Conn
+		host          string
+		curServices   map[string]bool
+		codeVersion   string
+		gserver       *aserver
+		opCmdDoing    map[uint32]bool
+		curZoneNotify map[string]bool
 	}
 )
 
@@ -37,6 +38,7 @@ func (c *Client) OnMessage() {
 		protocol.CmdStopHostZone:  c.CallBackHandle,
 		protocol.CmdZoneState:     c.ZoneState,
 		protocol.CmdUpdateSvn:     c.CallBackHandle,
+		protocol.CmdProcessErr:    c.CheckProcessErr,
 	}
 
 	for {
@@ -109,4 +111,27 @@ func (c *Client) ZoneState(data []byte) {
 	}
 	c.curServices[p.Zone] = p.Open
 	log.Println("notify zone state", p, c.curServices[p.Zone])
+}
+
+func (c *Client) CheckProcessErr(data []byte) {
+	p := protocol.C2sDx{}
+	err := json.Unmarshal(data, &p)
+	if err != nil {
+		log.Println("ZoneState, uncode error: ", string(data))
+		return
+	}
+	arg := ""
+	for _, z := range p.Zones {
+		v, ok := c.curZoneNotify[z]
+		if !ok || (ok && !v) {
+			c.curZoneNotify[z] = true
+			arg += z + ","
+		}
+	}
+	if arg != "" {
+		s, serr := utils.ExeShell("php", "shells/aliyunDX/demo/sendSms.php", arg)
+		log.Println("exshell rsp:", s, "err:", serr)
+	}
+
+	log.Println("CheckProcessErr", arg)
 }

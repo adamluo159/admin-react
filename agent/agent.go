@@ -5,7 +5,6 @@ import (
 	"log"
 	"net"
 	"os"
-	"strconv"
 	"strings"
 	"time"
 
@@ -42,15 +41,8 @@ type (
 		RemoteConfDir string //远端游戏配置仓库目录
 		LocalConfDir  string //本地游戏配置地址
 		GameShell     string //游戏启动关闭脚本
-		HttpStr       string //在线人数上报地址
-		HttpKey       string //上报数据时做签名的key
 	}
 
-	OnlineReport struct {
-		Method    string       `json:"method"`
-		Param     []ZoneOnline `json:"param"`
-		TimeStamp int64        `json:"timestamp"`
-	}
 	ZoneOnline struct {
 		Zid       int `json:"zid"`
 		OnlineNum int `json:"onlineNum"`
@@ -130,13 +122,4 @@ func CheckProcess(dstName string) bool {
 		return false
 	}
 	return true
-}
-
-//端口的连接数
-func OnlinePlayers(port string) int {
-	ret, _ := utils.ExeShell("sh", "scripts/onlinePlayers", port)
-	if n, err := strconv.Atoi(ret); err == nil {
-		return n
-	}
-	return 0
 }

@@ -136,18 +136,29 @@ func (a *agent) InitSrv(name string) {
 		RegularlyCheck: run,
 		Sname:          name,
 	}
+
+	log.Println("init srv.......  ", name)
 }
 
 //定时检查已启动的进程是否现在存在
 func (a *agent) RegularlyCheckProcess() {
 	for {
+		s := protocol.C2sDx{
+			Zones: make([]string, 0),
+		}
+
 		for k, v := range a.srvs {
 			if v.RegularlyCheck && CheckProcess(k) == false {
 				log.Println("check process error ", k)
+				s.Zones = append(s.Zones, k)
 			}
 		}
 
-		time.Sleep(time.Minute * 30)
+		if len(s.Zones) > 0 {
+			protocol.SendJson(a.conn, protocol.CmdProcessErr, &s)
+		}
+
+		time.Sleep(time.Minute * 2)
 	}
 }
 
@@ -219,6 +230,11 @@ func (a *agent) S2cStartZone(data []byte) {
 		Result: "启zone服成功",
 	}
 	run := StartZone(zone)
+
+	if _, ok := a.srvs[zone]; !ok {
+		a.InitSrv(zone)
+	}
+
 	a.srvs[zone].Started = run
 
 	if run {
@@ -246,6 +262,11 @@ func (a *agent) S2cStopZone(data []byte) {
 		Do:     protocol.NotifyDoSuc,
 		Result: "关zone服成功",
 	}
+
+	if _, ok := a.srvs[zone]; !ok {
+		a.InitSrv(p.Name)
+	}
+
 	log.Println("recv stop msg, Name:", zone, "req:", p.Req)
 	if StopZone(zone) {
 		a.srvs[zone].Started = false

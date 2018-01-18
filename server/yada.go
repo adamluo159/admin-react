@@ -98,6 +98,9 @@ type (
 		DataLogIP       string
 		DataLogPort     int
 		MasterPort      int
+		PayWebIP        string
+		PayWebPort      int
+		Debug           bool
 	}
 )
 

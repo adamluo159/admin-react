@@ -65,6 +65,7 @@ func (s *aserver) Listen() {
 				protocol.CmdZoneState:     false,
 				protocol.CmdUpdateSvn:     false,
 			},
+			curZoneNotify: make(map[string]bool),
 		}
 		log.Println("agent server accpet socket, ip:", conn.RemoteAddr().String())
 		go client.OnMessage()
@@ -98,6 +99,7 @@ func (s *aserver) StartZone(host string, zid int) string {
 		r.Result = err.Error()
 	}
 	c.opCmdDoing[protocol.CmdStartZone] = false
+	c.curZoneNotify[p.Name] = false
 
 	return r.Result
 
@@ -167,7 +169,12 @@ func (s *aserver) StartAllZone() string {
 	retStr := ""
 	p := protocol.S2cNotifyDo{}
 	s.allOperating = true
+
 	for _, v := range s.clients {
+		for kz, _ := range v.curZoneNotify {
+			v.curZoneNotify[kz] = false
+		}
+
 		if err := protocol.SendJsonWaitCB(v.conn, protocol.CmdStartHostZone, p, &r); err != nil {
 			r.Result = err.Error()
 		}

@@ -2,7 +2,19 @@
 	"MongoIP": "mongodb://192.168.70.240:27017/",
 	"Channels": {
 		"开发渠道": 1,
-		"新动": 2
+		"华为": 2,
+		"Uc":3,
+		"Ios":4,
+		"应用宝":5,
+		"vivo":6,
+		"oppo":7,
+		"小米":8,
+		"魅族":9,
+		"金立":10,
+		"酷派":11,
+		"360":12,
+		"quick母包":10000,
+		"quick新动":10598
 	},
 	"LogicCount":2,
 	"GateCount":2,
@@ -20,5 +32,7 @@
 	"HttpPort": ":8080",
 	"DataLogIP": "192.168.70.240",
 	"DataLogPort": 1201,
-	"MasterPort":9501
+	"PayWebIP":"192.168.70.240",
+	"PayWebPort":1253,
+	"Debug": true
 }

@@ -68,8 +68,9 @@ type (
 	}
 
 	machineMgr struct {
-		cl   *mgo.Collection
-		conf Conf
+		cl    *mgo.Collection
+		conf  Conf
+		sHead ServerConfigHead
 	}
 )
 
@@ -80,6 +81,20 @@ const (
 
 //机器模块注册
 func NewMachineMgr(session *mgo.Session, mconf Conf) MachineMgr {
+	shead := ServerConfigHead{
+		NET_TIMEOUT_MSEC:    300 * 1000,
+		CLIENT_TIMEOUT_MSEC: 120 * 1000,
+		NET_MAX_CONNETION:   NetMaxConnection,
+		StartService:        []map[string]int{{"nType": 1}},
+		LOG_MAXLINE:         20000,
+		OpenGM:              0,
+		LOG_PRIORITY:        3,
+	}
+	if mconf.Debug == true {
+		shead.OpenGM = 1
+		shead.LOG_PRIORITY = 4
+	}
+
 	mcl := session.DB("gameAdmin").C("machine")
 	if mcl == nil {
 		log.Fatal("cannt find Collection about machine")
@@ -88,8 +103,9 @@ func NewMachineMgr(session *mgo.Session, mconf Conf) MachineMgr {
 		log.Fatalf("mongodb ensureindex err:%s", err.Error())
 	}
 	return &machineMgr{
-		cl:   mcl,
-		conf: mconf,
+		cl:    mcl,
+		conf:  mconf,
+		sHead: shead,
 	}
 }
 

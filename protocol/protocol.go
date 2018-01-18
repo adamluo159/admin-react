@@ -41,6 +41,7 @@ const (
 	CmdStopHostZone         //关闭该机器上所有区服
 	CmdZoneState            //区服状态(true:开启，false:关闭)
 	CmdUpdateSvn            //svn更新
+	CmdProcessErr           //进程异常
 )
 
 type C2sToken struct {
@@ -62,6 +63,10 @@ type C2sNotifyDone struct {
 type C2sZoneState struct {
 	Zone string
 	Open bool
+}
+
+type C2sDx struct {
+	Zones []string
 }
 
 func GetReqIndex() int {

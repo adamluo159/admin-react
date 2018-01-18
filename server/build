@@ -8,6 +8,6 @@ go build example/main.go
 
 mv main $server/server
 cp config.json $server
-cp shells/* $server
+cp -r shells $server
 
 echo "构建完毕..."

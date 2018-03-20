@@ -25,6 +25,7 @@ type (
 		DataLogDB      string
 		ZoneLogDB      string
 		ZoneDBBak      string
+		TokenTimeCheck bool
 		ConnectServers map[string]interface{}
 	}
 	Connect struct {
@@ -67,6 +68,7 @@ type (
 		ConnectServers   map[string]interface{}
 		OpenTime         int64
 		CheckPing        int
+		TokenTimeCheck   bool
 	}
 
 	CharDBConf struct {
@@ -102,6 +104,7 @@ type (
 		IP             string
 		Port           int
 		VesionStr      string
+		TokenTimeCheck bool
 		ConnectServers map[string]interface{}
 	}
 
@@ -214,6 +217,7 @@ func (m *machineMgr) ZoneLua(zone *Zone, Dir string) error {
 		DataLogDB:      datalogdb.IP,
 		ZoneLogDB:      zonelogdb.IP,
 		ZoneDBBak:      zonedbBak.IP,
+		TokenTimeCheck: !m.conf.Debug,
 		ConnectServers: make(map[string]interface{}),
 	}
 	zoneLua.ConnectServers["Master"] = Connect{
@@ -291,6 +295,7 @@ func (m *machineMgr) CenterLua(zone *Zone, Dir string) error {
 		ConnectServers:   make(map[string]interface{}),
 		OpenTime:         theTime.Unix(),
 		CheckPing:        1,
+		TokenTimeCheck:   !m.conf.Debug,
 	}
 	centerLua.ConnectServers["CharDB"] = Connect{
 		ID:   zone.Zid,
@@ -504,6 +509,7 @@ func (m *machineMgr) LoginLua() error {
 		IP:             loginM.IP,
 		Port:           LoginPort + 1,
 		VesionStr:      "3.4.1",
+		TokenTimeCheck: !m.conf.Debug,
 		ConnectServers: make(map[string]interface{}),
 	}
 
